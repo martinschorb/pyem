@@ -1,0 +1,54 @@
+
+filename = 'nav.nav'
+mapname = 'lm-map'
+points = range(6,13)
+
+# -------------------------------
+# dependencies
+
+import fnmatch
+
+# -------------------------------
+# start script
+
+# read and parse navigator file (version >2 !!)
+
+nav_file = open(filename,"r")
+
+navlines=list()
+
+for line in nav_file.readlines():
+    navlines.append(line.strip())
+
+
+
+# look for map item
+
+searchstr = '[Item = ' + mapname + ']'
+
+mapitemstartline = navlines.index(searchstr)
+
+mapitemendline = navlines[mapitemstartline:].index('')
+
+mapitem = navlines[mapitemstartline:mapitemstartline+mapitemendline]
+
+
+
+
+# extract map file name
+
+mapfile = fnmatch.filter(mapitem, 'MapFile*')[0]
+
+mapfile = mapfile[mapfile.find('= ')+2:]
+
+
+
+# extract map corner coordinates
+
+mapx = fnmatch.filter(mapitem, 'PtsX*')[0]
+
+mapx = mapx[mapx.find('= ')+2:].split()
+
+mapy = fnmatch.filter(mapitem, 'PtsY*')[0]
+
+mapy = mapy[mapy.find('= ')+2:].split()

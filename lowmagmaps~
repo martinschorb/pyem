@@ -1,0 +1,29 @@
+
+filename = 'nav.nav'
+mapname = 'lm-map'
+points = range(6,13)
+
+# dependencies
+
+import fnmatch
+
+
+# start script
+
+nav_file = open(filename,"r")
+
+navlines=list()
+
+for line in nav_file.readlines():
+    navlines.append(line.strip())
+
+
+searchstr = '[Item = ' + mapname + ']'
+
+mapitemstartline = navlines.index(searchstr)
+
+mapitemendline = navlines[mapitemstartline:].index('')
+
+mapitem = navlines[mapitemstartline:mapitemstartline+mapitemendline-1]
+mapfile = fnmatch.filter(mapitem, 'MapFile*')
+
