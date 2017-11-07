@@ -17,7 +17,7 @@
 # PARAMETERS
 
 
-navname = 'test.nav'
+navname = 'test1.nav'
 # file name navigator
 
 
@@ -562,7 +562,7 @@ for acq_item in acq:
     
     cny = numpy.array(numpy.transpose(c1[:,0]))
     cny = " ".join(map(str,cny))
-    cny = cny[2:-2]
+    cny = cny[1:-2]
     
     
     
