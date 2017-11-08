@@ -6,15 +6,13 @@ import fnmatch
 import os
 import os.path
 import sys
-import time
 import numpy
 import scipy
 import math
-import matplotlib.pyplot as plt
-import re
 from scipy.ndimage.interpolation import zoom
 import tifffile as tiff
-
+import re
+import scipy.misc as spm
 
 # define supporting functions
 
@@ -384,5 +382,63 @@ def realign_map(item,allitems):
   
   return result[0]
 
+# -------------------------------------
+
+
+
+def cart2pol(c):
+            rho = numpy.sqrt(c[:,0]**2 + c[:,1]**2)
+            phi = numpy.arctan2(c[:,1], c[:,0])
+            return(numpy.transpose([phi,rho]))
+            
+# --------------------------------------            
+            
+def pol2cart(rho, phi):
+             x = rho * numpy.cos(phi)
+             y = rho * numpy.sin(phi)
+             return(numpy.transpose([x, y]))
+
+
+# --------------------------------------
+
+def img2polygon(img, n_poly, center, radius):
+  if img.dtype.kind is 'b':
+    thresh = 1
+  elif img.dtype.kind is 'i':
+    thresh = 2**(8*img.dtype.itemsize-1)-1
+    if img.max()<thresh:
+        thresh = img.max()/2
+  else: thresh = img.max()/2
   
+
+  xs , ys = img.shape
+   
+  polypt=numpy.empty((0,2))
+
+  polyphi = numpy.linspace(0,2*numpy.pi,n_poly)
+
+  endpts = pol2cart(radius,polyphi)
+
+  endpts = numpy.array(center) + endpts
+
+  for pt in endpts:
+    x, y = numpy.linspace(center[0], pt[0] , radius), numpy.linspace(center[1], pt[1], radius)
+    a, b = x.astype(numpy.int),y.astype(numpy.int)
+    a[a>(ys-1)] = ys-1
+    a[a<0] = 0
+    b[b>(xs-1)] = xs-1
+    b[b<0] = 0
+    lpx = img[b,a]
+    lpd = numpy.diff(lpx)
+    maxdiff = numpy.max(numpy.abs(lpd))
+    maxdiff_ix = numpy.argmax(numpy.abs(lpd))
+    if maxdiff < thresh:
+      maxdiff_ix = radius-1
+    
+    polypt = numpy.append(polypt,[(a[maxdiff_ix],b[maxdiff_ix])],axis=0)
+    
+  return polypt
+
+   
+
 
