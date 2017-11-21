@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 # dependencies
-
+#%%
 import fnmatch
 import os
 import os.path
@@ -14,6 +14,7 @@ import tifffile as tiff
 import re
 import scipy.misc as spm
 
+#%%
 # define supporting functions
 
 
@@ -90,7 +91,8 @@ def parse_adoc(lines):
     return answer
 
 # -------------------------------
-
+#%%
+    
 def map_file(mapitem):
     
     # extracts map file name from navigator and checks for existance
@@ -113,7 +115,8 @@ def map_file(mapitem):
 
 
 # -------------------------------
-
+#%%
+    
 def map_header(mapfile):
     
     # extracts MRC header information for a given file name
@@ -186,26 +189,9 @@ def fullnav(navlines):
 
 
 # -------------------------------
-
-
-
-def mergemap(mapitem):
-
-  m=dict()
- 
-  # extract map properties
- 
-    # grab coordinates of map corner points        
-	  
-  mapx = map(float,mapitem['PtsX'])
-  mapy = map(float,mapitem['PtsY'])
-    
-  a=numpy.array([mapx,mapy])
-  lx = numpy.sqrt(sum((a[:,2]-a[:,3])**2))
-  ly = numpy.sqrt(sum((a[:,1]-a[:,2])**2))
-
-
-  # determine rotation of coordinate frame
+#%%
+def map_rotation(mapx,mapy):
+    # determine rotation of coordinate frame
 
   a12 = math.atan2((mapx[1]-mapx[2]),(mapy[1]-mapy[2]))
   a43 = math.atan2((mapx[4]-mapx[3]),(mapy[4]-mapy[3]))
@@ -223,8 +209,31 @@ def mergemap(mapitem):
 
   rotmat = numpy.matrix([[ct,-st],[st,ct]]) 
 
+  return rotmat
+
+# -------------------------------
+#%%
+
+def mergemap(mapitem):
+#%%
+  m=dict()
+ 
+  # extract map properties
+ 
+    # grab coordinates of map corner points        
+	  
+  mapx = map(float,mapitem['PtsX'])
+  mapy = map(float,mapitem['PtsY'])
+    
+  a=numpy.array([mapx,mapy])
+  lx = numpy.sqrt(sum((a[:,2]-a[:,3])**2))
+  ly = numpy.sqrt(sum((a[:,1]-a[:,2])**2))
+
+  rotmat = map_rotation(mapx,mapy)
+
 
   mapfile = map_file(mapitem)
+  #%%
   if mapfile.find('.st')<0 and mapfile.find('.map')<0 and mapfile.find('.mrc')<0:
     print 'Warning: ' + mapfile + ' is not an MRC file!' + '\n'
     print 'Assuming it is a single file or a stitched montage.' + '\n'
@@ -264,11 +273,14 @@ def mergemap(mapitem):
     mergefile = mergefile + '_merged'
 
     if mapheader['stacksize'] < 2:
-	callcmd = 'mrc2tif ' +  mapfile + ' ' + mergefile
+	print 'Single image found. No merging needed.'
+	
+	callcmd = 'mrc2tif ' +  mapfile + ' ' + mergefile + '.tif'
 	tilepx = [0,0]
 	tilepx=numpy.array([tilepx,tilepx])
 	os.system(callcmd)
-
+	mergeheader = mapheader
+	
     else:
       if not os.path.exists(mergefile + '.mrc'):
 	# merge the montage to a single file
@@ -288,19 +300,14 @@ def mergemap(mapitem):
 	 
 	  callcmd = 'mrc2tif ' +  mergefile + '.mrc ' + mergefile +'.tif'
 	  os.system(callcmd)
-	  
+	  mergeheader = map_header(mergefile + '.mrc')
 	  
 	  # extract pixel coordinate of each tile
       tilepx = loadtext(mergefile + '.al')
       tilepx = tilepx[:-1]
       for j, item in enumerate(tilepx): tilepx[j] = map(float,re.split(' +',tilepx[j]))
       tilepx = scipy.delete(tilepx,2,1)
-
-	  
-    
-
-
-    mergeheader = map_header(mergefile + '.mrc')
+      
 
 
     mdocname = mapfile + '.mdoc'
@@ -440,5 +447,4 @@ def img2polygon(img, n_poly, center, radius):
   return polypt
 
    
-
 
