@@ -55,6 +55,7 @@ def nav_item(navlines,label):
 
         item = navlines[itemstartline:itemstartline+itemendline]
         result = parse_adoc(item)
+        result['# Item']=navlines[itemstartline-1][navlines[itemstartline-1].find(' = ') + 3:-1]
         
     return result
     

@@ -145,7 +145,6 @@ for acq_item in acq:
     im1=im[yel,:]
 
     im1=im1[:,xel]
-  #            %matplotlib inline
 	      
 
 
