@@ -272,7 +272,8 @@ def mergemap(mapitem):
     if mergefile == []: mergefile = mapfile
     
     mergefile = mergefile + '_merged'
-
+    mergeheader = mapheader
+    
     if mapheader['stacksize'] < 2:
 	print 'Single image found. No merging needed.'
 	
@@ -342,7 +343,6 @@ def mergemap(mapitem):
     
   # end MRC section
   
-
 
 
   # generate output
