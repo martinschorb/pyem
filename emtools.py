@@ -418,6 +418,7 @@ def img2polygon(img, n_poly, center, radius):
         thresh = img.max()/2
   else: thresh = img.max()/2
   
+  n_poly = n_poly + 1
 
   xs , ys = img.shape
    

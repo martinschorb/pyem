@@ -28,37 +28,34 @@ import emtools as em
 # PARAMETERS
 
 
-navname = 'test2.nav'
+navname = 'test3.nav'
 # file name navigator
 
 
 target_map = 'refmap'
 # one example map at the desired settings (NavLabel)
 
-binning = 4
-
-c = [4444, 648]
+c = [522, 616]
 
 
-p = numpy.array([[ 4484. ,  642.],
- [ 4472. ,  660.],
- [ 4464. ,  682.],
- [ 4438. ,  684.],
- [ 4422.,   668.],
- [ 4412.  , 652.],
- [ 4410.  , 632.],
- [ 4416.  , 610.],
- [ 4440.  , 606.],
- [ 4454.  , 620.],
- [ 4468.  , 626.],
- [ 4484.  , 642.]])
+p = numpy.array([[ 556. , 622.],
+ [ 558.,  644.],
+ [ 534.,  652.],
+ [ 518.,  648.],
+ [ 508.,  636.],
+ [ 480.,  634.],
+ [ 490.,  612.],
+ [ 504.,  602.],
+ [ 516.,  592.],
+ [ 540.,  578.],
+ [ 560.,  596.],
+ [ 556. , 622.]])
 
 navlines = em.loadtext(navname)
-curr_map = em.nav_item(navlines,'1')
+curr_map = em.nav_item(navlines,'2')
 
 index = 1
 mapid = 1001
-pixelsize = 0.005186
 
 
 mx = map(float,curr_map['PtsX'])
@@ -67,7 +64,14 @@ my = map(float,curr_map['PtsY'])
 rotmat = em.map_rotation(mx,my)
 
 # rotmat = curr_map['rotmat']
-mergefile = 'map2_merged.tif'
+mapfile = em.map_file(curr_map)
+mapheader = em.map_header(mapfile)
+
+pixelsize = mapheader['pixelsize']
+
+mergefile = mapfile[:mapfile.rfind('.mrc')]  
+
+mergefile = mergefile + '_merged.tif'
 
 im = tiff.imread(mergefile)
 # im = curr_map['im']
@@ -145,9 +149,10 @@ yel3 = range(int(c3[1] - t_size[1]/2) , int(c3[1] + round(float(t_size[1])/2)))
 im4 = im3[yel3,:]
 im4 = im4[:,xel3]
 
-p4 = p3
-p4[:,0] = p3[:,0] + t_size[0]/2
-p4[:,1] = t_size[1]/2 - p3[:,1]
+p4=p3.copy()
+p4[:,0] =  t_size[0]/2 - p3[:,0]
+p4[:,1] =  p3[:,1] + t_size[1]/2
+
 
 label = curr_map['# Item'] + '_' + str(index).zfill(4)
 
@@ -163,7 +168,7 @@ a = numpy.matrix(a) - [cx/2 , cy/2]
 
 a = a * px_scale
     
-c1 = a * rotm1.T *rotmat + c
+c1 = a + c
 
 #c1 = a * rotmat1 * targetheader['pixelsize'] + c_stage
     
@@ -191,7 +196,12 @@ newnavitem = dict(targetitem)
 newnavitem['MapFile'] = [imfile]
 newnavitem.pop('StageXYZ','')
 newnavitem.pop('RawStageXY','')
-newnavitem['CoordsInAliMont'] = [str(c[0]),str(c[1]),curr_map['StageXYZ'][2]]
+if curr_map['MapFramesXY'] == ['0', '0']:
+  newnavitem['CoordsInMap'] = [str(c[0]),str(c[1]),curr_map['StageXYZ'][2]]
+else:
+  newnavitem['CoordsInAliMont'] = [str(c[0]),str(c[1]),curr_map['StageXYZ'][2]]
+
+
 newnavitem['PtsY'] = cnx.split()
 newnavitem['PtsX'] = cny.split()
 newnavitem['Note'] = newnavitem['MapFile']
