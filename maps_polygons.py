@@ -28,53 +28,44 @@ import emtools as em
 # PARAMETERS
 
 
-navname = 'test3.nav'
+navname = 'test1.nav'
 # file name navigator
 
 
 target_map = 'refmap'
 # one example map at the desired settings (NavLabel)
 
-c = [522, 616]
+c = [2992, 2364]
 
 
 p = numpy.array(#[522, 616])
-[[ 556. , 622.],
- [ 558.,  644.],
- [ 534.,  652.],
- [ 518.,  648.],
- [ 508.,  636.],
- [ 480.,  634.],
- [ 490.,  612.],
- [ 504.,  602.],
- [ 516.,  592.],
- [ 540.,  578.],
- [ 560.,  596.],
- [ 556. , 622.]])
+[[ 3096. , 2344.],
+ [ 3064. , 2380.],
+ [ 3044. , 2412.],
+ [ 3004. , 2444.],
+ [ 2924. , 2480.],
+ [ 2888. , 2408.],
+ [ 2900. , 2344.],
+ [ 2936. , 2304.],
+ [ 2968. , 2284.],
+ [ 3004. , 2248.],
+ [ 3040. , 2276.],
+ [ 3064. , 2308.],
+ [ 3096. , 2344.]])
 
 navlines = em.loadtext(navname)
-curr_map = em.nav_item(navlines,'2')
+curr_map = em.nav_item(navlines,'1-A')
 
 index = 1
 mapid = 1001
 
 
-mx = map(float,curr_map['PtsX'])
-my = map(float,curr_map['PtsY'])
 
-rotmat = em.map_rotation(mx,my)
 
 # rotmat = curr_map['rotmat']
-mapfile = em.map_file(curr_map)
-mapheader = em.map_header(mapfile)
 
-pixelsize = mapheader['pixelsize']
 
-mergefile = mapfile[:mapfile.rfind('.mrc')]  
 
-mergefile = mergefile + '_merged.tif'
-
-im = tiff.imread(mergefile)
 # im = curr_map['im']
 # ====================================================================================
 outnav=list()
@@ -91,6 +82,25 @@ nnf.write("%s\n" % navlines[1])
 
 targetitem = em.nav_item(navlines,target_map)
 
+
+#def pts2nav(im,p,curr_map,targetitem,nav):
+  
+
+
+mapfile = em.map_file(curr_map)
+mapheader = em.map_header(mapfile)
+
+pixelsize = mapheader['pixelsize']
+
+mx = map(float,curr_map['PtsX'])
+my = map(float,curr_map['PtsY'])
+
+rotmat = em.map_rotation(mx,my)
+  
+mergefile = mapfile[:mapfile.rfind('.mrc')]  
+
+mergefile = mergefile + '_merged.tif'
+im = tiff.imread(mergefile)
 newnavitem = dict(targetitem)
 
 targetfile = em.map_file(targetitem)
@@ -104,7 +114,7 @@ targetrot = em.map_rotation(tx,ty)
 
 allitems = em.fullnav(navlines)
 
- 
+
 px_scale = targetheader['pixelsize'] /pixelsize
 
 imsz = numpy.array(im.shape)
@@ -194,7 +204,10 @@ a = [[0,0],[cx,0],[cx,cy],[0,cy],[0,0]]
 a = numpy.matrix(a) - [cx/2 , cy/2]
 
 a = a * px_scale
-    
+
+c_out = c
+c_out[1] = imsz[0] -c_out[1]
+        
 c1 = a + c
 
 #c1 = a * rotmat1 * targetheader['pixelsize'] + c_stage
@@ -207,7 +220,7 @@ cny = numpy.array(numpy.transpose(c1[:,1]))
 cny = " ".join(map(str,cny))
 cny = cny[1:-2]
 
-    
+
 # fill navigator
 
 # map for realignment
@@ -216,9 +229,9 @@ newnavitem['MapFile'] = [imfile]
 newnavitem.pop('StageXYZ','')
 newnavitem.pop('RawStageXY','')
 if curr_map['MapFramesXY'] == ['0', '0']:
-  newnavitem['CoordsInMap'] = [str(c[0]),str(c[1]),curr_map['StageXYZ'][2]]
+  newnavitem['CoordsInMap'] = [str(c_out[0]),str(c_out[1]),curr_map['StageXYZ'][2]]
 else:
-  newnavitem['CoordsInAliMont'] = [str(c[0]),str(c[1]),curr_map['StageXYZ'][2]]
+  newnavitem['CoordsInAliMont'] = [str(c_out[0]),str(c_out[1]),curr_map['StageXYZ'][2]]
 
 newnavitem['PtsX'] = cnx.split()
 newnavitem['PtsY'] = cny.split()
@@ -237,7 +250,7 @@ newnavitem['# Item'] = 'map_' + label
 curr_map['Acquire'] = ['0']
 
 # Polygon
- 
+
 polynav['# Item'] = label
 polynav['Acquire'] = ['1']
 polynav['Draw'] = ['1']
@@ -255,6 +268,14 @@ outnav.append(curr_map)
 outnav.append(newnavitem)
 
 outnav.append(polynav)
+
+
+
+#return outnav
+
+# ============================================================================================================================
+
+
 
 for nitem in outnav:
  
