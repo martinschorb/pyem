@@ -38,7 +38,8 @@ target_map = 'refmap'
 c = [522, 616]
 
 
-p = numpy.array([[ 556. , 622.],
+p = numpy.array(#[522, 616])
+[[ 556. , 622.],
  [ 558.,  644.],
  [ 534.,  652.],
  [ 518.,  648.],
@@ -77,6 +78,9 @@ im = tiff.imread(mergefile)
 # im = curr_map['im']
 # ====================================================================================
 outnav=list()
+polynav=dict()
+
+
 
 newnav = navname[:-4] + '_automaps.nav'
 nnf = open(newnav,'w')
@@ -86,6 +90,9 @@ nnf.write("%s\n" % navlines[1])
 # inititate script
 
 targetitem = em.nav_item(navlines,target_map)
+
+newnavitem = dict(targetitem)
+
 targetfile = em.map_file(targetitem)
 targetheader = em.map_header(targetfile)
 
@@ -151,9 +158,29 @@ im4 = im4[:,xel3]
 
 p4=p3.copy()
 p4[:,0] =  t_size[0]/2 - p3[:,0]
-p4[:,1] =  p3[:,1] + t_size[1]/2
+p4[:,1] =  p3[:,1] + t_size[1]/2    
+    
+px = numpy.array(numpy.transpose(p4[:,0]))
+px = numpy.array2string(px,separator=' ')
+px = px[2:-2]
 
+py = numpy.array(numpy.transpose(p4[:,1]))
+py = numpy.array2string(py,separator=' ')
+py = py[2:-2]
+  
+  
+if numpy.shape(p3)[0] == 1:
+  polynav['Type'] = ['0']
+  polynav['Color'] = ['0']
+  polynav['NumPts'] = ['1']
+  
+else:      
+  polynav['Type'] = ['1']
+  polynav['Color'] = ['1']
+  polynav['NumPts'] = [str(p.shape[0])]
 
+  
+  
 label = curr_map['# Item'] + '_' + str(index).zfill(4)
 
 imfile = 'virt_' + label + '.tif'
@@ -172,27 +199,19 @@ c1 = a + c
 
 #c1 = a * rotmat1 * targetheader['pixelsize'] + c_stage
     
-cnx = numpy.array(numpy.transpose(c1[:,1]))
+cnx = numpy.array(numpy.transpose(c1[:,0]))
 cnx = numpy.array2string(cnx,separator=' ')
 cnx = cnx[2:-2]
     
-cny = numpy.array(numpy.transpose(c1[:,0]))
+cny = numpy.array(numpy.transpose(c1[:,1]))
 cny = " ".join(map(str,cny))
 cny = cny[1:-2]
-    
-px = numpy.array(numpy.transpose(p4[:,1]))
-px = numpy.array2string(px,separator=' ')
-px = px[2:-2]
 
-py = numpy.array(numpy.transpose(p4[:,0]))
-py = numpy.array2string(py,separator=' ')
-py = py[2:-2]
-    
     
 # fill navigator
 
 # map for realignment
-newnavitem = dict(targetitem)
+
 newnavitem['MapFile'] = [imfile]
 newnavitem.pop('StageXYZ','')
 newnavitem.pop('RawStageXY','')
@@ -201,9 +220,8 @@ if curr_map['MapFramesXY'] == ['0', '0']:
 else:
   newnavitem['CoordsInAliMont'] = [str(c[0]),str(c[1]),curr_map['StageXYZ'][2]]
 
-
-newnavitem['PtsY'] = cnx.split()
-newnavitem['PtsX'] = cny.split()
+newnavitem['PtsX'] = cnx.split()
+newnavitem['PtsY'] = cny.split()
 newnavitem['Note'] = newnavitem['MapFile']
 newnavitem['MapID'] = [str(mapid)]
 newnavitem['DrawnID'] = curr_map['MapID']
@@ -220,19 +238,15 @@ curr_map['Acquire'] = ['0']
 
 # Polygon
  
-polynav=dict()
 polynav['# Item'] = label
-polynav['Color'] = ['1']
-polynav['NumPts'] = [str(p.shape[0])]
 polynav['Acquire'] = ['1']
 polynav['Draw'] = ['1']
 polynav['Regis'] = curr_map['Regis']
-polynav['Type'] = ['1']
 polynav['DrawnID'] = [str(mapid)]
 polynav['GroupID'] = ['123456']#curr_map['MapID']
 polynav['CoordsInMap'] = [str(int(cx/2)) , str(int(cy/2)),curr_map['StageXYZ'][2]]
-polynav['PtsY'] = px.split()
-polynav['PtsX'] = py.split()
+polynav['PtsX'] = px.split()
+polynav['PtsY'] = py.split()
 
 
 
