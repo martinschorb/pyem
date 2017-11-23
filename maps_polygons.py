@@ -16,11 +16,7 @@
 
 
 import numpy
-#import matplotlib.pyplot as plt
-from scipy.ndimage.interpolation import zoom
-from scipy.ndimage import rotate
 import tifffile as tiff
-import math
 import emtools as em
 
 
@@ -53,9 +49,6 @@ p = numpy.array(#[522, 616])
 
 navlines = em.loadtext(navname)
 curr_map = em.nav_item(navlines,'2')
-
-index = 1
-mapid = 1001
 
 targetitem = em.nav_item(navlines,target_map)
 

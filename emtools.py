@@ -10,6 +10,7 @@ import numpy
 import scipy
 import math
 from scipy.ndimage.interpolation import zoom
+from scipy.ndimage import rotate
 import tifffile as tiff
 import re
 import scipy.misc as spm
@@ -488,7 +489,10 @@ def pts2nav(im,p,c,curr_map,targetitem,nav):
   px_scale = targetheader['pixelsize'] /pixelsize  
 
   imsz1 = numpy.array([targetheader['xsize'],targetheader['ysize']]) * px_scale
-
+  
+  index = 1 
+  mapid = 1001
+  
   px = round(c[0])
   py = round(c[1])
 
