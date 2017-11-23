@@ -19,7 +19,6 @@ import numpy
 #import matplotlib.pyplot as plt
 from scipy.ndimage.interpolation import zoom
 from scipy.ndimage import rotate
-
 import tifffile as tiff
 import math
 import emtools as em

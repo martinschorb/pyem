@@ -462,27 +462,27 @@ def pts2nav(im,p,c,curr_map,targetitem,nav):
   newnavitem = dict(targetitem)
 
   # read information from maps
-  mapfile = em.map_file(curr_map)
-  mapheader = em.map_header(mapfile)
+  mapfile = map_file(curr_map)
+  mapheader = map_header(mapfile)
 
   pixelsize = mapheader['pixelsize']
 
   mx = map(float,curr_map['PtsX'])
   my = map(float,curr_map['PtsY'])
 
-  rotmat = em.map_rotation(mx,my)
+  rotmat = map_rotation(mx,my)
   imsz = numpy.array(im.shape)
   
   
   # target reference
   
-  targetfile = em.map_file(targetitem)
-  targetheader = em.map_header(targetfile)
+  targetfile = map_file(targetitem)
+  targetheader = map_header(targetfile)
 
   tx = map(float,targetitem['PtsX'])
   ty = map(float,targetitem['PtsY'])
     
-  targetrot = em.map_rotation(tx,ty)
+  targetrot = map_rotation(tx,ty)
 
 
   px_scale = targetheader['pixelsize'] /pixelsize  
