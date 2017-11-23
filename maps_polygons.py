@@ -35,247 +35,51 @@ navname = 'test1.nav'
 target_map = 'refmap'
 # one example map at the desired settings (NavLabel)
 
-c = [2992, 2364]
-
+c = [664, 1548]
 
 p = numpy.array(#[522, 616])
-[[ 3096. , 2344.],
- [ 3064. , 2380.],
- [ 3044. , 2412.],
- [ 3004. , 2444.],
- [ 2924. , 2480.],
- [ 2888. , 2408.],
- [ 2900. , 2344.],
- [ 2936. , 2304.],
- [ 2968. , 2284.],
- [ 3004. , 2248.],
- [ 3040. , 2276.],
- [ 3064. , 2308.],
- [ 3096. , 2344.]])
+[[  720. , 1568.],
+ [  688. , 1600.],
+ [  664. , 1620.],
+ [  632. , 1604.],
+ [  616. , 1600.],
+ [  600. , 1588.],
+ [  584. , 1568.],
+ [  572. , 1532.],
+ [  600. , 1508.],
+ [  632. , 1496.],
+ [  680. , 1488.],
+ [  760. , 1496.],
+ [  720. , 1568.]])
 
 navlines = em.loadtext(navname)
-curr_map = em.nav_item(navlines,'1-A')
+curr_map = em.nav_item(navlines,'2')
 
 index = 1
 mapid = 1001
 
-
+targetitem = em.nav_item(navlines,target_map)
 
 
 # rotmat = curr_map['rotmat']
 
-
-
-# im = curr_map['im']
-# ====================================================================================
-outnav=list()
-polynav=dict()
-
-
+nav=list()
 
 newnav = navname[:-4] + '_automaps.nav'
 nnf = open(newnav,'w')
 nnf.write("%s\n" % navlines[0])
 nnf.write("%s\n" % navlines[1])
 
-# inititate script
-
-targetitem = em.nav_item(navlines,target_map)
-
-
-#def pts2nav(im,p,curr_map,targetitem,nav):
-  
-
+# im = curr_map['im']
+# ====================================================================================
 
 mapfile = em.map_file(curr_map)
-mapheader = em.map_header(mapfile)
-
-pixelsize = mapheader['pixelsize']
-
-mx = map(float,curr_map['PtsX'])
-my = map(float,curr_map['PtsY'])
-
-rotmat = em.map_rotation(mx,my)
-  
 mergefile = mapfile[:mapfile.rfind('.mrc')]  
 
 mergefile = mergefile + '_merged.tif'
 im = tiff.imread(mergefile)
-newnavitem = dict(targetitem)
 
-targetfile = em.map_file(targetitem)
-targetheader = em.map_header(targetfile)
-
-tx = map(float,targetitem['PtsX'])
-ty = map(float,targetitem['PtsY'])
-  
-targetrot = em.map_rotation(tx,ty)
-
-
-allitems = em.fullnav(navlines)
-
-
-px_scale = targetheader['pixelsize'] /pixelsize
-
-imsz = numpy.array(im.shape)
-
-imsz1 = numpy.array([targetheader['xsize'],targetheader['ysize']]) * px_scale
-
-
-
-px = round(c[0])
-py = round(c[1])
-
-
-
-# extract image (1.42x to enable rotation)
-
-xel = range(int(px - 1.42 * imsz1[0]/2) , int(px + 1.42 * round(float(imsz1[0])/2)))
-yel = range(int(py - 1.42 * imsz1[1]/2) , int(py + 1.42 * round(float(imsz1[1])/2)))
-
-im1=im[yel,:]
-im1=im1[:,xel]
-
-# center to origin
-p1 = p - c
-
-#c[1] = imsz[1] - c[1]
-
-# combine rotation matrices
-rotm1 = rotmat.T * targetrot
-angle = math.degrees(math.acos(rotm1[0,0]))
-
-# interpolate image
-im2 = zoom(im1,1/px_scale)
-
-p2 = p1/px_scale
-
-# rotate
-im3 = rotate(im2,angle)
-p3 =  p2 * rotm1.T
-
-t_size = imsz1/px_scale
-c3 = numpy.array(im3.shape)/2
-
-
-#crop to desired size
-
-xel3 = range(int(c3[0] - t_size[0]/2) , int(c3[0] + round(float(t_size[0])/2)))
-yel3 = range(int(c3[1] - t_size[1]/2) , int(c3[1] + round(float(t_size[1])/2)))
-
-im4 = im3[yel3,:]
-im4 = im4[:,xel3]
-
-p4=p3.copy()
-p4[:,0] =  t_size[0]/2 - p3[:,0]
-p4[:,1] =  p3[:,1] + t_size[1]/2    
-    
-px = numpy.array(numpy.transpose(p4[:,0]))
-px = numpy.array2string(px,separator=' ')
-px = px[2:-2]
-
-py = numpy.array(numpy.transpose(p4[:,1]))
-py = numpy.array2string(py,separator=' ')
-py = py[2:-2]
-  
-  
-if numpy.shape(p3)[0] == 1:
-  polynav['Type'] = ['0']
-  polynav['Color'] = ['0']
-  polynav['NumPts'] = ['1']
-  
-else:      
-  polynav['Type'] = ['1']
-  polynav['Color'] = ['1']
-  polynav['NumPts'] = [str(p.shape[0])]
-
-  
-  
-label = curr_map['# Item'] + '_' + str(index).zfill(4)
-
-imfile = 'virt_' + label + '.tif'
-	    
-tiff.imsave(imfile,im4,compress=6)
-    
-cx = t_size[1]
-cy = t_size[0]
-
-a = [[0,0],[cx,0],[cx,cy],[0,cy],[0,0]]
-a = numpy.matrix(a) - [cx/2 , cy/2]
-
-a = a * px_scale
-
-c_out = c
-c_out[1] = imsz[0] -c_out[1]
-        
-c1 = a + c
-
-#c1 = a * rotmat1 * targetheader['pixelsize'] + c_stage
-    
-cnx = numpy.array(numpy.transpose(c1[:,0]))
-cnx = numpy.array2string(cnx,separator=' ')
-cnx = cnx[2:-2]
-    
-cny = numpy.array(numpy.transpose(c1[:,1]))
-cny = " ".join(map(str,cny))
-cny = cny[1:-2]
-
-
-# fill navigator
-
-# map for realignment
-
-newnavitem['MapFile'] = [imfile]
-newnavitem.pop('StageXYZ','')
-newnavitem.pop('RawStageXY','')
-if curr_map['MapFramesXY'] == ['0', '0']:
-  newnavitem['CoordsInMap'] = [str(c_out[0]),str(c_out[1]),curr_map['StageXYZ'][2]]
-else:
-  newnavitem['CoordsInAliMont'] = [str(c_out[0]),str(c_out[1]),curr_map['StageXYZ'][2]]
-
-newnavitem['PtsX'] = cnx.split()
-newnavitem['PtsY'] = cny.split()
-newnavitem['Note'] = newnavitem['MapFile']
-newnavitem['MapID'] = [str(mapid)]
-newnavitem['DrawnID'] = curr_map['MapID']
-newnavitem['Acquire'] = ['0']
-newnavitem['MapSection'] = ['0']
-newnavitem.pop('SamePosId','')
-# newnavitem['MapWidthHeight'] = [str(im2size[0]),str(im2size[1])]
-newnavitem['ImageType'] = ['2']
-newnavitem['MapMinMaxScale'] = [str(numpy.min(im4)),str(numpy.max(im4))]
-newnavitem['NumPts'] = ['5']
-newnavitem['# Item'] = 'map_' + label    
-    
-curr_map['Acquire'] = ['0']
-
-# Polygon
-
-polynav['# Item'] = label
-polynav['Acquire'] = ['1']
-polynav['Draw'] = ['1']
-polynav['Regis'] = curr_map['Regis']
-polynav['DrawnID'] = [str(mapid)]
-polynav['GroupID'] = ['123456']#curr_map['MapID']
-polynav['CoordsInMap'] = [str(int(cx/2)) , str(int(cy/2)),curr_map['StageXYZ'][2]]
-polynav['PtsX'] = px.split()
-polynav['PtsY'] = py.split()
-
-
-
-outnav.append(curr_map)
-
-outnav.append(newnavitem)
-
-outnav.append(polynav)
-
-
-
-#return outnav
-
-# ============================================================================================================================
-
-
+outnav = em.pts2nav(im,p,c,curr_map,targetitem,nav)
 
 for nitem in outnav:
  
