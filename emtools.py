@@ -409,6 +409,41 @@ def realign_map(item,allitems):
 
 # -------------------------------------
 
+def imcrop(im1,c,sz):
+
+  sz_x = sz[0]
+  sz_y = sz[1]
+  
+ 
+  ximsz = im1.shape[0]
+  yimsz = im1.shape[1]
+
+  xllim = max([0,c[0]-sz_x/2])
+  xulim = min([ximsz,c[0]+sz_x/2])
+
+  x_range = min([c[0]-xllim,xulim-c[0]])
+  xel = range(int(c[0] - x_range), int(c[0] + x_range))
+
+  yllim = max([0,c[1]-sz_y/2])
+  yulim = min([ximsz,c[1]+sz_y/2])
+
+  y_range = min([c[1]-yllim,yulim-c[1]])
+
+  yel = range(int(c[1] - y_range), int(c[1] + y_range))
+  
+
+  
+  im2 = im1[yel,:]
+ 
+  
+  im2 = im2[:,xel]
+  
+  return im2
+
+
+
+# --------------------------------------  
+
 
 
 def cart2pol(c):
