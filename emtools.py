@@ -455,8 +455,28 @@ def img2polygon(img, n_poly, center, radius):
 # --------------------------------------
 
 
-def pts2nav(im,p,c,curr_map,targetitem,nav): 
+def pts2nav(im,pts,cntrs,curr_map,targetitem,nav): 
+
+  #parse input data
   
+  if type(im) <> numpy.ndarray:
+    raise Exception('Wrong input format of image.')
+
+  if type(pts) <>list:
+    if type(pts) == numpy.ndarray: pts = [pts]
+    else: raise Exception('Wrong input format of point coordinates.')
+  else: raise Exception('Wrong input format of point coordinates.')
+  
+  if type(cntrs) <>list:
+    if type(cntrs) == numpy.ndarray: cntrs = [cntrs]
+    else: raise Exception('Wrong input format of center coordinates.')
+  else: 
+    if len(cntrs) == 2:
+      if type(cntrs[0]) == int:  cntrs = [cntrs]
+      elif (type(cntrs[0]) <> numpy.ndarray) and (type(cntrs[0]) <> list):    
+	raise Exception('Wrong input format of center coordinates.')
+  
+
   # generate output
   outnav=list()
   polynav=dict()
@@ -493,150 +513,154 @@ def pts2nav(im,p,c,curr_map,targetitem,nav):
   index = 1 
   mapid = 1001
   
-  px = round(c[0])
-  py = round(c[1])
-
-
-  # extract image (1.42x to enable rotation)
-
-  xel = range(int(px - 1.42 * imsz1[0]/2) , int(px + 1.42 * round(float(imsz1[0])/2)))
-  yel = range(int(py - 1.42 * imsz1[1]/2) , int(py + 1.42 * round(float(imsz1[1])/2)))
-
-  im1=im[yel,:]
-  im1=im1[:,xel]
-
-  # center to origin
-  p1 = p - c
-
-  #c[1] = imsz[1] - c[1]
-
-  # combine rotation matrices
-  rotm1 = rotmat.T * targetrot
-  angle = math.degrees(math.acos(rotm1[0,0]))
-
-  # interpolate image
-  im2 = zoom(im1,1/px_scale)
-
-  p2 = p1/px_scale
-
-  # rotate
-  im3 = rotate(im2,angle)
-  p3 =  p2 * rotm1.T
-
-  t_size = imsz1/px_scale
-  c3 = numpy.array(im3.shape)/2
-
-
-  #crop to desired size
-
-  xel3 = range(int(c3[0] - t_size[0]/2) , int(c3[0] + round(float(t_size[0])/2)))
-  yel3 = range(int(c3[1] - t_size[1]/2) , int(c3[1] + round(float(t_size[1])/2)))
-
-  im4 = im3[yel3,:]
-  im4 = im4[:,xel3]
-
-  p4=p3.copy()
-  p4[:,0] =  t_size[0]/2 - p3[:,0]
-  p4[:,1] =  p3[:,1] + t_size[1]/2    
+  for idx,c in enumerate(cntrs):
       
-  px = numpy.array(numpy.transpose(p4[:,0]))
-  px = numpy.array2string(px,separator=' ')
-  px = px[2:-2]
+    px = round(c[0])
+    py = round(c[1])
 
-  py = numpy.array(numpy.transpose(p4[:,1]))
-  py = numpy.array2string(py,separator=' ')
-  py = py[2:-2]
-    
-    
-  if numpy.shape(p3)[0] == 1:
-    polynav['Type'] = ['0']
-    polynav['Color'] = ['0']
-    polynav['NumPts'] = ['1']
-    
-  else:      
-    polynav['Type'] = ['1']
-    polynav['Color'] = ['1']
-    polynav['NumPts'] = [str(p.shape[0])]
 
-    
-    
-  label = curr_map['# Item'] + '_' + str(index).zfill(4)
+    # extract image (1.42x to enable rotation)
 
-  imfile = 'virt_' + label + '.tif'
-	      
-  tiff.imsave(imfile,im4,compress=6)
+    xel = range(int(px - 1.42 * imsz1[0]/2) , int(px + 1.42 * round(float(imsz1[0])/2)))
+    yel = range(int(py - 1.42 * imsz1[1]/2) , int(py + 1.42 * round(float(imsz1[1])/2)))
+
+    im1=im[yel,:]
+    im1=im1[:,xel]
+    
+    p = pts[idx]
+    
+    # center to origin
+    p1 = p - c
+
+    #c[1] = imsz[1] - c[1]
+
+    # combine rotation matrices
+    rotm1 = rotmat.T * targetrot
+    angle = math.degrees(math.acos(rotm1[0,0]))
+
+    # interpolate image
+    im2 = zoom(im1,1/px_scale)
+
+    p2 = p1/px_scale
+
+    # rotate
+    im3 = rotate(im2,angle)
+    p3 =  p2 * rotm1.T
+
+    t_size = imsz1/px_scale
+    c3 = numpy.array(im3.shape)/2
+
+
+    #crop to desired size
+
+    xel3 = range(int(c3[0] - t_size[0]/2) , int(c3[0] + round(float(t_size[0])/2)))
+    yel3 = range(int(c3[1] - t_size[1]/2) , int(c3[1] + round(float(t_size[1])/2)))
+
+    im4 = im3[yel3,:]
+    im4 = im4[:,xel3]
+
+    p4=p3.copy()
+    p4[:,0] =  t_size[0]/2 - p3[:,0]
+    p4[:,1] =  p3[:,1] + t_size[1]/2    
+	
+    px = numpy.array(numpy.transpose(p4[:,0]))
+    px = numpy.array2string(px,separator=' ')
+    px = px[2:-2]
+
+    py = numpy.array(numpy.transpose(p4[:,1]))
+    py = numpy.array2string(py,separator=' ')
+    py = py[2:-2]
       
-  cx = t_size[1]
-  cy = t_size[0]
-
-  a = [[0,0],[cx,0],[cx,cy],[0,cy],[0,0]]
-  a = numpy.matrix(a) - [cx/2 , cy/2]
-
-  a = a * px_scale
-
-  c_out = c
-  c_out[1] = imsz[0] -c_out[1]
-	  
-  c1 = a + c
-
-  #c1 = a * rotmat1 * targetheader['pixelsize'] + c_stage
       
-  cnx = numpy.array(numpy.transpose(c1[:,0]))
-  cnx = numpy.array2string(cnx,separator=' ')
-  cnx = cnx[2:-2]
+    if numpy.shape(p3)[0] == 1:
+      polynav['Type'] = ['0']
+      polynav['Color'] = ['0']
+      polynav['NumPts'] = ['1']
       
-  cny = numpy.array(numpy.transpose(c1[:,1]))
-  cny = " ".join(map(str,cny))
-  cny = cny[1:-2]
+    else:      
+      polynav['Type'] = ['1']
+      polynav['Color'] = ['1']
+      polynav['NumPts'] = [str(p.shape[0])]
 
-
-  # fill navigator
-
-  # map for realignment
-
-  newnavitem['MapFile'] = [imfile]
-  newnavitem.pop('StageXYZ','')
-  newnavitem.pop('RawStageXY','')
-  if curr_map['MapFramesXY'] == ['0', '0']:
-    newnavitem['CoordsInMap'] = [str(c_out[0]),str(c_out[1]),curr_map['StageXYZ'][2]]
-  else:
-    newnavitem['CoordsInAliMont'] = [str(c_out[0]),str(c_out[1]),curr_map['StageXYZ'][2]]
-
-  newnavitem['PtsX'] = cnx.split()
-  newnavitem['PtsY'] = cny.split()
-  newnavitem['Note'] = newnavitem['MapFile']
-  newnavitem['MapID'] = [str(mapid)]
-  newnavitem['DrawnID'] = curr_map['MapID']
-  newnavitem['Acquire'] = ['0']
-  newnavitem['MapSection'] = ['0']
-  newnavitem.pop('SamePosId','')
-  # newnavitem['MapWidthHeight'] = [str(im2size[0]),str(im2size[1])]
-  newnavitem['ImageType'] = ['2']
-  newnavitem['MapMinMaxScale'] = [str(numpy.min(im4)),str(numpy.max(im4))]
-  newnavitem['NumPts'] = ['5']
-  newnavitem['# Item'] = 'map_' + label    
       
-  curr_map['Acquire'] = ['0']
+      
+    label = curr_map['# Item'] + '_' + str(index).zfill(3)
 
-  # Polygon
+    imfile = 'virt_' + label + '.tif'
+		
+    tiff.imsave(imfile,im4,compress=6)
+	
+    cx = t_size[1]
+    cy = t_size[0]
 
-  polynav['# Item'] = label
-  polynav['Acquire'] = ['1']
-  polynav['Draw'] = ['1']
-  polynav['Regis'] = curr_map['Regis']
-  polynav['DrawnID'] = [str(mapid)]
-  polynav['GroupID'] = ['123456']#curr_map['MapID'
-  polynav['CoordsInMap'] = [str(int(cx/2)) , str(int(cy/2)),curr_map['StageXYZ'][2]]
-  polynav['PtsX'] = px.split()
-  polynav['PtsY'] = py.split()
+    a = [[0,0],[cx,0],[cx,cy],[0,cy],[0,0]]
+    a = numpy.matrix(a) - [cx/2 , cy/2]
+
+    a = a * px_scale
+
+    c_out = c
+    c_out[1] = imsz[0] -c_out[1]
+	    
+    c1 = a + c
+
+    #c1 = a * rotmat1 * targetheader['pixelsize'] + c_stage
+	
+    cnx = numpy.array(numpy.transpose(c1[:,0]))
+    cnx = numpy.array2string(cnx,separator=' ')
+    cnx = cnx[2:-2]
+	
+    cny = numpy.array(numpy.transpose(c1[:,1]))
+    cny = " ".join(map(str,cny))
+    cny = cny[1:-2]
+
+
+    # fill navigator
+
+    # map for realignment
+
+    newnavitem['MapFile'] = [imfile]
+    newnavitem.pop('StageXYZ','')
+    newnavitem.pop('RawStageXY','')
+    if curr_map['MapFramesXY'] == ['0', '0']:
+      newnavitem['CoordsInMap'] = [str(c_out[0]),str(c_out[1]),curr_map['StageXYZ'][2]]
+    else:
+      newnavitem['CoordsInAliMont'] = [str(c_out[0]),str(c_out[1]),curr_map['StageXYZ'][2]]
+
+    newnavitem['PtsX'] = cnx.split()
+    newnavitem['PtsY'] = cny.split()
+    newnavitem['Note'] = newnavitem['MapFile']
+    newnavitem['MapID'] = [str(mapid)]
+    newnavitem['DrawnID'] = curr_map['MapID']
+    newnavitem['Acquire'] = ['0']
+    newnavitem['MapSection'] = ['0']
+    newnavitem.pop('SamePosId','')
+    # newnavitem['MapWidthHeight'] = [str(im2size[0]),str(im2size[1])]
+    newnavitem['ImageType'] = ['2']
+    newnavitem['MapMinMaxScale'] = [str(numpy.min(im4)),str(numpy.max(im4))]
+    newnavitem['NumPts'] = ['5']
+    newnavitem['# Item'] = 'm_' + label    
+	
+    curr_map['Acquire'] = ['0']
+
+    # Polygon
+
+    polynav['# Item'] = label
+    polynav['Acquire'] = ['1']
+    polynav['Draw'] = ['1']
+    polynav['Regis'] = curr_map['Regis']
+    polynav['DrawnID'] = [str(mapid)]
+    polynav['GroupID'] = ['123456']#curr_map['MapID'
+    polynav['CoordsInMap'] = [str(int(cx/2)) , str(int(cy/2)),curr_map['StageXYZ'][2]]
+    polynav['PtsX'] = px.split()
+    polynav['PtsY'] = py.split()
 
 
 
-  outnav.append(curr_map)
+    outnav.append(curr_map)
 
-  outnav.append(newnavitem)
+    outnav.append(newnavitem)
 
-  outnav.append(polynav)
+    outnav.append(polynav)
 
 
   return outnav
