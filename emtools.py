@@ -177,6 +177,22 @@ def itemtonav(item,name):
     
 # -------------------------------
 
+def newmapID(allitems,mapid):
+    # checks if provided item ID already exists in a navigator and gives the next unique ID
+    # ID needs to be integer
+    
+    newid = mapid
+    
+    for item in allitems:
+      if 'MapID' in item:
+	if str(mapid) == item['MapID'][0]:
+	  newid = newmapID(mapid+1)
+	
+    return newid
+    
+    
+    
+# -------------------------------
 def fullnav(navlines):
 # parses a full nav file and returns a list of dictionaries
   c=[]
@@ -462,10 +478,9 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav):
   if type(im) <> numpy.ndarray:
     raise Exception('Wrong input format of image.')
 
-  if type(pts) <>list:
+  if type(pts) <> list:
     if type(pts) == numpy.ndarray: pts = [pts]
     else: raise Exception('Wrong input format of point coordinates.')
-  else: raise Exception('Wrong input format of point coordinates.')
   
   if type(cntrs) <>list:
     if type(cntrs) == numpy.ndarray: cntrs = [cntrs]
@@ -479,10 +494,12 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav):
 
   # generate output
   outnav=list()
-  polynav=dict()
-  newnavitem = dict(targetitem)
+  nav_pol=list()
+  nav_maps=list()
+
 
   # read information from maps
+    
   mapfile = map_file(curr_map)
   mapheader = map_header(mapfile)
 
@@ -504,17 +521,37 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav):
   ty = map(float,targetitem['PtsY'])
     
   targetrot = map_rotation(tx,ty)
-
+  
+  # combine rotation matrices
+  rotm1 = rotmat.T * targetrot
+  angle = math.degrees(math.acos(rotm1[0,0]))
 
   px_scale = targetheader['pixelsize'] /pixelsize  
 
   imsz1 = numpy.array([targetheader['xsize'],targetheader['ysize']]) * px_scale
   
-  index = 1 
-  mapid = 1001
+  ntotal = len(cntrs)
+  
+  outnav.append(curr_map)
+  
+  curr_id = int(curr_map['MapID'][0])
+  
+  delim = 100000
+    
+  startid = newmapID(nav,divmod(curr_id,delim)[0]*delim)
+   
+  
+  mapid = startid + 1
   
   for idx,c in enumerate(cntrs):
-      
+    
+    polynav=dict()
+    newnavitem = dict(targetitem)
+    mapid = newmapID(nav,mapid+1)
+  
+    
+    print('Processing object '+ str(idx+1) + '/' + str(ntotal) + ' (%2.0f%%)' %(idx*100/ntotal) + ' at position %5u , %5u' %(c[0],c[1]))
+    
     px = round(c[0])
     py = round(c[1])
 
@@ -532,12 +569,6 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav):
     # center to origin
     p1 = p - c
 
-    #c[1] = imsz[1] - c[1]
-
-    # combine rotation matrices
-    rotm1 = rotmat.T * targetrot
-    angle = math.degrees(math.acos(rotm1[0,0]))
-
     # interpolate image
     im2 = zoom(im1,1/px_scale)
 
@@ -550,7 +581,6 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav):
     t_size = imsz1/px_scale
     c3 = numpy.array(im3.shape)/2
 
-
     #crop to desired size
 
     xel3 = range(int(c3[0] - t_size[0]/2) , int(c3[0] + round(float(t_size[0])/2)))
@@ -560,6 +590,7 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav):
     im4 = im4[:,xel3]
 
     p4=p3.copy()
+    
     p4[:,0] =  t_size[0]/2 - p3[:,0]
     p4[:,1] =  p3[:,1] + t_size[1]/2    
 	
@@ -584,11 +615,11 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav):
 
       
       
-    label = curr_map['# Item'] + '_' + str(index).zfill(3)
-
+    label = curr_map['# Item'] + '_' + str(idx+1).zfill(3)
+    
     imfile = 'virt_' + label + '.tif'
 		
-    tiff.imsave(imfile,im4,compress=6)
+    if not os.path.exists(imfile):tiff.imsave(imfile,im4,compress=6)
 	
     cx = t_size[1]
     cy = t_size[0]
@@ -599,6 +630,7 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav):
     a = a * px_scale
 
     c_out = c
+
     c_out[1] = imsz[0] -c_out[1]
 	    
     c1 = a + c
@@ -612,7 +644,10 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav):
     cny = numpy.array(numpy.transpose(c1[:,1]))
     cny = " ".join(map(str,cny))
     cny = cny[1:-2]
-
+    
+    
+    
+    
 
     # fill navigator
 
@@ -639,7 +674,7 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav):
     newnavitem['MapMinMaxScale'] = [str(numpy.min(im4)),str(numpy.max(im4))]
     newnavitem['NumPts'] = ['5']
     newnavitem['# Item'] = 'm_' + label    
-	
+    newnavitem['GroupID'] = [str(newmapID(nav,startid+50000))]
     curr_map['Acquire'] = ['0']
 
     # Polygon
@@ -649,18 +684,20 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav):
     polynav['Draw'] = ['1']
     polynav['Regis'] = curr_map['Regis']
     polynav['DrawnID'] = [str(mapid)]
-    polynav['GroupID'] = ['123456']#curr_map['MapID'
     polynav['CoordsInMap'] = [str(int(cx/2)) , str(int(cy/2)),curr_map['StageXYZ'][2]]
     polynav['PtsX'] = px.split()
     polynav['PtsY'] = py.split()
+    polynav['GroupID'] = [str(newmapID(nav,startid+70000))]
 
+    nav_maps.append(newnavitem)
 
+    nav_pol.append(polynav)
+    
+    
+    
+  outnav.extend(nav_maps)
+  outnav.extend(nav_pol)
 
-    outnav.append(curr_map)
-
-    outnav.append(newnavitem)
-
-    outnav.append(polynav)
 
 
   return outnav
