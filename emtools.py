@@ -413,35 +413,29 @@ def imcrop(im1,c,sz):
 
   sz_x = sz[0]
   sz_y = sz[1]
-  
- 
+   
   ximsz = im1.shape[0]
   yimsz = im1.shape[1]
 
-  xllim = max([0,c[0]-sz_x/2])
-  xulim = min([ximsz,c[0]+sz_x/2])
+  xllim = max([0,c[1]-sz_x/2])
+  xulim = min([ximsz,c[1]+sz_x/2])
 
-  x_range = min([c[0]-xllim,xulim-c[0]])
-  xel = range(int(c[0] - x_range), int(c[0] + x_range))
+  x_range = min([c[1]-xllim,xulim-c[1]])
+  xel = range(int(c[1] - x_range), int(c[1] + x_range))
 
-  yllim = max([0,c[1]-sz_y/2])
-  yulim = min([ximsz,c[1]+sz_y/2])
+  yllim = max([0,c[0]-sz_y/2])
+  yulim = min([yimsz,c[0]+sz_y/2])
 
-  y_range = min([c[1]-yllim,yulim-c[1]])
+  y_range = min([c[0]-yllim,yulim-c[0]])
 
-  yel = range(int(c[1] - y_range), int(c[1] + y_range))
+  yel = range(int(c[0] - y_range), int(c[0] + y_range))
   
-
-  
-  im2 = im1[yel,:]
- 
-  
-  im2 = im2[:,xel]
+  im2 = im1[xel,:]  
+  im2 = im2[:,yel]
   
   return im2
-
-
-
+  
+  
 # --------------------------------------  
 
 
@@ -592,12 +586,14 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav):
 
 
     # extract image (1.42x to enable rotation)
+    cropsize = imsz1 * 1.42
+    
 
-    xel = range(int(px - 1.42 * imsz1[0]/2) , int(px + 1.42 * round(float(imsz1[0])/2)))
-    yel = range(int(py - 1.42 * imsz1[1]/2) , int(py + 1.42 * round(float(imsz1[1])/2)))
+    im1 = imcrop(im,c,cropsize)
 
-    im1=im[yel,:]
-    im1=im1[:,xel]
+    if min(im1.shape) < 400:    
+      print('Item is too close to border of map, skipping it.')
+      continue
     
     p = pts[idx]
     
@@ -610,7 +606,7 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav):
     p2 = p1/px_scale
 
     # rotate
-    im3 = rotate(im2,angle)
+    im3 = rotate(im2,angle,cval=numpy.mean(im1))
     p3 =  p2 * rotm1.T
 
     t_size = imsz1/px_scale
@@ -618,12 +614,8 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav):
 
     #crop to desired size
 
-    xel3 = range(int(c3[0] - t_size[0]/2) , int(c3[0] + round(float(t_size[0])/2)))
-    yel3 = range(int(c3[1] - t_size[1]/2) , int(c3[1] + round(float(t_size[1])/2)))
-
-    im4 = im3[yel3,:]
-    im4 = im4[:,xel3]
-
+    im4 = imcrop(im3,[c3[1],c3[0]],t_size)
+      
     p4=p3.copy()
     
     p4[:,0] =  t_size[0]/2 - p3[:,0]
