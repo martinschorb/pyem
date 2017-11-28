@@ -17,7 +17,7 @@
 # PARAMETERS
 
 
-navname = 'test1.nav'
+navname = 'test2.nav'
 # file name navigator
 
 
@@ -39,7 +39,7 @@ import time
 import numpy
 import scipy
 import math
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import re
 from scipy.ndimage.interpolation import zoom
 import tifffile as tiff
@@ -132,7 +132,7 @@ for acq_item in acq:
   py = round(pt_px1[1])
   
   if px < 0 or py < 0:
-    print 'Warning! Item ' + acq_item['# Item'] + ' is not within the map frame. Ignoring it'
+    print('Warning! Item ' + acq_item['# Item'] + ' is not within the map frame. Ignoring it')
   else:
 
     xel = range(int(px - imsz1[0]/2) , int(px + round(float(imsz1[0])/2)))
