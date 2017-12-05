@@ -166,7 +166,7 @@ def itemtonav(item,name):
     dlist = list()
     dlist.append('[Item = ' + name + ']')
     for key, value in item.iteritems():
-      if not key == '# Item':	
+      if not key == '# Item':    
         dlist.append(key + ' = ' + " ".join(value))
     
     dlist.append('')
@@ -187,7 +187,7 @@ def newmapID(allitems,mapid):
         if 'MapID' in item:
             if str(mapid) == item['MapID'][0]:
                 newid = newmapID(mapid+1)
-	
+    
     return newid
     
     
@@ -239,7 +239,7 @@ def mergemap(mapitem):
   # extract map properties
  
     # grab coordinates of map corner points        
-	  
+      
   mapx = map(float,mapitem['PtsX'])
   mapy = map(float,mapitem['PtsY'])
     
@@ -277,11 +277,57 @@ def mergemap(mapitem):
     
   else:  
    
-    
+    mapsection = map(int,mapitem['MapSection'])[0]
     mapheader = map_header(mapfile)
-
+    pixelsize = mapheader['pixelsize']
+        
+      # multiple montages stored in one MRC stack
+      
+      
     mappxcenter = [mapheader['xsize']/2, mapheader['ysize']/2]
 
+    mdocname = mapfile + '.mdoc'
+    
+        
+
+    # extract center positions of individual map tiles
+    if mapheader['stacksize'] > 1:
+        m['frames'] = map(int,mapitem['MapFramesXY'])
+        montage_tiles = numpy.prod(m['frames'])
+        if os.path.exists(mdocname):
+            mdoclines = loadtext(mdocname)
+            if mapheader['stacksize'] > montage_tiles:
+                tileidx_offset = mapsection * montage_tiles
+                
+                
+            
+            tilepos=list()
+            for i in range(0,montage_tiles-1):
+                tile = mdoc_item(mdoclines,'ZValue = ' + str(tileidx_offset+i))
+                tilepos.append(tile['StagePosition'])
+                if 'AlignedPieceCoordsVS' in tile: m['Sloppy'] = True
+
+            tilepos = numpy.array(tilepos,float)
+            pixelsize = float(mdoc_item(mdoclines,'MontSection = '+str(mapsection))['PixelSpacing'][0])/ 10000 # in um
+            
+        
+        else:
+            if mapheader['stacksize'] > montage_tiles:
+                    raise Exception('Multiple maps stored in an MRC stack without mdoc file for metadata. I cannot reliably determine the pixel size.')
+                
+                
+            callcmd = 'extracttilts ' + mapfile + ' -stage -all > syscall.tmp'
+            os.system(callcmd)
+            tilepos1 = loadtext('syscall.tmp')[21:-1]
+            tilepos = numpy.array([float(mapitem['PtsX'][0]),  float(mapitem['PtsY'][0])])
+            
+            
+                
+
+    
+    else:
+        tilepos1 = map(float,mapitem['StageXYZ'][0:2])
+        tilepos = numpy.array([tilepos1,tilepos1])
 
 
     # check if map is a montage or not
@@ -289,6 +335,8 @@ def mergemap(mapitem):
     if mergefile == []: mergefile = mapfile
     
     mergefile = mergefile + '_merged'
+      
+    mergefiletif = mergefile  + '_s' + str(mapsection) + '.tif'
     mergeheader = mapheader
     
     if mapheader['stacksize'] < 2:
@@ -298,9 +346,10 @@ def mergemap(mapitem):
         tilepx=numpy.array([tilepx,tilepx])
         os.system(callcmd)
         mergeheader = mapheader
-	
+        
+    
     else:
-        if not os.path.exists(mergefile + '.mrc'):
+        if not os.path.exists(mergefiletif):
             
             # merge the montage to a single file
             callcmd = 'extractpieces ' +  mapfile + ' ' + mapfile + '.pcs'
@@ -310,55 +359,59 @@ def mergemap(mapitem):
             print('Merging the map montage into a single image....' + '\n')
             print('----------------------------------------------------\n')
 
-            callcmd = 'blendmont -imi ' +  mapfile + ' -imo ' + mergefile + '.mrc -pli ' + mapfile + '.pcs -roo ' + mergefile  + '.mrc -al '+ mergefile + '.al -sloppy'    #os.system(callcmd)
+            callcmd = 'blendmont -imi ' +  mapfile + ' -imo ' + mergefile + '.mrc -pli ' + mapfile + '.pcs -roo ' + mergefile  + '.mrc -se ' + str(mapsection) + ' -al '+ mergefile + '.al -sloppy'    #os.system(callcmd)
             os.system(callcmd)
-            callcmd = 'mrc2tif ' +  mergefile + '.mrc ' + mergefile +'.tif'
+            callcmd = 'mrc2tif ' +  mergefile + '.mrc ' + mergefiletif
             os.system(callcmd)
             mergeheader = map_header(mergefile + '.mrc')
-	  
+      
             # extract pixel coordinate of each tile
         tilepx = loadtext(mergefile + '.al')
+        
         tilepx = tilepx[:-1]
-
         for j, item in enumerate(tilepx): tilepx[j] = map(float,re.split(' +',tilepx[j]))
-
-        tilepx = scipy.delete(tilepx,2,1)
-      
-
-
-    mdocname = mapfile + '.mdoc'
-
-
-    # extract center positions of individual map tiles
-    if mapheader['stacksize'] > 1:
-        if os.path.exists(mdocname):
-            mdoclines = loadtext(mdocname)
-            tilepos=list()
-            for i in range(0,mapheader['stacksize']):
-                tile = mdoc_item(mdoclines,'ZValue = ' + str(i))
-                tilepos.append(tile['StagePosition'])
-                if 'AlignedPieceCoordsVS' in tile: m['Sloppy'] = True
-
-            tilepos = numpy.array(tilepos,float)
-	    
-        else:
-            callcmd = 'extracttilts ' + mapfile + ' -stage -all > syscall.tmp'
-            os.system(callcmd)
-            tilepos1 = loadtext('syscall.tmp')[21:-1]
-            tilepos = numpy.array([float(mapitem['PtsX'][0]),  float(mapitem['PtsY'][0])])    
-	
-    else:
-        tilepos1 = map(float,mapitem['StageXYZ'][0:2])
-        tilepos = numpy.array([tilepos1,tilepos1])
-
-    mergefiletif = mergefile + '.tif'
-      # load merged map for cropping
-
-    im = tiff.imread(mergefiletif)
     
+    tilepx = numpy.array(tilepx)
+    tilepx = tilepx[tilepx[:,2] == mapsection,0:2]
+    
+    
+    # use original tile coordinates(pixels) from SerialEM to determine tile position in montage
+    
+    tilepx1 = loadtext(mapfile + '.pcs')
+    tilepx1 = tilepx1[:-1]
+    for j, item in enumerate(tilepx1): tilepx1[j] = map(float,re.split(' +',tilepx1[j]))
+    
+    tilepx1 = numpy.array(tilepx1)
+    tilepx1 = tilepx1[tilepx1[:,2] == mapsection,0:2]
+
+    
+    
+    tpx = tilepx1[:,0]
+    tpy = tilepx1[:,1]
+        
+    if numpy.abs(tpx).max()>0: xstep = tpx[tpx>0].min()
+    else: xstep = 1
+    if numpy.abs(tpy).max()>0: ystep = tpy[tpy>0].min()
+    else: ystep = 1
+
+    tileloc = numpy.array([tpx / xstep,tpy/ystep]).T
+    
+    m['sections'] = tileloc[:,0]*m['frames'][1]+tileloc[:,1]
+
+    overlapx = mapheader['xsize'] - xstep
+    overlapy = mapheader['ysize'] - ystep
+
+
+
+      # load merged map for cropping
+    
+    im = tiff.imread(mergefiletif)
+
     
   # end MRC section
   
+  mergeheader['pixelsize'] = pixelsize
+  mapheader['pixelsize'] = pixelsize
 
 
   # generate output
@@ -372,6 +425,8 @@ def mergemap(mapitem):
   m['mapheader'] = mapheader
   m['mergeheader'] = mergeheader
   m['tilepx'] = tilepx
+  m['overlap'] = [overlapx,overlapy]
+  m['tileloc'] = tileloc
   
   return m
 
@@ -493,6 +548,43 @@ def img2polygon(img, n_poly, center, radius):
     
   return polypt
 
+# --------------------------------------
+
+def map_extract(im,c,p,px_scale,imsz1,rotm1):
+  
+  # extract image (1.42x to enable rotation)
+  cropsize = imsz1 * 1.42
+  
+  angle = math.degrees(math.acos(rotm1[0,0]))
+
+  im1 = imcrop(im,c,cropsize)
+
+  # center to origin
+  p1 = p - c
+
+  # interpolate image
+  im2 = zoom(im1,1/px_scale)
+
+  p2 = p1/px_scale
+
+  # rotate
+  im3 = rotate(im2,angle,cval=numpy.mean(im1))
+  p3 =  p2 * rotm1.T
+
+  t_size = imsz1/px_scale
+  c3 = numpy.array(im3.shape)/2
+
+  #crop to desired size
+
+  im4 = imcrop(im3,[c3[1],c3[0]],t_size)
+    
+  p4=p3.copy()
+
+  p4[:,0] =  t_size[0]/2 - p3[:,0]
+  p4[:,1] =  p3[:,1] + t_size[1]/2
+  
+  return im4, p4
+
 
 
 
@@ -503,231 +595,201 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav):
 
   #parse input data
   
-    if type(im) != numpy.ndarray:
-        raise Exception('Wrong input format of image.')
+  if type(im) != numpy.ndarray:
+      raise Exception('Wrong input format of image.')
 
-    if type(pts) != list:
-        if type(pts) == numpy.ndarray: pts = [pts]
-        else: raise Exception('Wrong input format of point coordinates.')
+  if type(pts) != list:
+      if type(pts) == numpy.ndarray: pts = [pts]
+      else: raise Exception('Wrong input format of point coordinates.')
+
+  if type(cntrs) != list:
+      if type(cntrs) == numpy.ndarray: cntrs = [cntrs]
+      else: raise Exception('Wrong input format of center coordinates.')
+  else: 
+      if len(cntrs) == 2: 
+          if type(cntrs[0]) == int:  cntrs = [cntrs]
+          elif (type(cntrs[0]) != numpy.ndarray) and (type(cntrs[0]) != list):    
+              raise Exception('Wrong input format of center coordinates.')
+
+# generate output
+  outnav=list()
+  nav_pol=list()
+  nav_maps=list()
+
+
+  # read information from maps
+
+  mapfile = map_file(curr_map)
+  mapheader = map_header(mapfile)
+
+  pixelsize = mapheader['pixelsize']
+
+  mx = map(float,curr_map['PtsX'])
+  my = map(float,curr_map['PtsY'])
+
+  rotmat = map_rotation(mx,my)
+  imsz = numpy.array(im.shape)
+
+
+  # target reference
+
+  targetfile = map_file(targetitem)
+  targetheader = map_header(targetfile)
+
+  tx = map(float,targetitem['PtsX'])
+  ty = map(float,targetitem['PtsY'])
+
+  targetrot = map_rotation(tx,ty)
+
+  # combine rotation matrices
+  rotm1 = rotmat.T * targetrot  
+
+  px_scale = targetheader['pixelsize'] /pixelsize  
+
+  imsz1 = numpy.array([targetheader['xsize'],targetheader['ysize']]) * px_scale
+
+  ntotal = len(cntrs)
+
+  outnav.append(curr_map)
+
+  curr_id = int(curr_map['MapID'][0])
+
+  delim = 100000
+
+  startid = newmapID(nav,divmod(curr_id,delim)[0]*delim)
   
-    if type(cntrs) != list:
-        if type(cntrs) == numpy.ndarray: cntrs = [cntrs]
-        else: raise Exception('Wrong input format of center coordinates.')
-    else: 
-        if len(cntrs) == 2:
-            if type(cntrs[0]) == int:  cntrs = [cntrs]
-            elif (type(cntrs[0]) != numpy.ndarray) and (type(cntrs[0]) != list):    
-                raise Exception('Wrong input format of center coordinates.')
   
 
-  # generate output
-    outnav=list()
-    nav_pol=list()
-    nav_maps=list()
+  mapid = startid + 1
+
+  for idx,c in enumerate(cntrs):
+
+    polynav=dict()
+    newnavitem = dict(targetitem)
+    mapid = newmapID(nav,mapid+1)
+    
+    print('Processing object '+ str(idx+1) + '/' + str(ntotal) + ' (%2.0f%%)' %(idx*100/ntotal) + ' at position %5u , %5u' %(c[0],c[1]))
+    
+    p = pts[idx]
+    
+    im4, p4 = map_extract(im,c,p,px_scale,imsz1,rotm1)
+    
+    
+    if min(im4.shape) < 400:    
+      print('Item is too close to border of map, skipping it.')
+      continue
+    
+    px = numpy.array(numpy.transpose(p4[:,0]))
+    px = numpy.array2string(px,separator=' ')
+    px = px[2:-2]
+
+    py = numpy.array(numpy.transpose(p4[:,1]))
+    py = numpy.array2string(py,separator=' ')
+    py = py[2:-2]
+      
+      
+    if numpy.shape(p4)[0] == 1:
+        polynav['Type'] = ['0']
+        polynav['Color'] = ['0']
+        polynav['NumPts'] = ['1']
+
+    else:      
+        polynav['Type'] = ['1']
+        polynav['Color'] = ['1']
+        polynav['NumPts'] = [str(p.shape[0])]
+
+      
+      
+    label = curr_map['# Item'] + '_' + str(idx+1).zfill(3)
+
+    imfile = 'virt_' + label + '.tif'
+    
+    if os.path.exists(imfile): os.system('rm -f ' + imfile)
+    tiff.imsave(imfile,im4,compress=6)
+    
+    t_size = imsz1/px_scale
+    
+    cx = t_size[1]
+    cy = t_size[0]
+
+    a = [[0,0],[cx,0],[cx,cy],[0,cy],[0,0]]
+    a = numpy.matrix(a) - [cx/2 , cy/2]
+
+    a = a * px_scale
+
+    c_out = c
+
+    c_out[1] = imsz[0] -c_out[1]
+        
+    c1 = a + c
+
+    #c1 = a * rotmat1 * targetheader['pixelsize'] + c_stage
+    
+    cnx = numpy.array(numpy.transpose(c1[:,0]))
+    cnx = numpy.array2string(cnx,separator=' ')
+    cnx = cnx[2:-2]
+    
+    cny = numpy.array(numpy.transpose(c1[:,1]))
+    cny = " ".join(map(str,cny))
+    cny = cny[1:-2]
+
+
+
+
+
+    # fill navigator
+
+    # map for realignment
+
+    newnavitem['MapFile'] = [imfile]
+    newnavitem.pop('StageXYZ','')
+    newnavitem.pop('RawStageXY','')
+    if curr_map['MapFramesXY'] == ['0', '0']:
+        newnavitem['CoordsInMap'] = [str(c_out[0]),str(c_out[1]),curr_map['StageXYZ'][2]]
+    elif mapheader['Sloppy']:
+        newnavitem['CoordsInAliMontVS'] = [str(c_out[0]),str(c_out[1]),curr_map['StageXYZ'][2]]
+    else:
+        newnavitem['CoordsInAliMont'] = [str(c_out[0]),str(c_out[1]),curr_map['StageXYZ'][2]]
+      
+    newnavitem['PtsX'] = cnx.split()
+    newnavitem['PtsY'] = cny.split()
+    newnavitem['Note'] = newnavitem['MapFile']
+    newnavitem['MapID'] = [str(mapid)]
+    newnavitem['DrawnID'] = curr_map['MapID']
+    newnavitem['Acquire'] = ['0']
+    newnavitem['MapSection'] = ['0']
+    newnavitem.pop('SamePosId','')
+    # newnavitem['MapWidthHeight'] = [str(im2size[0]),str(im2size[1])]
+    newnavitem['ImageType'] = ['2']
+    newnavitem['MapMinMaxScale'] = [str(numpy.min(im4)),str(numpy.max(im4))]
+    newnavitem['NumPts'] = ['5']
+    newnavitem['# Item'] = 'm_' + label    
+    newnavitem['GroupID'] = [str(newmapID(nav,startid+50000))]
+    curr_map['Acquire'] = ['0']
 
+    # Polygon
 
-    # read information from maps
+    polynav['# Item'] = label
+    polynav['Acquire'] = ['1']
+    polynav['Draw'] = ['1']
+    polynav['Regis'] = curr_map['Regis']
+    polynav['DrawnID'] = [str(mapid)]
+    polynav['CoordsInMap'] = [str(int(cx/2)) , str(int(cy/2)),curr_map['StageXYZ'][2]]
+    polynav['PtsX'] = px.split()
+    polynav['PtsY'] = py.split()
+    polynav['GroupID'] = [str(newmapID(nav,startid+70000))]
 
-    mapfile = map_file(curr_map)
-    mapheader = map_header(mapfile)
+    nav_maps.append(newnavitem)
 
-    pixelsize = mapheader['pixelsize']
+    nav_pol.append(polynav)
 
-    mx = map(float,curr_map['PtsX'])
-    my = map(float,curr_map['PtsY'])
 
-    rotmat = map_rotation(mx,my)
-    imsz = numpy.array(im.shape)
-  
 
-    # target reference
+  outnav.extend(nav_maps)
+  outnav.extend(nav_pol)
 
-    targetfile = map_file(targetitem)
-    targetheader = map_header(targetfile)
 
-    tx = map(float,targetitem['PtsX'])
-    ty = map(float,targetitem['PtsY'])
 
-    targetrot = map_rotation(tx,ty)
-
-    # combine rotation matrices
-    rotm1 = rotmat.T * targetrot
-    angle = math.degrees(math.acos(rotm1[0,0]))
-
-    px_scale = targetheader['pixelsize'] /pixelsize  
-
-    imsz1 = numpy.array([targetheader['xsize'],targetheader['ysize']]) * px_scale
-
-    ntotal = len(cntrs)
-
-    outnav.append(curr_map)
-
-    curr_id = int(curr_map['MapID'][0])
-
-    delim = 100000
-
-    startid = newmapID(nav,divmod(curr_id,delim)[0]*delim)
-
-
-    mapid = startid + 1
-
-    for idx,c in enumerate(cntrs):
-
-        polynav=dict()
-        newnavitem = dict(targetitem)
-        mapid = newmapID(nav,mapid+1)
-
-
-        print('Processing object '+ str(idx+1) + '/' + str(ntotal) + ' (%2.0f%%)' %(idx*100/ntotal) + ' at position %5u , %5u' %(c[0],c[1]))
-
-        px = round(c[0])
-        py = round(c[1])
-
-
-        # extract image (1.42x to enable rotation)
-        cropsize = imsz1 * 1.42
-
-
-        im1 = imcrop(im,c,cropsize)
-
-        if min(im1.shape) < 400:    
-            print('Item is too close to border of map, skipping it.')
-            continue
-
-        p = pts[idx]
-
-        # center to origin
-        p1 = p - c
-
-        # interpolate image
-        im2 = zoom(im1,1/px_scale)
-
-        p2 = p1/px_scale
-
-        # rotate
-        im3 = rotate(im2,angle,cval=numpy.mean(im1))
-        p3 =  p2 * rotm1.T
-
-        t_size = imsz1/px_scale
-        c3 = numpy.array(im3.shape)/2
-
-        #crop to desired size
-
-        im4 = imcrop(im3,[c3[1],c3[0]],t_size)
-          
-        p4=p3.copy()
-
-        p4[:,0] =  t_size[0]/2 - p3[:,0]
-        p4[:,1] =  p3[:,1] + t_size[1]/2    
-            
-        px = numpy.array(numpy.transpose(p4[:,0]))
-        px = numpy.array2string(px,separator=' ')
-        px = px[2:-2]
-
-        py = numpy.array(numpy.transpose(p4[:,1]))
-        py = numpy.array2string(py,separator=' ')
-        py = py[2:-2]
-          
-          
-        if numpy.shape(p3)[0] == 1:
-            polynav['Type'] = ['0']
-            polynav['Color'] = ['0']
-            polynav['NumPts'] = ['1']
-
-        else:      
-            polynav['Type'] = ['1']
-            polynav['Color'] = ['1']
-            polynav['NumPts'] = [str(p.shape[0])]
-
-          
-          
-        label = curr_map['# Item'] + '_' + str(idx+1).zfill(3)
-
-        imfile = 'virt_' + label + '.tif'
-                    
-        if not os.path.exists(imfile):tiff.imsave(imfile,im4,compress=6)
-            
-        cx = t_size[1]
-        cy = t_size[0]
-
-        a = [[0,0],[cx,0],[cx,cy],[0,cy],[0,0]]
-        a = numpy.matrix(a) - [cx/2 , cy/2]
-
-        a = a * px_scale
-
-        c_out = c
-
-        c_out[1] = imsz[0] -c_out[1]
-                
-        c1 = a + c
-
-        #c1 = a * rotmat1 * targetheader['pixelsize'] + c_stage
-            
-        cnx = numpy.array(numpy.transpose(c1[:,0]))
-        cnx = numpy.array2string(cnx,separator=' ')
-        cnx = cnx[2:-2]
-            
-        cny = numpy.array(numpy.transpose(c1[:,1]))
-        cny = " ".join(map(str,cny))
-        cny = cny[1:-2]
-
-
-
-
-
-        # fill navigator
-
-        # map for realignment
-
-        newnavitem['MapFile'] = [imfile]
-        newnavitem.pop('StageXYZ','')
-        newnavitem.pop('RawStageXY','')
-        if curr_map['MapFramesXY'] == ['0', '0']:
-            newnavitem['CoordsInMap'] = [str(c_out[0]),str(c_out[1]),curr_map['StageXYZ'][2]]
-        elif mapheader['Sloppy']:
-            newnavitem['CoordsInAliMontVS'] = [str(c_out[0]),str(c_out[1]),curr_map['StageXYZ'][2]]
-        else:
-            newnavitem['CoordsInAliMont'] = [str(c_out[0]),str(c_out[1]),curr_map['StageXYZ'][2]]
-          
-        newnavitem['PtsX'] = cnx.split()
-        newnavitem['PtsY'] = cny.split()
-        newnavitem['Note'] = newnavitem['MapFile']
-        newnavitem['MapID'] = [str(mapid)]
-        newnavitem['DrawnID'] = curr_map['MapID']
-        newnavitem['Acquire'] = ['0']
-        newnavitem['MapSection'] = ['0']
-        newnavitem.pop('SamePosId','')
-        # newnavitem['MapWidthHeight'] = [str(im2size[0]),str(im2size[1])]
-        newnavitem['ImageType'] = ['2']
-        newnavitem['MapMinMaxScale'] = [str(numpy.min(im4)),str(numpy.max(im4))]
-        newnavitem['NumPts'] = ['5']
-        newnavitem['# Item'] = 'm_' + label    
-        newnavitem['GroupID'] = [str(newmapID(nav,startid+50000))]
-        curr_map['Acquire'] = ['0']
-
-        # Polygon
-
-        polynav['# Item'] = label
-        polynav['Acquire'] = ['1']
-        polynav['Draw'] = ['1']
-        polynav['Regis'] = curr_map['Regis']
-        polynav['DrawnID'] = [str(mapid)]
-        polynav['CoordsInMap'] = [str(int(cx/2)) , str(int(cy/2)),curr_map['StageXYZ'][2]]
-        polynav['PtsX'] = px.split()
-        polynav['PtsY'] = py.split()
-        polynav['GroupID'] = [str(newmapID(nav,startid+70000))]
-
-        nav_maps.append(newnavitem)
-
-        nav_pol.append(polynav)
-
-
-
-    outnav.extend(nav_maps)
-    outnav.extend(nav_pol)
-
-
-
-    return outnav
+  return outnav
 
 

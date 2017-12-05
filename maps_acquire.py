@@ -17,7 +17,7 @@
 # PARAMETERS
 
 
-navname = 'test2.nav'
+navname = 'test1.nav'
 # file name navigator
 
 
@@ -46,7 +46,7 @@ import tifffile as tiff
 
 import emtools as em
 
-
+reload(em)
 
 
 # start script
@@ -58,6 +58,10 @@ targetitem = em.nav_item(navlines,target_map)
 targetfile = em.map_file(targetitem)
 targetheader = em.map_header(targetfile)
 
+tx = map(float,targetitem['PtsX'])
+ty = map(float,targetitem['PtsY'])
+
+targetrot = em.map_rotation(tx,ty)
 
 newnav = navname[:-4] + '_automaps.nav'
 nnf = open(newnav,'w')
@@ -85,110 +89,141 @@ maps = {}
 newmapid = 1000
 
 outnav=list()
+ntotal = len(acq)
 
-for acq_item in acq:
-  newmapid = newmapid + 1
+for idx,acq_item in enumerate(acq):
+  print('Processing navitem '+ str(idx+1) + '/' + str(ntotal) + ' (%2.0f%% done)' %(idx*100/ntotal))
+
+  newmapid = em.newmapID(allitems,newmapid + 1)
   mapitem = em.realign_map(acq_item,allitems)
   
   itemid = mapitem['# Item']
-  
+    
   if not itemid in maps.keys():
     maps[itemid] = em.mergemap(mapitem)
+    
+    
+  mx = map(float,mapitem['PtsX'])
+  my = map(float,mapitem['PtsY'])
 
-  ptitem = acq_item
-      
-  xval = (float(ptitem['PtsX'][0]))
-  yval = (float(ptitem['PtsY'][0]))
+  rotmat = em.map_rotation(mx,my)
+  # combine rotation matrices
+  rotm1 = rotmat.T * targetrot  
+  xval = (float(acq_item['PtsX'][0]))
+  yval = (float(acq_item['PtsY'][0]))
   
   pt = numpy.array([xval,yval])
-
-  tilepos = maps[itemid]['tilepos']
   
-  if len(tilepos.shape)<2:
-    tileid = 0
-  else:
-    tiledist = numpy.sum((tilepos-pt)**2,axis=1)
-    tileid = numpy.argmin(tiledist)
-  
-  
-  # normalize coordinates
-  
-  ptn = numpy.matrix(pt - tilepos[tileid])
-
   # calculate the pixel coordinates
+  im = maps[itemid]['im'] 
   
-  pt_px = numpy.array(ptn * numpy.transpose(maps[itemid]['rotmat']) / maps[itemid]['mapheader']['pixelsize'] + maps[itemid]['mappxcenter'])
-  pt_px = pt_px.squeeze()
+  imsz = im.shape
+  
+  tileloc= maps[itemid]['tileloc']
+  
+  
+  if 'XYinPc' in acq_item:
+    tileid = int(acq_item['PieceOn'][0])
+    pt_px0 = map(float,acq_item['XYinPc'])
+    pt_px = numpy.array(pt_px0)
+    #pt_px[0] = maps[itemid]['mapheader']['xsize'] - pt_px[0]
+    #pt_px[1] = pt_px[1]   
+    
+    
+  else:
+         
+    tilepos = maps[itemid]['tilepos']
+    if numpy.diff(tilepos,axis=0)[0].max() == 0:
+      print('Montage created using image shift! Problems in identifying the positions of clicked points accurately possible!')
+	  
+    if len(tilepos.shape)<2:
+      tileid = 0
+    else:
+      tiledist = numpy.sum((tilepos-pt)**2,axis=1)
+      tileid = numpy.argmin(tiledist)
+    
+    
+    # normalize coordinates
+    
+    ptn = numpy.matrix(pt - tilepos[tileid])
+    pt_px = numpy.array(ptn * numpy.transpose(maps[itemid]['rotmat']) / maps[itemid]['mapheader']['pixelsize'] + maps[itemid]['mappxcenter'])
+    pt_px = pt_px.squeeze()
+
+
+
+  
+  
   pt_px1 = pt_px + maps[itemid]['tilepx'][tileid]
-  pt_px1[1] = maps[itemid]['mergeheader']['ysize'] - pt_px1[1]
-  
-	    
+  pt_px1[1] = imsz[0] - pt_px1[1]
+  	    
   
   px_scale = targetheader['pixelsize'] /( maps[itemid]['mapheader']['pixelsize'] )
 
-  imsz1 = numpy.array([targetheader['xsize'],targetheader['ysize']]) * px_scale
+  imsz1 = numpy.array([targetheader['xsize'],targetheader['ysize']]) * px_scale 
+     
+  im2, p2 = em.map_extract(im,pt_px1,pt_px1,px_scale,imsz1,rotm1)
 
-  px = round(pt_px1[0])
-  py = round(pt_px1[1])
+
+  #px = round(pt_px1[0])
+  #py = round(pt_px1[1])
   
-  if px < 0 or py < 0:
+  if min(im2.shape)<600:
     print('Warning! Item ' + acq_item['# Item'] + ' is not within the map frame. Ignoring it')
   else:
 
-    xel = range(int(px - imsz1[0]/2) , int(px + round(float(imsz1[0])/2)))
-    yel = range(int(py - imsz1[1]/2) , int(py + round(float(imsz1[1])/2)))
+    #xel = range(int(px - imsz1[0]/2) , int(px + round(float(imsz1[0])/2)))
+    #yel = range(int(py - imsz1[1]/2) , int(py + round(float(imsz1[1])/2)))
     
-    im = maps[itemid]['im']
+    #im = maps[itemid]['im']
     
-    imsize = numpy.array(im.shape)
+    #imsize = numpy.array(im.shape)
     
-    im1=im[yel,:]
+    #im1=im[yel,:]
 
-    im1=im1[:,xel]
+    #im1=im1[:,xel]
 	      
 
 
   #    print(points[i])
-    im2 = zoom(im1,1/px_scale)
-    
+    #im2 = zoom(im1,1/px_scale)
+
     imsize2 = im2.shape
     #plt.imshow(im2)
 
     imfile = 'virt_map_' + acq_item['# Item'] + '.tif'
-	    
-    tiff.imsave(imfile,im2)
     
+    if os.path.exists(imfile): os.remove(imfile)
+    tiff.imsave(imfile,im2)
+
     cx = imsize2[1]
     cy = imsize2[0]
 
     a = [[0,0],[cx,0],[cx,cy],[0,cy],[0,0]]
     a = numpy.matrix(a) - [cx/2 , cy/2]
-    
+
     c1 = a*maps[itemid]['rotmat'] * targetheader['pixelsize'] + pt
-    
+
     cnx = numpy.array(numpy.transpose(c1[:,1]))
     cnx = numpy.array2string(cnx,separator=' ')
     cnx = cnx[2:-2]
-    
+
     cny = numpy.array(numpy.transpose(c1[:,0]))
     cny = " ".join(map(str,cny))
     cny = cny[1:-2]
-    
-    
-    
-    
-  # fill navigator
-  
+
+
+    # fill navigator
+
     acq_item['Acquire'] = '0'
-    
+
     outnav.append(acq_item)
-    
-    
+
+
     newnavitem = dict(targetitem)
-    
+
     newnavitem['MapFile'] = [imfile]
-    newnavitem['StageXYZ'] = ptitem['StageXYZ']
-    newnavitem['RawStageXY'] = ptitem['StageXYZ'][0:2]
+    newnavitem['StageXYZ'] = acq_item['StageXYZ']
+    newnavitem['RawStageXY'] = acq_item['StageXYZ'][0:2]
     newnavitem['PtsY'] = cnx.split()
     newnavitem['PtsX'] = cny.split()
     newnavitem['NumPts'] = ['1']
@@ -202,10 +237,10 @@ for acq_item in acq:
     newnavitem['MapMinMaxScale'] = [str(numpy.min(im2)),str(numpy.max(im2))]
     newnavitem['NumPts'] = ['5']
     newnavitem['# Item'] = 'map_' + acq_item['# Item']    
-    
+
     outnav.append(newnavitem)
-    
-    outnav.sort()
+
+  outnav.sort()
    
 for nitem in outnav:
  
