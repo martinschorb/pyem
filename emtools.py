@@ -630,7 +630,7 @@ def map_extract(im,c,p,px_scale,imsz1,rotm1):
 # --------------------------------------
 
 
-def pts2nav(im,pts,cntrs,curr_map,targetitem,nav): 
+def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False): 
 
   #parse input data
   
@@ -785,7 +785,7 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav):
     newnavitem.pop('RawStageXY','')
     if curr_map['MapFramesXY'] == ['0', '0']:
         newnavitem['CoordsInMap'] = [str(c_out[0]),str(c_out[1]),curr_map['StageXYZ'][2]]
-    elif mapheader['Sloppy']:
+    elif sloppy:
         newnavitem['CoordsInAliMontVS'] = [str(c_out[0]),str(c_out[1]),curr_map['StageXYZ'][2]]
     else:
         newnavitem['CoordsInAliMont'] = [str(c_out[0]),str(c_out[1]),curr_map['StageXYZ'][2]]
