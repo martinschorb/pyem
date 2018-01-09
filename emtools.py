@@ -1,5 +1,26 @@
 # -*- coding: utf-8 -*-
 
+# emtools.py
+
+# Copyright (c) 2017, Martin Schorb
+# Copyright (c) 2017, European Molecular Biology Laboratory
+# Produced at the EMBL
+# All rights reserved.
+
+"""    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+"""
+
 # dependencies
 #%%
 import fnmatch
@@ -7,7 +28,6 @@ import os
 import os.path
 import sys
 import numpy
-import scipy
 import math
 from scipy.ndimage.interpolation import zoom
 from scipy.ndimage import rotate
@@ -15,7 +35,6 @@ import tifffile as tiff
 import re
 import scipy.misc as spm
 
-#%%
 # define supporting functions
 
 
@@ -235,10 +254,11 @@ def map_rotation(mapx,mapy):
 def mergemap(mapitem):
 #%%
   m=dict()
- 
+  m['Sloppy'] = False
+  
   # extract map properties
  
-    # grab coordinates of map corner points        
+  # grab coordinates of map corner points        
       
   mapx = map(float,mapitem['PtsX'])
   mapy = map(float,mapitem['PtsY'])
@@ -247,12 +267,16 @@ def mergemap(mapitem):
   lx = numpy.sqrt(sum((a[:,2]-a[:,3])**2))
   ly = numpy.sqrt(sum((a[:,1]-a[:,2])**2))
 
+  # determine map rotation
   rotmat = map_rotation(mapx,mapy)
 
-
+  #find map file
   mapfile = map_file(mapitem)
   #%%
+  
   if mapfile.find('.st')<0 and mapfile.find('.map')<0 and mapfile.find('.mrc')<0:
+    #no mrc file
+    
     print('Warning: ' + mapfile + ' is not an MRC file!' + '\n')
     print('Assuming it is a single file or a stitched montage.' + '\n')
     mergefile = mapfile
@@ -276,30 +300,43 @@ def mergemap(mapitem):
     tilepx=numpy.array([tilepx,tilepx])
     
   else:  
-   
+   # map is mrc file
     mapsection = map(int,mapitem['MapSection'])[0]
     mapheader = map_header(mapfile)
     pixelsize = mapheader['pixelsize']
         
-      # multiple montages stored in one MRC stack
+    # multiple montages stored in one MRC stack
       
       
     mappxcenter = [mapheader['xsize']/2, mapheader['ysize']/2]
 
     mdocname = mapfile + '.mdoc'
+    m['frames'] = map(int,mapitem['MapFramesXY'])
     
-        
-
+    
+    if (m['frames'] == [0,0]):
+      mapheader['stacksize'] = 0   
+      if os.path.exists(mdocname):
+            mdoclines = loadtext(mdocname)
+            pixelsize = float(mdoc_item(mdoclines,'ZValue = '+str(mapsection))['PixelSpacing'][0])/ 10000 # in um
+              
+            
+            
     # extract center positions of individual map tiles
     if mapheader['stacksize'] > 1:
-        m['frames'] = map(int,mapitem['MapFramesXY'])
+        
         montage_tiles = numpy.prod(m['frames'])
         if os.path.exists(mdocname):
             mdoclines = loadtext(mdocname)
             if mapheader['stacksize'] > montage_tiles:
-                tileidx_offset = mapsection * montage_tiles
-                
-                
+            # multiple same-dimension montages in one MRC stack
+	      tileidx_offset = mapsection * montage_tiles
+            elif mapheader['stacksize'] == montage_tiles:
+            # single montage without empty tiles (polygon)
+	      tileidx_offset = 0    
+            elif  mapheader['stacksize'] < montage_tiles:
+	    # polygon fit montage with empty tiles
+	      tileidx_offset = 0
             
             tilepos=list()
             for i in range(0,montage_tiles-1):
@@ -341,12 +378,14 @@ def mergemap(mapitem):
     
     if mapheader['stacksize'] < 2:
         print('Single image found. No merging needed.')
-        callcmd = 'mrc2tif ' +  mapfile + ' ' + mergefile + '.tif'
-        tilepx = [0,0]
+        callcmd = 'mrc2tif -s -z ' + str(mapsection)+ ',' + str(mapsection) + ' ' +  mapfile + ' ' + mergefiletif
+        tilepx = 0
         tilepx=numpy.array([tilepx,tilepx])
         os.system(callcmd)
         mergeheader = mapheader
-        
+        overlapx = 0
+        overlapy = 0
+        tileloc = [0,0]
     
     else:
         if not os.path.exists(mergefiletif):
@@ -371,35 +410,35 @@ def mergemap(mapitem):
         tilepx = tilepx[:-1]
         for j, item in enumerate(tilepx): tilepx[j] = map(float,re.split(' +',tilepx[j]))
     
-    tilepx = numpy.array(tilepx)
-    tilepx = tilepx[tilepx[:,2] == mapsection,0:2]
+        tilepx = numpy.array(tilepx)
+        tilepx = tilepx[tilepx[:,2] == mapsection,0:2]
     
     
-    # use original tile coordinates(pixels) from SerialEM to determine tile position in montage
+        # use original tile coordinates(pixels) from SerialEM to determine tile position in montage
     
-    tilepx1 = loadtext(mapfile + '.pcs')
-    tilepx1 = tilepx1[:-1]
-    for j, item in enumerate(tilepx1): tilepx1[j] = map(float,re.split(' +',tilepx1[j]))
+        tilepx1 = loadtext(mapfile + '.pcs')
+        tilepx1 = tilepx1[:-1]
+        for j, item in enumerate(tilepx1): tilepx1[j] = map(float,re.split(' +',tilepx1[j]))
     
-    tilepx1 = numpy.array(tilepx1)
-    tilepx1 = tilepx1[tilepx1[:,2] == mapsection,0:2]
-
+        tilepx1 = numpy.array(tilepx1)
+        tilepx1 = tilepx1[tilepx1[:,2] == mapsection,0:2]
     
     
-    tpx = tilepx1[:,0]
-    tpy = tilepx1[:,1]
-        
-    if numpy.abs(tpx).max()>0: xstep = tpx[tpx>0].min()
-    else: xstep = 1
-    if numpy.abs(tpy).max()>0: ystep = tpy[tpy>0].min()
-    else: ystep = 1
-
-    tileloc = numpy.array([tpx / xstep,tpy/ystep]).T
     
-    m['sections'] = tileloc[:,0]*m['frames'][1]+tileloc[:,1]
-
-    overlapx = mapheader['xsize'] - xstep
-    overlapy = mapheader['ysize'] - ystep
+        tpx = tilepx1[:,0]
+        tpy = tilepx1[:,1]
+          
+        if numpy.abs(tpx).max()>0: xstep = tpx[tpx>0].min()
+        else: xstep = 1
+        if numpy.abs(tpy).max()>0: ystep = tpy[tpy>0].min()
+        else: ystep = 1
+    
+        tileloc = numpy.array([tpx / xstep,tpy/ystep]).T
+    
+        m['sections'] = tileloc[:,0]*m['frames'][1]+tileloc[:,1]
+    
+        overlapx = mapheader['xsize'] - xstep
+        overlapy = mapheader['ysize'] - ystep
 
 
 
@@ -417,7 +456,7 @@ def mergemap(mapitem):
   # generate output
 
   m['mapfile'] = mapfile
-  m['mergefile'] = mergefile
+  m['mergefile'] = mergefiletif
   m['rotmat'] = rotmat
   m['tilepos'] = tilepos
   m['im'] = im
