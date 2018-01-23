@@ -301,11 +301,7 @@ def mergemap(mapitem):
     mergeheader['pixelsize'] = numpy.mean([lx / numpy.array(im.shape)[0],ly / numpy.array(im.shape)[1]])
     mapheader = mergeheader
 
-
-
     tilepos = numpy.array([float(mapitem['PtsX'][0]),  float(mapitem['PtsY'][0])])
-
-
 
     tilepx = [0,0]
     tilepx=numpy.array([tilepx,tilepx])
@@ -316,8 +312,7 @@ def mergemap(mapitem):
     mapheader = map_header(mapfile)
     pixelsize = mapheader['pixelsize']
 
-    # multiple montages stored in one MRC stack
-
+    # determine if file contains multiple montages stored in one MRC stack
 
     mappxcenter = [mapheader['xsize']/2, mapheader['ysize']/2]
 
@@ -368,9 +363,6 @@ def mergemap(mapitem):
             os.system(callcmd)
             tilepos1 = loadtext('syscall.tmp')[21:-1]
             tilepos = numpy.array([float(mapitem['PtsX'][0]),  float(mapitem['PtsY'][0])])
-
-
-
 
 
     else:
@@ -483,11 +475,11 @@ def mergemap(mapitem):
 
 
 # -------------------------------
-
-
-
+#%%
 
 def realign_map(item,allitems):
+  # determines which map to align to for given navigator item
+
   if item['Type'] in [['0'],['1']]:
     # point or polygon
     if not 'DrawnID' in item.keys():
@@ -514,6 +506,9 @@ def realign_map(item,allitems):
 # -------------------------------------
 
 def imcrop(im1,c,sz):
+  # crops an image of a given size (2 element numpy array) around a pixel coordinate (2 element numpy array)
+  # in case the coordinate is close to an edge, the cropped image will have the maximum possible width/height
+  # and centering of the image
 
   sz_x = sz[0]
   sz_y = sz[1]
@@ -541,10 +536,10 @@ def imcrop(im1,c,sz):
 
 
 # --------------------------------------
-
-
+#%%
 
 def cart2pol(c):
+    # cartesian into polar coordinates (2D)
             rho = numpy.sqrt(c[:,0]**2 + c[:,1]**2)
             phi = numpy.arctan2(c[:,1], c[:,0])
             return(numpy.transpose([phi,rho]))
@@ -552,14 +547,18 @@ def cart2pol(c):
 # --------------------------------------
 
 def pol2cart(rho, phi):
+    # polar into cartesian coordinates (2D)
              x = rho * numpy.cos(phi)
              y = rho * numpy.sin(phi)
              return(numpy.transpose([x, y]))
 
 
 # --------------------------------------
+#%%
 
 def img2polygon(img, n_poly, center, radius):
+    #
+
   if img.dtype.kind is 'b':
     thresh = 1
   elif img.dtype.kind is 'i':
@@ -572,7 +571,7 @@ def img2polygon(img, n_poly, center, radius):
 
   xs , ys = img.shape
 
-  polypt=numpy.empty((0,2))
+  polypt = numpy.empty((0,2))
 
   polyphi = numpy.linspace(0,2*numpy.pi,n_poly)
 
