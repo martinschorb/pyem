@@ -38,11 +38,12 @@ import scipy.misc as spm
 # define supporting functions
 
 
+#%%
 
 def loadtext(fname):
 
     # loads a text file, such as nav or adoc, returns it as a list
-    
+
     if not os.path.exists(fname):
         print('ERROR: ' + fname + ' does not exist! Exiting' + '\n')
         sys.exit(1)
@@ -52,74 +53,81 @@ def loadtext(fname):
 
     for line in f.readlines():
         lines.append(line.strip())
-    
+
     lines.append('')
     f.close()
     return lines
 
-    
+
 # -------------------------------
+#%%
 
 def nav_item(navlines,label):
-    
+
     # extracts the content block of a navItem of givel label
-    # reads and parses navigator files version >2 !!
+    # returns it as a dictionary
+    # reads and parses navigator adoc files version >2 !!
 
     searchstr = '[Item = ' + label + ']'
     if not searchstr in navlines:
-        print('ERROR: Navigator Item ' + label + ' not found!')        
-        result=[]        
-    else:    
+        print('ERROR: Navigator Item ' + label + ' not found!')
+        result=[]
+    else:
         itemstartline = navlines.index(searchstr)+1
         itemendline = navlines[itemstartline:].index('')
 
         item = navlines[itemstartline:itemstartline+itemendline]
         result = parse_adoc(item)
         result['# Item']=navlines[itemstartline-1][navlines[itemstartline-1].find(' = ') + 3:-1]
-        
+
     return result
-    
+
+
 # -------------------------------
+#%%
 
 def mdoc_item(lines,label):
-    
+
     # extracts the content block of an item of givel label in a mdoc file
+    # returns it as a dictionary
 
     searchstr = '[' + label + ']'
     if not searchstr in lines:
-        print('ERROR: Item ' + label + ' not found!')        
+        print('ERROR: Item ' + label + ' not found!')
         result=[]
-    else:    
+    else:
         itemstartline = lines.index(searchstr)+1
         itemendline = lines[itemstartline:].index('')
 
         item = lines[itemstartline:itemstartline+itemendline]
         result = parse_adoc(item)
-        
+
     return result
 
 
 # -------------------------------
+#%%
 
 def parse_adoc(lines):
-    # converts an adoc-format string into a dictionary
+    # converts an adoc-format string list into a dictionary
+
     answer = {}
     for line in lines:
         entry = line.split()
         if entry: answer.update({entry[0]: entry[2:]})
 
-    
+
     return answer
 
 # -------------------------------
 #%%
-    
+
 def map_file(mapitem):
-    
+
     # extracts map file name from navigator and checks for existance
 
     mapfile = ' '.join(mapitem['MapFile'])
-    
+
     if not os.path.exists(mapfile):
         print('Warning: ' + mapfile + ' does not exist!' + '\n')
 
@@ -134,12 +142,11 @@ def map_file(mapitem):
     return mapfile
 
 
-
 # -------------------------------
 #%%
-    
+
 def map_header(mapfile):
-    
+
     # extracts MRC header information for a given file name
     header={}
 
@@ -164,7 +171,7 @@ def map_header(mapfile):
     header['ysize'] = int(head1[oldindex+1:strindex])
     header['stacksize'] = int(head1[head1.rfind(' ')+1:])
 
-    
+
     # determine the scale
 
     head2 = fnmatch.filter(map_headerlines, 'Pixel spacing *')[0]
@@ -179,39 +186,41 @@ def map_header(mapfile):
     return header
 
 # -------------------------------
+#%%
 
 def itemtonav(item,name):
     # converts a dictionary autodoc item variable into text list suitable for export into navigator format
+
     dlist = list()
     dlist.append('[Item = ' + name + ']')
     for key, value in item.iteritems():
-      if not key == '# Item':    
+      if not key == '# Item':
         dlist.append(key + ' = ' + " ".join(value))
-    
+
     dlist.append('')
     return dlist
-    
 
-    
-    
+
 # -------------------------------
+#%%
 
 def newmapID(allitems,mapid):
     # checks if provided item ID already exists in a navigator and gives the next unique ID
     # ID needs to be integer
-    
+
     newid = mapid
-    
+
     for item in allitems:
         if 'MapID' in item:
             if str(mapid) == item['MapID'][0]:
                 newid = newmapID(mapid+1)
-    
+
     return newid
-    
-    
-    
+
+
 # -------------------------------
+#%%
+
 def fullnav(navlines):
 # parses a full nav file and returns a list of dictionaries
   c=[]
@@ -220,13 +229,12 @@ def fullnav(navlines):
       b=nav_item(navlines,item[item.find(' = ') + 3:-1])
       b['# Item']=item[item.find(' = ') + 3:-1]
       c.append(b)
-  
+
   return c
-
-
 
 # -------------------------------
 #%%
+
 def map_rotation(mapx,mapy):
     # determine rotation of coordinate frame
 
@@ -244,25 +252,28 @@ def map_rotation(mapx,mapy):
   ct = math.cos(meanangle)
   st = math.sin(meanangle)
 
-  rotmat = numpy.matrix([[ct,-st],[st,ct]]) 
+  rotmat = numpy.matrix([[ct,-st],[st,ct]])
 
   return rotmat
+
 
 # -------------------------------
 #%%
 
 def mergemap(mapitem):
-#%%
+
+  # processes a map item and merges the mosaic using IMOD
+  # generates a dictionary with metadata for this procedure
+
   m=dict()
   m['Sloppy'] = False
-  
+
   # extract map properties
- 
-  # grab coordinates of map corner points        
-      
+  # grab coordinates of map corner points
+
   mapx = map(float,mapitem['PtsX'])
   mapy = map(float,mapitem['PtsY'])
-    
+
   a=numpy.array([mapx,mapy])
   lx = numpy.sqrt(sum((a[:,2]-a[:,3])**2))
   ly = numpy.sqrt(sum((a[:,1]-a[:,2])**2))
@@ -272,59 +283,59 @@ def mergemap(mapitem):
 
   #find map file
   mapfile = map_file(mapitem)
-  #%%
-  
+
+
   if mapfile.find('.st')<0 and mapfile.find('.map')<0 and mapfile.find('.mrc')<0:
-    #no mrc file
-    
+    #not an mrc file
+
     print('Warning: ' + mapfile + ' is not an MRC file!' + '\n')
-    print('Assuming it is a single file or a stitched montage.' + '\n')
+    print('Assuming it is a single tif file or a stitched montage.' + '\n')
     mergefile = mapfile
     im = tiff.imread(mergefile)
-    mappxcenter = numpy.array(im.shape)[0:2] / 2 
+    mappxcenter = numpy.array(im.shape)[0:2] / 2
     mergeheader = {}
-       
+
     mergeheader['stacksize'] = numpy.array(im.shape)
     mergeheader['xsize'] = numpy.array(im.shape)[0]
     mergeheader['ysize'] = numpy.array(im.shape)[1]
     mergeheader['pixelsize'] = numpy.mean([lx / numpy.array(im.shape)[0],ly / numpy.array(im.shape)[1]])
     mapheader = mergeheader
 
-    
-    
+
+
     tilepos = numpy.array([float(mapitem['PtsX'][0]),  float(mapitem['PtsY'][0])])
-    
-    
-    
+
+
+
     tilepx = [0,0]
     tilepx=numpy.array([tilepx,tilepx])
-    
-  else:  
+
+  else:
    # map is mrc file
     mapsection = map(int,mapitem['MapSection'])[0]
     mapheader = map_header(mapfile)
     pixelsize = mapheader['pixelsize']
-        
+
     # multiple montages stored in one MRC stack
-      
-      
+
+
     mappxcenter = [mapheader['xsize']/2, mapheader['ysize']/2]
 
     mdocname = mapfile + '.mdoc'
     m['frames'] = map(int,mapitem['MapFramesXY'])
-    
-    
+
+
     if (m['frames'] == [0,0]):
-      mapheader['stacksize'] = 0   
+      mapheader['stacksize'] = 0
       if os.path.exists(mdocname):
             mdoclines = loadtext(mdocname)
             pixelsize = float(mdoc_item(mdoclines,'ZValue = '+str(mapsection))['PixelSpacing'][0])/ 10000 # in um
-              
-            
-            
+
+
+
     # extract center positions of individual map tiles
     if mapheader['stacksize'] > 1:
-        
+
         montage_tiles = numpy.prod(m['frames'])
         if os.path.exists(mdocname):
             mdoclines = loadtext(mdocname)
@@ -333,11 +344,11 @@ def mergemap(mapitem):
 	      tileidx_offset = mapsection * montage_tiles
             elif mapheader['stacksize'] == montage_tiles:
             # single montage without empty tiles (polygon)
-	      tileidx_offset = 0    
+	      tileidx_offset = 0
             elif  mapheader['stacksize'] < montage_tiles:
 	    # polygon fit montage with empty tiles
 	      tileidx_offset = 0
-            
+
             tilepos=list()
             for i in range(0,montage_tiles-1):
                 tile = mdoc_item(mdoclines,'ZValue = ' + str(tileidx_offset+i))
@@ -346,36 +357,36 @@ def mergemap(mapitem):
 
             tilepos = numpy.array(tilepos,float)
             pixelsize = float(mdoc_item(mdoclines,'MontSection = '+str(mapsection))['PixelSpacing'][0])/ 10000 # in um
-            
-        
+
+
         else:
             if mapheader['stacksize'] > montage_tiles:
                     raise Exception('Multiple maps stored in an MRC stack without mdoc file for metadata. I cannot reliably determine the pixel size.')
-                
-                
+
+
             callcmd = 'extracttilts ' + mapfile + ' -stage -all > syscall.tmp'
             os.system(callcmd)
             tilepos1 = loadtext('syscall.tmp')[21:-1]
             tilepos = numpy.array([float(mapitem['PtsX'][0]),  float(mapitem['PtsY'][0])])
-            
-            
-                
 
-    
+
+
+
+
     else:
         tilepos1 = map(float,mapitem['StageXYZ'][0:2])
         tilepos = numpy.array([tilepos1,tilepos1])
 
 
     # check if map is a montage or not
-    mergefile = mapfile[:mapfile.rfind('.mrc')]     
+    mergefile = mapfile[:mapfile.rfind('.mrc')]
     if mergefile == []: mergefile = mapfile
-    
+
     mergefile = mergefile + '_merged'
-      
+
     mergefiletif = mergefile  + '_s' + str(mapsection) + '.tif'
     mergeheader = mapheader
-    
+
     if mapheader['stacksize'] < 2:
         print('Single image found. No merging needed.')
         callcmd = 'mrc2tif -s -z ' + str(mapsection)+ ',' + str(mapsection) + ' ' +  mapfile + ' ' + mergefiletif
@@ -386,10 +397,10 @@ def mergemap(mapitem):
         overlapx = 0
         overlapy = 0
         tileloc = [0,0]
-    
+
     else:
         if not os.path.exists(mergefiletif):
-            
+
             # merge the montage to a single file
             callcmd = 'extractpieces ' +  mapfile + ' ' + mapfile + '.pcs'
             os.system(callcmd)
@@ -403,52 +414,52 @@ def mergemap(mapitem):
             callcmd = 'mrc2tif ' +  mergefile + '.mrc ' + mergefiletif
             os.system(callcmd)
             mergeheader = map_header(mergefile + '.mrc')
-      
+
             # extract pixel coordinate of each tile
         tilepx = loadtext(mergefile + '.al')
-        
+
         tilepx = tilepx[:-1]
         for j, item in enumerate(tilepx): tilepx[j] = map(float,re.split(' +',tilepx[j]))
-    
+
         tilepx = numpy.array(tilepx)
         tilepx = tilepx[tilepx[:,2] == mapsection,0:2]
-    
-    
+
+
         # use original tile coordinates(pixels) from SerialEM to determine tile position in montage
-    
+
         tilepx1 = loadtext(mapfile + '.pcs')
         tilepx1 = tilepx1[:-1]
         for j, item in enumerate(tilepx1): tilepx1[j] = map(float,re.split(' +',tilepx1[j]))
-    
+
         tilepx1 = numpy.array(tilepx1)
         tilepx1 = tilepx1[tilepx1[:,2] == mapsection,0:2]
-    
-    
-    
+
+
+
         tpx = tilepx1[:,0]
         tpy = tilepx1[:,1]
-          
+
         if numpy.abs(tpx).max()>0: xstep = tpx[tpx>0].min()
         else: xstep = 1
         if numpy.abs(tpy).max()>0: ystep = tpy[tpy>0].min()
         else: ystep = 1
-    
+
         tileloc = numpy.array([tpx / xstep,tpy/ystep]).T
-    
+
         m['sections'] = tileloc[:,0]*m['frames'][1]+tileloc[:,1]
-    
+
         overlapx = mapheader['xsize'] - xstep
         overlapy = mapheader['ysize'] - ystep
 
 
 
       # load merged map for cropping
-    
+
     im = tiff.imread(mergefiletif)
 
-    
+
   # end MRC section
-  
+
   mergeheader['pixelsize'] = pixelsize
   mapheader['pixelsize'] = pixelsize
 
@@ -466,7 +477,7 @@ def mergemap(mapitem):
   m['tilepx'] = tilepx
   m['overlap'] = [overlapx,overlapy]
   m['tileloc'] = tileloc
-  
+
   return m
 
 
@@ -474,11 +485,11 @@ def mergemap(mapitem):
 # -------------------------------
 
 
-  
-  
+
+
 def realign_map(item,allitems):
   if item['Type'] in [['0'],['1']]:
-    # point or polygon    
+    # point or polygon
     if not 'DrawnID' in item.keys():
       if not 'SamePosId' in item.keys():
           print('No map found to realign item '+ item['# Item'] + ' to, skipping it...')
@@ -489,15 +500,15 @@ def realign_map(item,allitems):
       mapID = item['DrawnID']
 
   else:
-   
+
     if not 'RealignedID' in item.keys():
       print('No map found to realign item '+ item['# Item'] + ' to, skipping it...')
       result=[]
     else:
       mapID = item['RealignedID']
-      
+
   result = filter(lambda item:item['MapID']==mapID,allitems)
-  
+
   return result[0]
 
 # -------------------------------------
@@ -506,7 +517,7 @@ def imcrop(im1,c,sz):
 
   sz_x = sz[0]
   sz_y = sz[1]
-   
+
   ximsz = im1.shape[0]
   yimsz = im1.shape[1]
 
@@ -522,14 +533,14 @@ def imcrop(im1,c,sz):
   y_range = min([c[0]-yllim,yulim-c[0]])
 
   yel = range(int(c[0] - y_range), int(c[0] + y_range))
-  
-  im2 = im1[xel,:]  
+
+  im2 = im1[xel,:]
   im2 = im2[:,yel]
-  
+
   return im2
-  
-  
-# --------------------------------------  
+
+
+# --------------------------------------
 
 
 
@@ -537,9 +548,9 @@ def cart2pol(c):
             rho = numpy.sqrt(c[:,0]**2 + c[:,1]**2)
             phi = numpy.arctan2(c[:,1], c[:,0])
             return(numpy.transpose([phi,rho]))
-            
-# --------------------------------------            
-            
+
+# --------------------------------------
+
 def pol2cart(rho, phi):
              x = rho * numpy.cos(phi)
              y = rho * numpy.sin(phi)
@@ -556,11 +567,11 @@ def img2polygon(img, n_poly, center, radius):
     if img.max()<thresh:
         thresh = img.max()/2
   else: thresh = img.max()/2
-  
+
   n_poly = n_poly + 1
 
   xs , ys = img.shape
-   
+
   polypt=numpy.empty((0,2))
 
   polyphi = numpy.linspace(0,2*numpy.pi,n_poly)
@@ -582,18 +593,18 @@ def img2polygon(img, n_poly, center, radius):
     maxdiff_ix = numpy.argmax(numpy.abs(lpd))
     if maxdiff < thresh:
       maxdiff_ix = radius-1
-    
+
     polypt = numpy.append(polypt,[(a[maxdiff_ix],b[maxdiff_ix])],axis=0)
-    
+
   return polypt
 
 # --------------------------------------
 
 def map_extract(im,c,p,px_scale,imsz1,rotm1):
-  
+
   # extract image (1.42x to enable rotation)
   cropsize = imsz1 * 1.42
-  
+
   angle = math.degrees(math.acos(rotm1[0,0]))
 
   im1 = imcrop(im,c,cropsize)
@@ -616,12 +627,12 @@ def map_extract(im,c,p,px_scale,imsz1,rotm1):
   #crop to desired size
 
   im4 = imcrop(im3,[c3[1],c3[0]],t_size)
-    
+
   p4=p3.copy()
 
   p4[:,0] =  t_size[0]/2 - p3[:,0]
   p4[:,1] =  p3[:,1] + t_size[1]/2
-  
+
   return im4, p4
 
 
@@ -630,10 +641,21 @@ def map_extract(im,c,p,px_scale,imsz1,rotm1):
 # --------------------------------------
 
 
-def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False): 
+def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False):
+# takes pixel coordinates on an input map, generates virtual maps at their positions, creates polygons matching their shape.
+# input parameters:
+# - im, original image for feature detection
+# - pts, image coordinates, list of arrays (for polygons)
+# - cntrs, center of the feature (bounding box)
+# - curr_map, map item to process (emtools dict)
+# - targetitem, target map
+# - nav, all navigator items (emtools dict)
+# - sloppy (optional) if merging of original map was sloppy
+
+
 
   #parse input data
-  
+
   if type(im) != numpy.ndarray:
       raise Exception('Wrong input format of image.')
 
@@ -644,10 +666,10 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False):
   if type(cntrs) != list:
       if type(cntrs) == numpy.ndarray: cntrs = [cntrs]
       else: raise Exception('Wrong input format of center coordinates.')
-  else: 
-      if len(cntrs) == 2: 
+  else:
+      if len(cntrs) == 2:
           if type(cntrs[0]) == int:  cntrs = [cntrs]
-          elif (type(cntrs[0]) != numpy.ndarray) and (type(cntrs[0]) != list):    
+          elif (type(cntrs[0]) != numpy.ndarray) and (type(cntrs[0]) != list):
               raise Exception('Wrong input format of center coordinates.')
 
 # generate output
@@ -681,9 +703,9 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False):
   targetrot = map_rotation(tx,ty)
 
   # combine rotation matrices
-  rotm1 = rotmat.T * targetrot  
+  rotm1 = rotmat.T * targetrot
 
-  px_scale = targetheader['pixelsize'] /pixelsize  
+  px_scale = targetheader['pixelsize'] /pixelsize
 
   imsz1 = numpy.array([targetheader['xsize'],targetheader['ysize']]) * px_scale
 
@@ -696,28 +718,32 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False):
   delim = 100000
 
   startid = newmapID(nav,divmod(curr_id,delim)[0]*delim)
-  
-  
+
+
 
   mapid = startid + 1
+  idx=0
 
-  for idx,c in enumerate(cntrs):
+  for c in cntrs:
 
     polynav=dict()
     newnavitem = dict(targetitem)
     mapid = newmapID(nav,mapid+1)
-    
+
     print('Processing object '+ str(idx+1) + '/' + str(ntotal) + ' (%2.0f%%)' %(idx*100/ntotal) + ' at position %5u , %5u' %(c[0],c[1]))
-    
+
     p = pts[idx]
-    
+
     im4, p4 = map_extract(im,c,p,px_scale,imsz1,rotm1)
-    
-    
-    if min(im4.shape) < 400:    
+
+
+    if min(im4.shape) < 400:
       print('Item is too close to border of map, skipping it.')
+      ntotal = ntotal - 1
       continue
-    
+
+    idx = idx + 1
+
     px = numpy.array(numpy.transpose(p4[:,0]))
     px = numpy.array2string(px,separator=' ')
     px = px[2:-2]
@@ -725,29 +751,29 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False):
     py = numpy.array(numpy.transpose(p4[:,1]))
     py = numpy.array2string(py,separator=' ')
     py = py[2:-2]
-      
-      
+
+
     if numpy.shape(p4)[0] == 1:
         polynav['Type'] = ['0']
         polynav['Color'] = ['0']
         polynav['NumPts'] = ['1']
 
-    else:      
+    else:
         polynav['Type'] = ['1']
         polynav['Color'] = ['1']
         polynav['NumPts'] = [str(p.shape[0])]
 
-      
-      
+
+
     label = curr_map['# Item'] + '_' + str(idx+1).zfill(3)
 
     imfile = 'virt_' + label + '.tif'
-    
+
     if os.path.exists(imfile): os.system('rm -f ' + imfile)
     tiff.imsave(imfile,im4,compress=6)
-    
+
     t_size = imsz1/px_scale
-    
+
     cx = t_size[1]
     cy = t_size[0]
 
@@ -759,15 +785,15 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False):
     c_out = c
 
     c_out[1] = imsz[0] -c_out[1]
-        
+
     c1 = a + c
 
     #c1 = a * rotmat1 * targetheader['pixelsize'] + c_stage
-    
+
     cnx = numpy.array(numpy.transpose(c1[:,0]))
     cnx = numpy.array2string(cnx,separator=' ')
     cnx = cnx[2:-2]
-    
+
     cny = numpy.array(numpy.transpose(c1[:,1]))
     cny = " ".join(map(str,cny))
     cny = cny[1:-2]
@@ -789,7 +815,7 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False):
         newnavitem['CoordsInAliMontVS'] = [str(c_out[0]),str(c_out[1]),curr_map['StageXYZ'][2]]
     else:
         newnavitem['CoordsInAliMont'] = [str(c_out[0]),str(c_out[1]),curr_map['StageXYZ'][2]]
-      
+
     newnavitem['PtsX'] = cnx.split()
     newnavitem['PtsY'] = cny.split()
     newnavitem['Note'] = newnavitem['MapFile']
@@ -802,7 +828,7 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False):
     newnavitem['ImageType'] = ['2']
     newnavitem['MapMinMaxScale'] = [str(numpy.min(im4)),str(numpy.max(im4))]
     newnavitem['NumPts'] = ['5']
-    newnavitem['# Item'] = 'm_' + label    
+    newnavitem['# Item'] = 'm_' + label
     newnavitem['GroupID'] = [str(newmapID(nav,startid+50000))]
     curr_map['Acquire'] = ['0']
 
@@ -830,5 +856,3 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False):
 
 
   return outnav
-
-
