@@ -127,19 +127,29 @@ def map_file(mapitem):
     # extracts map file name from navigator and checks for existance
 
     mapfile = ' '.join(mapitem['MapFile'])
+    cdir = os.path.curdir
 
-    if not os.path.exists(mapfile):
-        print('Warning: ' + mapfile + ' does not exist!' + '\n')
+    if os.path.exists(mapfile):
+        return mapfile
+    
+    else:
+    #    print('Warning: ' + mapfile + ' does not exist!' + '\n')
 
-        mapfile = mapfile[mapfile.rfind('\\')+1:]
-        print('will try ' + mapfile + ' in current directory.' + '\n')
+        mapfile1 = mapfile[mapfile.rfind('\\')+1:]
+        print('will try ' + mapfile + ' in current directory or subdirectories.' + '\n')
 
+       # check subdirectories recursively
+        
+        for subdir in os.walk(cdir):            
+            mapfile = os.path.join(cdir,subdir[0],mapfile1)
+                    
+            if os.path.exists(mapfile):
+                return mapfile
+            else:
+                 print('ERROR: ' + mapfile1 + ' does not exist! Exiting' + '\n')
+                 sys.exit(1)
 
-    if not os.path.exists(mapfile):
-        print('ERROR: ' + mapfile + ' does not exist! Exiting' + '\n')
-        sys.exit(1)
-
-    return mapfile
+    
 
 
 # -------------------------------
