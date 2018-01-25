@@ -487,7 +487,7 @@ def realign_map(item,allitems):
           print('No map found to realign item '+ item['# Item'] + ' to, skipping it...')
           result=[]
       else:
-          result = realign_ID(nav_item(item['SamePosId']))
+          result = realign_map(nav_item(item['SamePosId']),allitems)
     else:
       mapID = item['DrawnID']
 
