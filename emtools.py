@@ -33,7 +33,7 @@ from scipy.ndimage.interpolation import zoom
 from scipy.ndimage import rotate
 import tifffile as tiff
 import re
-import scipy.misc as spm
+import mrcfile as mrc
 
 # define supporting functions
 
@@ -136,6 +136,9 @@ def map_file(mapitem):
     #    print('Warning: ' + mapfile + ' does not exist!' + '\n')
 
         mapfile1 = mapfile[mapfile.rfind('\\')+1:]
+        dir1 = mapfile[:mapfile.rfind('\\')]
+        dir2=dir1[dir1.rfind('\\')+1:]
+
         print('will try ' + mapfile + ' in current directory or subdirectories.' + '\n')
 
        # check subdirectories recursively
@@ -144,54 +147,33 @@ def map_file(mapitem):
             mapfile = os.path.join(cdir,subdir[0],mapfile1)
                     
             if os.path.exists(mapfile):
-                return mapfile
+                if subdir[2:] == dir2:
+                    return mapfile
+                else:
+                    mapfile2 = mapfile
             else:
                  print('ERROR: ' + mapfile1 + ' does not exist! Exiting' + '\n')
                  sys.exit(1)
 
-    
+        return mapfile2
 
 
 # -------------------------------
 #%%
 
-def map_header(mapfile):
+def map_header(m):
 
-    # extracts MRC header information for a given file name
+    # extracts MRC header information for a given mrc.object (legacy from reading marc headers)
     header={}
 
-    callcmd = 'header ' + mapfile + ' > syscall.tmp'
-    os.system(callcmd)
+    header['xsize'] = numpy.int(m.header.nx)
+    header['ysize'] = numpy.int(m.header.ny)
+    
+    header['stacksize'] = numpy.int(m.header.nz)
 
-    map_headerlines = loadtext('syscall.tmp')
-    head1 = fnmatch.filter(map_headerlines, 'Number of columns, *')[0]
-    strindex = head1.find('.. ')+3
-    oldindex = strindex
-    while strindex-oldindex < 2:
-      oldindex = strindex
-      strindex = head1.find(' ',strindex+1)
+    # determine the scale    
 
-    header['xsize'] = int(head1[oldindex+1:strindex])
-
-    oldindex = strindex
-    while strindex-oldindex < 2:
-      oldindex = strindex
-      strindex = head1.find(' ',strindex+1)
-
-    header['ysize'] = int(head1[oldindex+1:strindex])
-    header['stacksize'] = int(head1[head1.rfind(' ')+1:])
-
-
-    # determine the scale
-
-    head2 = fnmatch.filter(map_headerlines, 'Pixel spacing *')[0]
-    strindex = head2.find('.. ')+3
-    oldindex = strindex
-    while strindex-oldindex < 2:
-        oldindex = strindex
-        strindex = head2.find(' ',strindex+1)
-
-    header['pixelsize'] = float(head2[oldindex+1:strindex]) / 10000 # in um
+    header['pixelsize'] = m.voxel_size.x / 10000 # in um
 
     return header
 
@@ -319,7 +301,9 @@ def mergemap(mapitem):
   else:
    # map is mrc file
     mapsection = map(int,mapitem['MapSection'])[0]
-    mapheader = map_header(mapfile)
+    mf = mrc.mmap(mapfile, permissive = 'True')   
+    
+    mapheader = map_header(mf)
     pixelsize = mapheader['pixelsize']
 
     # determine if file contains multiple montages stored in one MRC stack
@@ -386,22 +370,23 @@ def mergemap(mapitem):
 
     mergefile = mergefile + '_merged'
 
-    mergefiletif = mergefile  + '_s' + str(mapsection) + '.tif'
+   # mergefiletif = mergefile  + '_s' + str(mapsection) + '.tif'
     mergeheader = mapheader
 
     if mapheader['stacksize'] < 2:
         print('Single image found. No merging needed.')
-        callcmd = 'mrc2tif -s -z ' + str(mapsection)+ ',' + str(mapsection) + ' ' +  mapfile + ' ' + mergefiletif
+        #callcmd = 'mrc2tif -s -z ' + str(mapsection)+ ',' + str(mapsection) + ' ' +  mapfile + ' ' + mergefiletif
         tilepx = 0
         tilepx=numpy.array([tilepx,tilepx])
-        os.system(callcmd)
+        #os.system(callcmd)
+        merge_mrc =  mf
         mergeheader = mapheader
         overlapx = 0
         overlapy = 0
         tileloc = [0,0]
 
     else:
-        if not os.path.exists(mergefiletif):
+        if not os.path.exists(mergefile+'.mrc'):
 
             # merge the montage to a single file
             callcmd = 'extractpieces ' +  mapfile + ' ' + mapfile + '.pcs'
@@ -413,9 +398,11 @@ def mergemap(mapitem):
 
             callcmd = 'blendmont -imi ' +  mapfile + ' -imo ' + mergefile + '.mrc -pli ' + mapfile + '.pcs -roo ' + mergefile  + '.mrc -se ' + str(mapsection) + ' -al '+ mergefile + '.al -sloppy'    #os.system(callcmd)
             os.system(callcmd)
-            callcmd = 'mrc2tif ' +  mergefile + '.mrc ' + mergefiletif
-            os.system(callcmd)
-            mergeheader = map_header(mergefile + '.mrc')
+            #callcmd = 'mrc2tif ' +  mergefile + '.mrc ' + mergefiletif
+            #os.system(callcmd)
+            
+            merge_mrc =  mrc.mmap(mergefile + '.mrc', permissive = 'True')
+            mergeheader = map_header(merge_mrc)            
 
             # extract pixel coordinate of each tile
         tilepx = loadtext(mergefile + '.al')
@@ -453,12 +440,17 @@ def mergemap(mapitem):
         overlapx = mapheader['xsize'] - xstep
         overlapy = mapheader['ysize'] - ystep
 
-
+        
 
       # load merged map for cropping
-
-    im = tiff.imread(mergefiletif)
-
+    if mapsection>0:
+        im = merge_mrc.data[mapsection,:,:]
+    else:
+        im = merge_mrc.data
+        
+    merge_mrc.close()    
+    im = numpy.rot90(numpy.transpose(im))
+    
 
   # end MRC section
 
@@ -469,7 +461,7 @@ def mergemap(mapitem):
   # generate output
 
   m['mapfile'] = mapfile
-  m['mergefile'] = mergefiletif
+  m['mergefile'] = mergefile+'.mrc'
   m['rotmat'] = rotmat
   m['tilepos'] = tilepos
   m['im'] = im

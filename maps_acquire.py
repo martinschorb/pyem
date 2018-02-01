@@ -17,7 +17,7 @@
 # PARAMETERS
 
 
-navname = 'test1.nav'
+navname = 'navwim.nav'
 # file name navigator
 
 
@@ -43,6 +43,7 @@ import math
 import re
 from scipy.ndimage.interpolation import zoom
 import tifffile as tiff
+import mrcfile as mrc
 
 import emtools as em
 
@@ -56,7 +57,8 @@ navlines = em.loadtext(navname)
 targetitem = em.nav_item(navlines,target_map)
 
 targetfile = em.map_file(targetitem)
-targetheader = em.map_header(targetfile)
+target_mrc = mrc.open(targetfile, permissive = 'True')
+targetheader = em.map_header(target_mrc)
 
 tx = map(float,targetitem['PtsX'])
 ty = map(float,targetitem['PtsY'])
@@ -167,7 +169,7 @@ for idx,acq_item in enumerate(acq):
   #px = round(pt_px1[0])
   #py = round(pt_px1[1])
   
-  if min(im2.shape)<600:
+  if min(im2.shape)<200:
     print('Warning! Item ' + acq_item['# Item'] + ' is not within the map frame. Ignoring it')
   else:
 
