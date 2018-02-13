@@ -50,7 +50,6 @@ import emtools as em
 reload(em)
 
 
-
 # start script
 
 
@@ -124,14 +123,18 @@ for idx,acq_item in enumerate(acq):
   
   tileloc= maps[itemid]['tileloc']
   
+  tileloc[:,1] = tileloc[:,1].max() - tileloc[:,1]
+  
+  tileshift =  (tileloc > 0).astype(int) * maps[itemid]['overlap']/2  
   
   if 'XYinPc' in acq_item:
     tileid = int(acq_item['PieceOn'][0])
     pt_px0 = map(float,acq_item['XYinPc'])
     pt_px = numpy.array(pt_px0)
+    #print(tileshift[tileid,:])
     #pt_px[0] = maps[itemid]['mapheader']['xsize'] - pt_px[0]
     #pt_px[1] = pt_px[1]   
-    
+    pt_px = pt_px + [tileshift[tileid,0],-tileshift[tileid,1]]
     
   else:
          
@@ -158,7 +161,7 @@ for idx,acq_item in enumerate(acq):
   
   pt_px1 = pt_px + maps[itemid]['tilepx'][tileid]
   pt_px1[1] = imsz[0] - pt_px1[1]
-  print(pt_px1)	    
+  	    
   
   px_scale = targetheader['pixelsize'] /( maps[itemid]['mapheader']['pixelsize'] )
 
@@ -166,7 +169,7 @@ for idx,acq_item in enumerate(acq):
      
   im2, p2 = em.map_extract(im,pt_px1,pt_px1,px_scale,imsz1,rotm1)
 
-  tiff.imshow(im2)
+
   #px = round(pt_px1[0])
   #py = round(pt_px1[1])
   
@@ -191,7 +194,7 @@ for idx,acq_item in enumerate(acq):
     #im2 = zoom(im1,1/px_scale)
 
     imsize2 = im2.shape
-    #plt.imshow(im2)
+    #tiff.imshow(im2)
 
     imfile = 'virt_map_' + acq_item['# Item'] + '.tif'
     

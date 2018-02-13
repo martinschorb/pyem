@@ -127,7 +127,8 @@ def map_file(mapitem):
     # extracts map file name from navigator and checks for existance
 
     mapfile = ' '.join(mapitem['MapFile'])
-    cdir = os.path.curdir
+    cdir = os.getcwd()
+    print(mapfile)
 
     if os.path.exists(mapfile):
         return mapfile
@@ -135,25 +136,24 @@ def map_file(mapitem):
     else:
     #    print('Warning: ' + mapfile + ' does not exist!' + '\n')
 
-        mapfile1 = mapfile[mapfile.rfind('\\')+1:]
-        dir1 = mapfile[:mapfile.rfind('\\')]
-        dir2=dir1[dir1.rfind('\\')+1:]
-
-        print('will try ' + mapfile + ' in current directory or subdirectories.' + '\n')
+        mapfile1 = os.path.basename(mapfile)
+        dir1 = os.path.dirname(mapfile)
+        dir2 = os.path.basename(dir1)
+        print('will try ' + mapfile1 + ' in current directory or subdirectories.' + '\n')
 
        # check subdirectories recursively
         
         for subdir in os.walk(cdir):            
-            mapfile = os.path.join(cdir,subdir[0],mapfile1)
-                    
-            if os.path.exists(mapfile):
+            mapfile = os.path.join(subdir[0],mapfile1)
+            print(' Try ' + mapfile)
+            if os.path.exists(mapfile):                
                 if subdir[2:] == dir2:
                     return mapfile
                 else:
                     mapfile2 = mapfile
             else:
                  print('ERROR: ' + mapfile1 + ' does not exist! Exiting' + '\n')
-                 sys.exit(1)
+                # sys.exit(1)  # kills KNIME ;-)
 
         return mapfile2
 
@@ -330,17 +330,17 @@ def mergemap(mapitem):
             mdoclines = loadtext(mdocname)
             if mapheader['stacksize'] > montage_tiles:
             # multiple same-dimension montages in one MRC stack
-	      tileidx_offset = mapsection * montage_tiles
+                tileidx_offset = mapsection * montage_tiles
             elif mapheader['stacksize'] == montage_tiles:
             # single montage without empty tiles (polygon)
-	      tileidx_offset = 0
+                tileidx_offset = 0
             elif  mapheader['stacksize'] < montage_tiles:
-	    # polygon fit montage with empty tiles
-	      tileidx_offset = 0
+            # polygon fit montage with empty tiles
+                tileidx_offset = 0
 
             tilepos=list()
-            for i in range(0,montage_tiles-1):
-                tile = mdoc_item(mdoclines,'ZValue = ' + str(tileidx_offset+i))
+            for i in range(0,numpy.min([montage_tiles,mapheader['stacksize']])-1):
+                tile = mdoc_item(mdoclines,'ZValue = ' + str(tileidx_offset+i))                
                 tilepos.append(tile['StagePosition'])
                 if 'AlignedPieceCoordsVS' in tile: m['Sloppy'] = True
 
@@ -401,8 +401,9 @@ def mergemap(mapitem):
             #callcmd = 'mrc2tif ' +  mergefile + '.mrc ' + mergefiletif
             #os.system(callcmd)
             
-            merge_mrc =  mrc.mmap(mergefile + '.mrc', permissive = 'True')
-            mergeheader = map_header(merge_mrc)            
+        merge_mrc =  mrc.mmap(mergefile + '.mrc', permissive = 'True')
+        mergeheader = map_header(merge_mrc)
+        
 
             # extract pixel coordinate of each tile
         tilepx = loadtext(mergefile + '.al')
