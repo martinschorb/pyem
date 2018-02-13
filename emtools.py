@@ -136,26 +136,27 @@ def map_file(mapitem):
     else:
     #    print('Warning: ' + mapfile + ' does not exist!' + '\n')
 
-        mapfile1 = os.path.basename(mapfile)
-        dir1 = os.path.dirname(mapfile)
-        dir2 = os.path.basename(dir1)
-        print('will try ' + mapfile1 + ' in current directory or subdirectories.' + '\n')
+       mapfile1 = mapfile[mapfile.rfind('\\')+1:]
+       dir1 = mapfile[:mapfile.rfind('\\')]
+       dir2=dir1[dir1.rfind('\\')+1:]
+
+       print('will try ' + mapfile1 + ' in current directory or subdirectories.' + '\n')
 
        # check subdirectories recursively
         
-        for subdir in os.walk(cdir):            
+       for subdir in os.walk(cdir):            
             mapfile = os.path.join(subdir[0],mapfile1)
-            print(' Try ' + mapfile)
+           # print(' Try ' + mapfile)
             if os.path.exists(mapfile):                
                 if subdir[2:] == dir2:
                     return mapfile
                 else:
                     mapfile2 = mapfile
             else:
-                 print('ERROR: ' + mapfile1 + ' does not exist! Exiting' + '\n')
+                print('ERROR: ' + mapfile1 + ' does not exist! Exiting' + '\n')
                 # sys.exit(1)  # kills KNIME ;-)
-
-        return mapfile2
+                
+            return mapfile2
 
 
 # -------------------------------

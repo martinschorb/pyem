@@ -21,7 +21,7 @@ navname = 'nav.nav'
 # file name navigator
 
 
-target_map = '92'
+target_map = 'refmap'
 # one example map at the desired settings (NavLabel)
 
 
@@ -229,6 +229,9 @@ for idx,acq_item in enumerate(acq):
 
 
     newnavitem = dict(targetitem)
+
+   # pad item numbers to 4 digits    
+    if acq_item['# Item'].isdigit(): acq_item['# Item'] = acq_item['# Item'].zfill(4)
 
     newnavitem['MapFile'] = [imfile]
     newnavitem['StageXYZ'] = acq_item['StageXYZ']

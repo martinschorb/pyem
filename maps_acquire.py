@@ -21,7 +21,7 @@ navname = 'nav.nav'
 # file name navigator
 
 
-target_map = '92'
+target_map = 'refmap'
 # one example map at the desired settings (NavLabel)
 
 
@@ -158,15 +158,13 @@ for idx,acq_item in enumerate(acq):
   
   pt_px1 = pt_px + maps[itemid]['tilepx'][tileid]
   pt_px1[1] = imsz[0] - pt_px1[1]
-  print(pt_px1)	    
-  
+    
   px_scale = targetheader['pixelsize'] /( maps[itemid]['mapheader']['pixelsize'] )
 
   imsz1 = numpy.array([targetheader['xsize'],targetheader['ysize']]) * px_scale 
      
   im2, p2 = em.map_extract(im,pt_px1,pt_px1,px_scale,imsz1,rotm1)
 
-  tiff.imshow(im2)
   #px = round(pt_px1[0])
   #py = round(pt_px1[1])
   
@@ -226,6 +224,9 @@ for idx,acq_item in enumerate(acq):
 
 
     newnavitem = dict(targetitem)
+    
+    # pad item numbers to 4 digits    
+    if acq_item['# Item'].isdigit(): acq_item['# Item'] = acq_item['# Item'].zfill(4)
 
     newnavitem['MapFile'] = [imfile]
     newnavitem['StageXYZ'] = acq_item['StageXYZ']
