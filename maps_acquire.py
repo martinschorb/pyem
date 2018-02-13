@@ -218,6 +218,9 @@ for idx,acq_item in enumerate(acq):
     # fill navigator
 
     acq_item['Acquire'] = '0'
+    
+    # NoRealign
+    acq_item['Color'] = '5'
 
     outnav.append(acq_item)
 
