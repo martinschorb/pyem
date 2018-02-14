@@ -34,6 +34,7 @@ from scipy.ndimage import rotate
 import tifffile as tiff
 import re
 import mrcfile as mrc
+import time
 
 # define supporting functions
 
@@ -253,7 +254,7 @@ def map_rotation(mapx,mapy):
 # -------------------------------
 #%%
 
-def mergemap(mapitem):
+def mergemap(mapitem,crop=0):
 
   # processes a map item and merges the mosaic using IMOD
   # generates a dictionary with metadata for this procedure
@@ -390,14 +391,14 @@ def mergemap(mapitem):
         if not os.path.exists(mergefile+'.mrc'):
 
             # merge the montage to a single file
-            callcmd = 'extractpieces ' +  mapfile + ' ' + mapfile + '.pcs'
+            callcmd = 'extractpieces ' +  '\"' + mapfile + '\" \"'  +  mapfile + '.pcs\"'
             os.system(callcmd)
 
             print('----------------------------------------------------\n')
             print('Merging the map montage into a single image....' + '\n')
             print('----------------------------------------------------\n')
 
-            callcmd = 'blendmont -imi ' +  mapfile + ' -imo ' + mergefile + '.mrc -pli ' + mapfile + '.pcs -roo ' + mergefile  + '.mrc -se ' + str(mapsection) + ' -al '+ mergefile + '.al -sloppy'    #os.system(callcmd)
+            callcmd = 'blendmont -imi ' + '\"' + mapfile + '\"' + ' -imo \"' + mergefile + '.mrc\" -pli \"' + mapfile + '.pcs\" -roo \"' + mergefile  + '.mrc\" -se ' + str(mapsection) + ' -al \"'+ mergefile + '.al\" -sloppy'    #os.system(callcmd)
             os.system(callcmd)
             #callcmd = 'mrc2tif ' +  mergefile + '.mrc ' + mergefiletif
             #os.system(callcmd)
@@ -443,7 +444,30 @@ def mergemap(mapitem):
         overlapy = mapheader['ysize'] - ystep
 
         
-
+	
+	if crop>0:
+		if not os.path.exists(mergefile+'_crop.mrc'):
+			loopcount = 0
+			print('waiting for crop model to be created ... Please store it under this file name: \"' + mergefile + '.mod\".')
+			callcmd = '3dmod \"' +  mergefile + '.mrc\"'
+			os.system(callcmd)
+			while not os.path.exists(mergefile+'.mod'):
+				if loopcount > 20: 
+					print('Timeout - will continue without cropping!')
+					break
+				print('waiting for crop model to be created in IMOD... Please store it under this file name: \"' + mergefile + '.mrc\".')
+				time.sleep(20)
+				loopcount = loopcount + 1
+				
+			if loopcount < 21:
+				callcmd = 'imodmop \"' +  mergefile + '.mod\" \"'+ mergefile + '.mrc\" \"' + mergefile + '_crop.mrc\"'
+				os.system(callcmd)
+		
+		merge_mrc.close()
+		
+		merge_mrc = mrc.mmap(mergefile + '_crop.mrc', permissive = 'True')
+		
+	
       # load merged map for cropping
     if mapsection>0:
         im = merge_mrc.data[mapsection,:,:]
@@ -473,7 +497,8 @@ def mergemap(mapitem):
   m['tilepx'] = tilepx
   m['overlap'] = [overlapx,overlapy]
   m['tileloc'] = tileloc
-
+  
+  merge_mrc.close()
   return m
 
 
@@ -684,7 +709,8 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False):
   # read information from maps
 
   mapfile = map_file(curr_map)
-  mapheader = map_header(mapfile)
+  map_mrc = mrc.mmap(mapfile, permissive = 'True')
+  mapheader = map_header(map_mrc)
 
   pixelsize = mapheader['pixelsize']
 
@@ -698,7 +724,8 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False):
   # target reference
 
   targetfile = map_file(targetitem)
-  targetheader = map_header(targetfile)
+  target_mrc = mrc.mmap(targetfile, permissive = 'True')
+  targetheader = map_header(target_mrc)
 
   tx = map(float,targetitem['PtsX'])
   ty = map(float,targetitem['PtsY'])
@@ -772,7 +799,7 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False):
 
     imfile = 'virt_' + label + '.tif'
 
-    if os.path.exists(imfile): os.system('rm -f ' + imfile)
+    if os.path.exists(imfile): os.remove(imfile)
     tiff.imsave(imfile,im4,compress=6)
 
     t_size = imsz1/px_scale
