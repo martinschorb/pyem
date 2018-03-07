@@ -63,12 +63,13 @@ def loadtext(fname):
 # -------------------------------
 #%%
 
-def nav_item(navlines,label):
+def nav_item(lines,label):
 
     # extracts the content block of a navItem of givel label
     # returns it as a dictionary
     # reads and parses navigator adoc files version >2 !!
-    
+    if lines[-1] != '':
+         navlines = lines+['']
     
 
     searchstr = '[Item = ' + label + ']'
@@ -89,12 +90,12 @@ def nav_item(navlines,label):
 # -------------------------------
 #%%
 
-def mdoc_item(lines,label):
+def mdoc_item(lines1,label):
 
     # extracts the content block of an item of givel label in a mdoc file
     # returns it as a dictionary
-    if lines[-1:] != '':
-        lines.append('')
+    if lines1[-1] != '':
+        lines = lines1+['']
 
 
     searchstr = '[' + label + ']'
