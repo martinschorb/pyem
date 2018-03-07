@@ -892,3 +892,29 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False):
 
 
   return outnav
+
+
+
+# ------------------------------------------------------------
+  
+def nav_selection(allitems,select=[],acquire=True):
+    
+# extracts a selection of navigator items into a new navigator
+# takes an input navigator (list of dicts), an optional list of item labels (one line each) and optional whether to include items selected for acquisition
+# if only the input nav is given, it will extract all "Acquire" items
+# output is a text list (like navlines)
+        
+    newnav = list()
+    
+    if acquire:
+        acq = filter(lambda item:item.get('Acquire'),allitems)
+        acq = filter(lambda item:item['Acquire']==['1'],acq)
+        
+        for item in acq:
+            newnav.extend(itemtonav(item,item['# Item']))
+                                             
+    for listitem in select:
+        selitem = filter(lambda item:item['# Item']==listitem,allitems)
+        newnav.extend(itemtonav(selitem[0],selitem[0]['# Item']))
+
+    return newnav
