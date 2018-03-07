@@ -126,7 +126,7 @@ def parse_adoc(lines):
 def map_file(mapitem):
 
     # extracts map file name from navigator and checks for existance
-
+           
     mapfile = ' '.join(mapitem['MapFile'])
     cdir = os.getcwd()
     print(mapfile)
@@ -455,7 +455,7 @@ def mergemap(mapitem,crop=0):
 				if loopcount > 20: 
 					print('Timeout - will continue without cropping!')
 					break
-				print('waiting for crop model to be created in IMOD... Please store it under this file name: \"' + mergefile + '.mrc\".')
+				print('waiting for crop model to be created in IMOD... Please store it under this file name: \"' + mergefile + '.mod\".')
 				time.sleep(20)
 				loopcount = loopcount + 1
 				
@@ -772,7 +772,7 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False):
       ntotal = ntotal - 1
       continue
 
-    idx = idx + 1
+    
 
     px = numpy.array(numpy.transpose(p4[:,0]))
     px = numpy.array2string(px,separator=' ')
@@ -795,8 +795,8 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False):
 
 
 
-    label = curr_map['# Item'] + '_' + str(idx+1).zfill(3)
-
+    label = curr_map['# Item'] + '_' + str(idx).zfill(3)
+    idx = idx + 1
     imfile = 'virt_' + label + '.tif'
 
     if os.path.exists(imfile): os.remove(imfile)
