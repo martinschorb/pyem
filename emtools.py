@@ -23,7 +23,7 @@
 
 # dependencies
 #%%
-import fnmatch
+#import fnmatch
 import os
 import os.path
 import sys
@@ -55,7 +55,7 @@ def loadtext(fname):
     for line in f.readlines():
         lines.append(line.strip())
 
-    lines.append('')
+ #   lines.append('')
     f.close()
     return lines
 
@@ -68,6 +68,8 @@ def nav_item(navlines,label):
     # extracts the content block of a navItem of givel label
     # returns it as a dictionary
     # reads and parses navigator adoc files version >2 !!
+    
+    
 
     searchstr = '[Item = ' + label + ']'
     if not searchstr in navlines:
@@ -91,6 +93,9 @@ def mdoc_item(lines,label):
 
     # extracts the content block of an item of givel label in a mdoc file
     # returns it as a dictionary
+    if lines[-1:] != '':
+        lines.append('')
+
 
     searchstr = '[' + label + ']'
     if not searchstr in lines:

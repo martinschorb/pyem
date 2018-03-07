@@ -1,0 +1,19 @@
+KNIME:
+
+Preferences-> Updates -> Available Software Sites -> Stable Community Contribution
+load workflow
+install all missing packages
+
+Preferences -> KNIME -> Python, point it to the anaconda installation directory.
+
+Anaconda:
+
+start anaconda prompt
+conda install -c conda-forge tifffile numpy scipy pandas scikit-image
+pip install mrcfile
+
+install emtools.py in local directory
+
+in all python nodes put the line
+
+sys.path.append('C:\emtools')
