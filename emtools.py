@@ -639,7 +639,7 @@ def map_extract(im,c,p,px_scale,imsz1,rotm1):
   # extract image (1.42x to enable rotation)
   cropsize = imsz1 * 1.42
 
-  angle = math.degrees(math.acos(rotm1[0,0]))
+  angle = math.degrees(math.asin(rotm1[1,0]))
 
   im1 = imcrop(im,c,cropsize)
 
@@ -652,8 +652,9 @@ def map_extract(im,c,p,px_scale,imsz1,rotm1):
   p2 = p1/px_scale
 
   # rotate
+  
   im3 = rotate(im2,angle,cval=numpy.mean(im1))
-  p3 =  p2 * rotm1.T
+  p3 =  p2 * rotm1
 
   t_size = imsz1/px_scale
   c3 = numpy.array(im3.shape)/2
@@ -664,8 +665,8 @@ def map_extract(im,c,p,px_scale,imsz1,rotm1):
 
   p4=p3.copy()
 
-  p4[:,0] =  t_size[0]/2 - p3[:,0]
-  p4[:,1] =  p3[:,1] + t_size[1]/2
+  p4[:,1] =  t_size[0]/2 - p3[:,0]
+  p4[:,0] =  t_size[1]/2 - p3[:,1]
 
   return im4, p4
 
@@ -770,9 +771,9 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False):
 
     p = pts[idx]
 
-    im4, p4 = map_extract(im,c,p,px_scale,imsz1,rotm1)
+    im4, p4 = map_extract(im,c,p,px_scale,imsz1,targetrot)
 
-
+	
     if min(im4.shape) < 400:
       print('Item is too close to border of map, skipping it.')
       ntotal = ntotal - 1
@@ -806,7 +807,7 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False):
     imfile = 'virt_' + label + '.tif'
 
     if os.path.exists(imfile): os.remove(imfile)
-    tiff.imsave(imfile,im4,compress=6)
+    tiff.imsave(imfile,im4)
 
     t_size = imsz1/px_scale
 
@@ -821,11 +822,11 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False):
     c_out = c
 
     c_out[1] = imsz[0] -c_out[1]
+    
+    c1 = numpy.array(a) * targetrot
+    c1 = c1 + numpy.array(c_out)
 
-    c1 = a + c
-
-    #c1 = a * rotmat1 * targetheader['pixelsize'] + c_stage
-
+    
     cnx = numpy.array(numpy.transpose(c1[:,0]))
     cnx = numpy.array2string(cnx,separator=' ')
     cnx = cnx[2:-2]
@@ -918,3 +919,64 @@ def nav_selection(allitems,select=[],acquire=True):
         newnav.extend(itemtonav(selitem[0],selitem[0]['# Item']))
 
     return newnav
+
+
+# ------------------------------------------------------------
+    
+def outline2mod(im,namebase,z=0,binning=1):
+
+# takes an input image of label outlines (single pixel thickness
+# creates an IMOD model file with these outlines as contours.
+# 
+    
+    filename = namebase+'.txt'
+    f = open(filename,'w')
+    
+    for label in numpy.unique(im[im>0]):
+        a = numpy.argwhere(im == label)
+        
+        # initialize geometrical sorting, working vars
+        am = a
+        an = a[0,:]
+        pt = an
+        am=numpy.delete(am,0,0)
+        
+        while(am.shape[0]>2):
+            # find neighbouring point from remaining ones
+            ix = numpy.argmin((am[:,0]-pt[0])**2+(am[:,1]-pt[1])**2)
+            # add to sorted list
+            an = numpy.vstack((an,am[ix,:]))
+            pt = am[ix,:]
+            # remove this point from input
+            am=numpy.delete(am,ix,0)
+        
+        # add last 2 points to sorted list
+        ix = numpy.argmin((am[:,0]-pt[0])**2+(am[:,1]-pt[1])**2)
+        an = numpy.vstack((an,am[ix,:]))        
+        am = numpy.delete(am,ix,0)
+        an = numpy.vstack((an,am[0,:]))      
+        
+        
+        points = numpy.vstack((an[:,1],im.shape[0]-an[:,0])).transpose() * binning
+        
+        
+        
+        # write output file        
+        for j,item in enumerate(points):
+            f.write(" 1  "+str(label)+"  %s %s" % (item[0],item[1])+" "+str(z)+"\n")
+            
+    
+    
+    f.close()
+    
+    #convert into IMOD model
+    callcmd = 'point2model '+filename+' '+namebase+'.mod'
+    os.system(callcmd)
+    
+    
+    
+    
+        
+        
+        
+        
