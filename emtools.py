@@ -941,15 +941,32 @@ def outline2mod(im,namebase,z=0,binning=1):
         an = a[0,:]
         pt = an
         am=numpy.delete(am,0,0)
+        jump = 0
         
         while(am.shape[0]>2):
             # find neighbouring point from remaining ones
-            ix = numpy.argmin((am[:,0]-pt[0])**2+(am[:,1]-pt[1])**2)
-            # add to sorted list
-            an = numpy.vstack((an,am[ix,:]))
-            pt = am[ix,:]
-            # remove this point from input
-            am=numpy.delete(am,ix,0)
+            dist = (am[:,0]-pt[0])**2+(am[:,1]-pt[1])**2
+            ix = numpy.argmin(dist)
+            
+            if numpy.min(dist) > 50:                
+                if jump:
+                    an = numpy.vstack((an,anchor))
+                    pt = anchor
+                    jump = 0                    
+                else:    
+                    anchor = pt
+                    jump = 1
+                    an = numpy.vstack((an,am[ix,:]))
+                    pt = am[ix,:]
+                    am=numpy.delete(am,ix,0)
+            else:            
+                # add to sorted list
+                an = numpy.vstack((an,am[ix,:]))
+                pt = am[ix,:]
+            
+            
+                # remove this point from input
+                am=numpy.delete(am,ix,0)
         
         # add last 2 points to sorted list
         ix = numpy.argmin((am[:,0]-pt[0])**2+(am[:,1]-pt[1])**2)
