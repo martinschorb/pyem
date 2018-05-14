@@ -930,7 +930,8 @@ def outline2mod(im,namebase,z=0,binning=1):
 # 
     
     filename = namebase+'.txt'
-    f = open(filename,'w')
+    f = open(filename,'w')    
+   
     
     for label in numpy.unique(im[im>0]):
         a = numpy.argwhere(im == label)
@@ -960,7 +961,6 @@ def outline2mod(im,namebase,z=0,binning=1):
         points = numpy.vstack((an[:,1],im.shape[0]-an[:,0])).transpose() * binning
         
         
-        
         # write output file        
         for j,item in enumerate(points):
             f.write(" 1  "+str(label)+"  %s %s" % (item[0],item[1])+" "+str(z)+"\n")
@@ -970,7 +970,7 @@ def outline2mod(im,namebase,z=0,binning=1):
     f.close()
     
     #convert into IMOD model
-    callcmd = 'point2model '+filename+' '+namebase+'.mod'
+    callcmd = 'point2model \"'+filename+'\" \"'+namebase+'.mod\"'
     os.system(callcmd)
     
     
