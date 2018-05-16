@@ -17,3 +17,4 @@ install emtools.py in local directory
 in all python nodes put the line
 
 sys.path.append('C:\emtools')
+pip install -e /path/to/package
