@@ -171,7 +171,7 @@ def map_file(mapitem):
 
 def map_header(m):
 
-    # extracts MRC header information for a given mrc.object (legacy from reading marc headers)
+    # extracts MRC header information for a given mrc.object (legacy from reading mrc headers)
     header={}
 
     header['xsize'] = numpy.int(m.header.nx)

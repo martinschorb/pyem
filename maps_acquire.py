@@ -17,7 +17,7 @@
 # PARAMETERS
 
 
-navname = 'nav.nav'
+navname = '5a_automaps.nav'
 # file name navigator
 
 
@@ -31,17 +31,12 @@ target_map = 'refmap'
 
 # dependencies
 
-import fnmatch
 import os
 import os.path
-import sys
-import time
 import numpy
-import scipy
-import math
+
 #import matplotlib.pyplot as plt
-import re
-from scipy.ndimage.interpolation import zoom
+
 import tifffile as tiff
 import mrcfile as mrc
 
@@ -66,8 +61,8 @@ ty = map(float,targetitem['PtsY'])
 
 targetrot = em.map_rotation(tx,ty)
 
-newnav = navname[:-4] + '_automaps.nav'
-nnf = open(newnav,'w')
+newnavf = navname[:-4] + '_automaps.nav'
+nnf = open(newnavf,'w')
 nnf.write("%s\n" % navlines[0])
 nnf.write("%s\n" % navlines[1])
 
@@ -81,30 +76,35 @@ acq = filter(lambda item:item['Acquire']==['1'],acq)
 
 non_acq = [x for x in allitems if x not in acq]
 
+non_acq.remove(targetitem)
     
-for item in non_acq:
-  out = em.itemtonav(item,item['# Item'])
-  for line in out: nnf.write("%s\n" % line)
-
-
 maps = {}
 
-newmapid = 1000
+newmapid = em.newID(allitems,10000)
 
 outnav=list()
 ntotal = len(acq)
 
+
+
+
 for idx,acq_item in enumerate(acq):
   print('Processing navitem '+ str(idx+1) + '/' + str(ntotal) + ' (%2.0f%% done)' %(idx*100/ntotal))
 
-  newmapid = em.newmapID(allitems,newmapid + 1)
+  newmapid = em.newID(allitems,newmapid + 1)
   mapitem = em.realign_map(acq_item,allitems)
   
   itemid = mapitem['# Item']
     
   if not itemid in maps.keys():
     maps[itemid] = em.mergemap(mapitem)
+    groupid = em.newID(allitems,999000000+int(mapitem['MapID'][0][-6:]))
+    non_acq.remove(mapitem)
     
+    # NoRealign
+    mapitem['Color'] = '5'
+        
+    outnav.append(mapitem)
     
   mx = map(float,mapitem['PtsX'])
   my = map(float,mapitem['PtsY'])
@@ -239,6 +239,7 @@ for idx,acq_item in enumerate(acq):
     newnavitem['Acquire'] = ['1']
     newnavitem['MapSection'] = ['0']
     newnavitem['SamePosId'] = acq_item['MapID']
+    newnavitem['GroupID'] = [str(groupid)]
     # newnavitem['MapWidthHeight'] = [str(im2size[0]),str(im2size[1])]
     newnavitem['ImageType'] = ['2']
     newnavitem['MapMinMaxScale'] = [str(numpy.min(im2)),str(numpy.max(im2))]
@@ -247,10 +248,24 @@ for idx,acq_item in enumerate(acq):
 
     outnav.append(newnavitem)
 
+  
+  
   outnav.sort()
-   
+
+
+
+for item in non_acq:
+  out = em.itemtonav(item,item['# Item'])
+  for line in out: nnf.write("%s\n" % line)
+
+
+newnav = list()
+#for nitem in non_acq: 
+#    newnav.append(nitem)
 for nitem in outnav:
- 
+    newnav.append(nitem)
+   
+for nitem in newnav: 
   out = em.itemtonav(nitem,nitem['# Item'])
   for item in out: nnf.write("%s\n" % item)
 
