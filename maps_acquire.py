@@ -253,12 +253,6 @@ for idx,acq_item in enumerate(acq):
   outnav.sort()
 
 
-
-for item in non_acq:
-  out = em.itemtonav(item,item['# Item'])
-  for line in out: nnf.write("%s\n" % line)
-
-
 newnav = list()
 #for nitem in non_acq: 
 #    newnav.append(nitem)
