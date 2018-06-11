@@ -754,7 +754,7 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False):
 
   delim = 100000
 
-  startid = newmapID(nav,divmod(curr_id,delim)[0]*delim)
+  startid = newID(nav,divmod(curr_id,delim)[0]*delim)
 
 
 
@@ -765,7 +765,7 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False):
 
     polynav=dict()
     newnavitem = dict(targetitem)
-    mapid = newmapID(nav,mapid+1)
+    mapid = newID(nav,mapid+1)
 
     print('Processing object '+ str(idx+1) + '/' + str(ntotal) + ' (%2.0f%%)' %(idx*100/ntotal) + ' at position %5u , %5u' %(c[0],c[1]))
 
@@ -866,7 +866,7 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False):
     newnavitem['MapMinMaxScale'] = [str(numpy.min(im4)),str(numpy.max(im4))]
     newnavitem['NumPts'] = ['5']
     newnavitem['# Item'] = 'm_' + label
-    newnavitem['GroupID'] = [str(newmapID(nav,startid+50000))]
+    newnavitem['GroupID'] = [str(newID(nav,startid+50000))]
     curr_map['Acquire'] = ['0']
 
     # Polygon
@@ -879,7 +879,7 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False):
     polynav['CoordsInMap'] = [str(int(cx/2)) , str(int(cy/2)),curr_map['StageXYZ'][2]]
     polynav['PtsX'] = px.split()
     polynav['PtsY'] = py.split()
-    polynav['GroupID'] = [str(newmapID(nav,startid+70000))]
+    polynav['GroupID'] = [str(newID(nav,startid+70000))]
 
     nav_maps.append(newnavitem)
 
