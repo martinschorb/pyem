@@ -204,16 +204,16 @@ def itemtonav(item,name):
 # -------------------------------
 #%%
 
-def newmapID(allitems,mapid):
+def newID(allitems,startid):
     # checks if provided item ID already exists in a navigator and gives the next unique ID
     # ID needs to be integer
 
-    newid = mapid
+    newid = startid
 
     for item in allitems:
         if 'MapID' in item:
-            if str(mapid) == item['MapID'][0]:
-                newid = newmapID(mapid+1)
+            if str(startid) == item['MapID'][0]:
+                newid = newID(startid+1)
 
     return newid
 
