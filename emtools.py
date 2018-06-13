@@ -592,7 +592,7 @@ def pol2cart(rho, phi):
 #%%
 
 def img2polygon(img, n_poly, center, radius):
-    #
+    # converts a binary image into a polygon (list of points) describing its outline
 
   if img.dtype.kind is 'b':
     thresh = 1
@@ -635,6 +635,8 @@ def img2polygon(img, n_poly, center, radius):
 # --------------------------------------
 
 def map_extract(im,c,p,px_scale,imsz1,rotm1):
+# extracts an image from a given position in an existing map and links positions inside
+
 
   # extract image (1.42x to enable rotation)
   cropsize = imsz1 * 1.42
@@ -925,7 +927,7 @@ def nav_selection(allitems,select=[],acquire=True):
     
 def outline2mod(im,namebase,z=0,binning=1):
 
-# takes an input image of label outlines (single pixel thickness
+# takes an input image of label outlines (single pixel thickness)
 # creates an IMOD model file with these outlines as contours.
 # 
     

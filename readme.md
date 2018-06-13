@@ -1,6 +1,6 @@
 # EM tools
 
-### a python package to interact with Serial EM to enable automated Transmission Electron Microscopy
+### a Python package to interact with SerialEM to enable automated Transmission Electron Microscopy
 
 ## Function list:
 
@@ -21,3 +21,18 @@ functions to extract information from a navigator item
 - **map_file:**  extracts the file name of a map item. Looks for the image file in absolute and relative path.
 - **map_header:**  extracts parts of an MRC header. input: memory-mapped mrc object (see _mrcfile_ package)
 - **realign_map:**  determines which map to align to for given navigator item
+
+main functions that provide key actions
+
+- **mergemap:**  processes a map item and merges the mosaic using IMOD tools, generates a dictionary with metadata for this procedure
+- **img2polygon:**  converts a binary image into a polygon (list of points) describing its outline
+- **map_extract:**  extracts an image from a given position in an existing map and links positions inside
+- **pts2nav:**  takes pixel coordinates on an input map, generates virtual maps at their positions, creates polygons matching their shape
+- **outline2mod:**  takes an input image of label outlines (single pixel thickness), creates an IMOD model file with these outlines as contours.
+
+
+accessory functions;
+
+- **map_rotation:**  determine rotation of a map's coordinate frame
+- **cart2pol, pol2cart:** coordinate conversions
+- **imcrop:**  crops an image of a given size (2 element numpy array) around a pixel coordinate (2 element numpy array)
