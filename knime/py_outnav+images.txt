@@ -1,0 +1,63 @@
+from pandas import DataFrame
+from KNIPImage import KNIPImage
+
+import sys
+import os
+
+
+sys.path.append('C:\emtools')
+
+import emtools as em
+
+navlines_input = input_table['navlines']
+
+navlines = map(str,navlines_input.tolist())
+
+navfile=flow_variables['navfile']
+
+os.chdir(os.path.dirname(navfile))
+
+allitems = em.fullnav(navlines)
+
+
+acq = filter(lambda item:item.get('Acquire'),allitems)
+acq = filter(lambda item:item['Acquire']==['1'],acq)
+
+non_acq = [x for x in allitems if x not in acq]
+
+outnav=list()
+outnav.append(navlines[0])
+outnav.append(navlines[1])
+
+for item in non_acq:
+	out = em.itemtonav(item,item['# Item'])
+	for line in out: outnav.append(line)
+
+outim = list()
+maps = list()
+midx = 1
+crop = 1
+
+
+for acq_item in acq:
+  mapfile = acq_item['MapFile']
+  map1 = em.mergemap(acq_item,crop)
+  im = map1['im']
+
+  mapid = "_{0}".format(midx)
+  
+  flow_variables['map'+mapid]=acq_item['# Item']
+  flow_variables['mapfile'+mapid]=map1['mergefile']
+  flow_variables['map_px'+mapid]=map1['mapheader']['pixelsize']
+  flow_variables['sloppy'+mapid]=map1['Sloppy']
+  midx = midx + 1
+  
+  outim.append(KNIPImage(im))
+  
+  
+  
+# Copy input to output
+output_table_1=DataFrame()
+#output_table_1= outnav
+output_table_2=DataFrame()
+output_table_2['Image'] = outim

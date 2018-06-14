@@ -1,0 +1,38 @@
+from KNIPImage import KNIPImage
+from scipy import ndimage
+import numpy as np
+
+
+# Copy input to output
+output_table = input_table.copy()
+
+# Create empty output_column
+output_column = []
+
+# Loop over every cell in the 'Img' column
+for index,input_cell in input_table['Image'].iteritems():
+
+	# get image from cell
+	img = input_cell.array
+
+	img[img==0] = np.mean(img[img>0])
+
+	 
+	img1 = img - img.min()   
+ 
+	imp = np.sort(img1.flatten())
+
+	tot=len(imp)
+
+	img1[img1<imp[int(0.005*tot)]]=np.median(imp[int(0.005*tot):])
+
+	img1[img1>imp[int(0.995*tot)]]=np.median(imp[:int(0.995*tot)])
+
+	# Write result back into a KNIPImage
+	output_cell = KNIPImage(img1)
+
+	# Append output_cell to output array
+	output_column.append(output_cell)
+
+# Set output_column in output_table
+output_table['Image_maxmin'] = output_column
