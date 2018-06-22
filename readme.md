@@ -14,7 +14,7 @@ generic functions to parse/manipulate navigator/adoc files
 - **itemtonav:**  converts a dictionary autodoc item variable into text list suitable for export into navigator format
 - **newID:**  checks if the provided item ID already exists in a navigator and gives the next unique ID - input:list of dict, integer ID
 - **nav_selection:**  extracts a selection of navigator items into a new navigator, _Acquire_ can be chosen as a default flag, - input: list, optional list of items
-
+- **ordernav:**  re-orders a navigator by its label. It considers the indexing after a delimiter in the string. Example: s01_cell-1,s02_cell-1,s01_cell-02, ... is sorted by cells instead of s. When no delimiter is given (''), the navigator is sorted by its label.
 
 functions to extract information from a navigator item
 

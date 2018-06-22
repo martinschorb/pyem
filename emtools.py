@@ -35,6 +35,7 @@ import tifffile as tiff
 import re
 import mrcfile as mrc
 import time
+from operator import itemgetter
 
 # define supporting functions
 
@@ -995,7 +996,27 @@ def outline2mod(im,namebase,z=0,binning=1):
     
     
     
+# ------------------------------------------------------------ 
         
-        
-        
+def ordernav(nav,delim='_'):
+# re-orders a navigator by its label.
+# it considers the indexing after a delimiter in the string.
+# example: s01_cell-1,s02_cell-1,s01_cell-02, ...    is sorted by cells instead of s...
+# when no delimiter is given (''), the navigator is sorted by its label.
+
+    non_idx = 0
+    
+    for item in nav: 
+        if item['# Item'].find(delim) == -1:
+                item['# Sorting'] = str(non_idx).zfill(5)
+                non_idx = non_idx+1
+        else:
+            item['# Sorting'] = item['# Item'][item['# Item'].find(delim)+1:]
+    
+    newnav = sorted(nav,key = itemgetter('# Sorting'))
+                                         
+    for item in newnav: item.pop('# Sorting')
+
+    
+    return newnav
         
