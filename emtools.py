@@ -64,11 +64,16 @@ def loadtext(fname):
 # -------------------------------
 #%%
 
-def nav_item(lines,label):
+def nav_item(lines,label,multi=False):
 
-    # extracts the content block of a navItem of givel label
+    # extracts the content block of a single navItem of givel label
     # returns it as a dictionary
     # reads and parses navigator adoc files version >2 !!
+    # the "multi" parameter is needed when multiple items have the exact same label and the function is called from within a loop.
+    # if this is the case, please call full_nav and filter its output to filed the proper label.
+    
+    navlines=lines
+    
     if lines[-1] != '':
          navlines = lines+['']
     
@@ -84,8 +89,12 @@ def nav_item(lines,label):
         item = navlines[itemstartline:itemstartline+itemendline]
         result = parse_adoc(item)
         result['# Item']=navlines[itemstartline-1][navlines[itemstartline-1].find(' = ') + 3:-1]
-
+        if multi:
+            lines.pop(itemstartline-1)
+            return result,lines
+        
     return result
+    
 
 
 # -------------------------------
@@ -222,12 +231,13 @@ def newID(allitems,startid):
 # -------------------------------
 #%%
 
-def fullnav(navlines):
+def fullnav(inlines):
 # parses a full nav file and returns a list of dictionaries
+  navlines=inlines[:]  
   c=[]
   for item in navlines:
     if item.find('[')>-1:
-      b=nav_item(navlines,item[item.find(' = ') + 3:-1])
+      (b,navlines)=nav_item(navlines,item[item.find(' = ') + 3:-1],True)
       b['# Item']=item[item.find(' = ') + 3:-1]
       c.append(b)
 
@@ -915,11 +925,11 @@ def nav_selection(allitems,select=[],acquire=True):
         acq = filter(lambda item:item['Acquire']==['1'],acq)
         
         for item in acq:
-            newnav.extend(itemtonav(item,item['# Item']))
-                                             
-    for listitem in select:
-        selitem = filter(lambda item:item['# Item']==listitem,allitems)
-        newnav.extend(itemtonav(selitem[0],selitem[0]['# Item']))
+            newnav.extend(item)
+    if not (select == []):                                         
+        for listitem in select:
+            selitem = filter(lambda item:item['# Item']==listitem,allitems)
+            newnav.extend(selitem)
 
     return newnav
 
@@ -1000,9 +1010,9 @@ def outline2mod(im,namebase,z=0,binning=1):
         
 def ordernav(nav,delim='_'):
 # re-orders a navigator by its label.
-# it considers the indexing after a delimiter in the string.
+# It considers the indexing after a delimiter in the string.
 # example: s01_cell-1,s02_cell-1,s01_cell-02, ...    is sorted by cells instead of s...
-# when no delimiter is given (''), the navigator is sorted by its label.
+# when no delimiter is given, the navigator is sorted by its label.
 
     non_idx = 0
     
