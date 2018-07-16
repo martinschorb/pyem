@@ -7,7 +7,7 @@
 generic functions to parse/manipulate navigator/adoc files
 
 - **loadtext:**  reads a text file in a list of strings (line-by-line)
-- **nav_item:**  extracts a single navigator item from a text list - input: label, text - output: dict, not suitable for multiple items with the exact same label!
+- **nav_item:**  extracts a single navigator item from a text list - input: label, text - output: dict, list of remaining items
 - **mdoc_item:**  extracts a single item from a mdoc text list - input: label, text - output: dict
 - **parse_adoc:**  converts an adoc format text list into a list of dictionaries
 - **fullnav:**  parses a full nav file (text list) and returns a list of dictionaries
