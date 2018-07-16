@@ -50,7 +50,7 @@ reload(em)
 
 
 navlines = em.loadtext(navname)
-targetitem = em.nav_item(navlines,target_map)
+(targetitem,junk) = em.nav_item(navlines,target_map)
 
 targetfile = em.map_file(targetitem)
 target_mrc = mrc.open(targetfile, permissive = 'True')

@@ -25,7 +25,7 @@ out=list()
 navlines_input = input_table_2['navlines']
 navlines = map(str,navlines_input.tolist())
 
-targetitem = em.nav_item(navlines,flow_variables['target_map'])
+(targetitem,junk) = em.nav_item(navlines,flow_variables['target_map'])
 
 
 allitems = em.fullnav(navlines)
@@ -75,7 +75,7 @@ for index,input_cell in input_table_1['Labels'].iteritems():
 	
 	
 	imsize = numpy.array(orig1.shape)
-	curr_map = em.nav_item(navlines,flow_variables['map'+mapid])
+	(curr_map,junk) = em.nav_item(navlines,flow_variables['map'+mapid])
 	pixelsize = flow_variables['map_px'+mapid]
 
     
