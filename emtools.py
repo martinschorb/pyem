@@ -64,36 +64,35 @@ def loadtext(fname):
 # -------------------------------
 #%%
 
-def nav_item(lines,label,multi=False):
+def nav_item(inlines,label):
 
     # extracts the content block of a single navItem of givel label
     # returns it as a dictionary
     # reads and parses navigator adoc files version >2 !!
     # the "multi" parameter is needed when multiple items have the exact same label and the function is called from within a loop.
-    # if this is the case, please call full_nav and filter its output to filed the proper label.
+    # if this is the case, please call full_nav and filter its output to find the items with the desired label.
     
-    navlines=lines
+    lines=inlines[:]
     
     if lines[-1] != '':
-         navlines = lines+['']
+         lines = lines+['']
     
 
     searchstr = '[Item = ' + label + ']'
-    if not searchstr in navlines:
+    if not searchstr in lines:
         print('ERROR: Navigator Item ' + label + ' not found!')
         result=[]
     else:
-        itemstartline = navlines.index(searchstr)+1
-        itemendline = navlines[itemstartline:].index('')
+        itemstartline = lines.index(searchstr)+1
+        itemendline = lines[itemstartline:].index('')
 
-        item = navlines[itemstartline:itemstartline+itemendline]
+        item = lines[itemstartline:itemstartline+itemendline]
         result = parse_adoc(item)
-        result['# Item']=navlines[itemstartline-1][navlines[itemstartline-1].find(' = ') + 3:-1]
-        if multi:
-            lines.pop(itemstartline-1)
-            return result,lines
+        result['# Item']=lines[itemstartline-1][lines[itemstartline-1].find(' = ') + 3:-1]
         
-    return result
+        lines[itemstartline-1:itemstartline+itemendline+1]=[]
+        
+    return result,lines
     
 
 
@@ -533,7 +532,8 @@ def realign_map(item,allitems):
           print('No map found to realign item '+ item['# Item'] + ' to, skipping it...')
           result=[]
       else:
-          result = realign_map(nav_item(item['SamePosId']),allitems)
+          mapitem = filter(lambda c_item:c_item['MapID']==item['SamePosId'],allitems)
+          result = realign_map(mapitem)
     else:
       mapID = item['DrawnID']
 
