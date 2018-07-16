@@ -67,10 +67,10 @@ def loadtext(fname):
 def nav_item(inlines,label):
 
     # extracts the content block of a single navItem of givel label
-    # returns it as a dictionary
     # reads and parses navigator adoc files version >2 !!
-    # the "multi" parameter is needed when multiple items have the exact same label and the function is called from within a loop.
-    # if this is the case, please call full_nav and filter its output to find the items with the desired label.
+    # returns the first item found as a dictionary and the remaining list with that item removed
+    # this is useful when multiple items have the exact same label and the function is called from within a loop to retrieve them all.
+
     
     lines=inlines[:]
     
@@ -1008,7 +1008,7 @@ def outline2mod(im,namebase,z=0,binning=1):
     
 # ------------------------------------------------------------ 
         
-def ordernav(nav,delim='_'):
+def ordernav(nav,delim=''):
 # re-orders a navigator by its label.
 # It considers the indexing after a delimiter in the string.
 # example: s01_cell-1,s02_cell-1,s01_cell-02, ...    is sorted by cells instead of s...
@@ -1017,9 +1017,12 @@ def ordernav(nav,delim='_'):
     non_idx = 0
     
     for item in nav: 
-        if item['# Item'].find(delim) == -1:
-                item['# Sorting'] = str(non_idx).zfill(5)
-                non_idx = non_idx+1
+        if delim=='' :
+            item['# Sorting'] = item['# Item']
+                
+        elif item['# Item'].find(delim) == -1:
+            item['# Sorting'] = str(non_idx).zfill(5)
+            non_idx = non_idx+1
         else:
             item['# Sorting'] = item['# Item'][item['# Item'].find(delim)+1:]
     
