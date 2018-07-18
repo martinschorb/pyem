@@ -236,7 +236,7 @@ def fullnav(inlines):
   c=[]
   for item in navlines:
     if item.find('[')>-1:
-      (b,navlines)=nav_item(navlines,item[item.find(' = ') + 3:-1],True)
+      (b,navlines)=nav_item(navlines,item[item.find(' = ') + 3:-1])
       b['# Item']=item[item.find(' = ') + 3:-1]
       c.append(b)
 
