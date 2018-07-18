@@ -17,7 +17,7 @@
 # PARAMETERS
 
 
-navname = '5a_automaps.nav'
+navname = 'test_F30.nav'
 # file name navigator
 
 
@@ -112,8 +112,9 @@ for idx,acq_item in enumerate(acq):
   rotmat = em.map_rotation(mx,my)
   # combine rotation matrices
   rotm1 = rotmat.T * targetrot  
-  xval = (float(acq_item['PtsX'][0]))
-  yval = (float(acq_item['PtsY'][0]))
+  
+  xval = float(acq_item['StageXYZ'][0]) #(float(acq_item['PtsX'][0]))
+  yval = float(acq_item['StageXYZ'][1]) #(float(acq_item['PtsY'][0]))
   
   pt = numpy.array([xval,yval])
   
