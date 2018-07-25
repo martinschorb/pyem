@@ -230,6 +230,19 @@ def newID(allitems,startid):
 # -------------------------------
 #%%
 
+def newreg(navitems):
+    # gives the next available registration for the input set of navigator items 
+
+    reg = list()
+    for item in navitems : reg.append(int(item['Regis'][0]))
+
+    return max(reg)+1
+
+
+# -------------------------------    
+
+#%%
+
 def fullnav(inlines):
 # parses a full nav file and returns a list of dictionaries
   navlines=inlines[:]  
@@ -426,7 +439,7 @@ def mergemap(mapitem,crop=0):
             # extract pixel coordinate of each tile
         tilepx = loadtext(mergefile + '.al')
 
-        tilepx = tilepx[:-1]
+        #tilepx = tilepx[:-1]
         for j, item in enumerate(tilepx): tilepx[j] = map(float,re.split(' +',tilepx[j]))
 
         tilepx = numpy.array(tilepx)
@@ -436,7 +449,7 @@ def mergemap(mapitem,crop=0):
         # use original tile coordinates(pixels) from SerialEM to determine tile position in montage
 
         tilepx1 = loadtext(mapfile + '.pcs')
-        tilepx1 = tilepx1[:-1]
+        #tilepx1 = tilepx1[:-1]
         for j, item in enumerate(tilepx1): tilepx1[j] = map(float,re.split(' +',tilepx1[j]))
 
         tilepx1 = numpy.array(tilepx1)
