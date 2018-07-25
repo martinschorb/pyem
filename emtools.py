@@ -258,6 +258,29 @@ def fullnav(inlines):
 # -------------------------------
 #%%
 
+def duplicate_items(navitems,labels=[],reg=True):
+# duplicates items from a list, optional second parameter is a list of labels of the items to duplicate. Default is to use the 'Acquire' flag. 
+# third parameter determines whether the registration of duplicate items should be changed (default:yes)
+    
+  outitems = navitems[:]
+  
+  if labels==[]:
+      dupitems = nav_selection(navitems)
+      
+  else:
+      dupitems = nav_selection(navitems,labels,False)     
+
+  for item in dupitems :
+      newitem = item.copy()
+      if reg:newitem['Regis']=[str(newreg(dupitems))]
+      newitem['# Item']='D_'+item['# Item']
+      outitems.append(newitem)
+    
+  return outitems    
+    
+# -------------------------------  
+#%%
+
 def map_rotation(mapx,mapy):
     # determine rotation of coordinate frame
 
@@ -473,30 +496,30 @@ def mergemap(mapitem,crop=0):
         overlapy = mapheader['ysize'] - ystep
 
         
-	
-	if crop>0:
-		if not os.path.exists(mergefile+'_crop.mrc'):
-			loopcount = 0
-			print('waiting for crop model to be created ... Please store it under this file name: \"' + mergefile + '.mod\".')
-			callcmd = '3dmod \"' +  mergefile + '.mrc\"'
-			os.system(callcmd)
-			while not os.path.exists(mergefile+'.mod'):
-				if loopcount > 20: 
-					print('Timeout - will continue without cropping!')
-					break
-				print('waiting for crop model to be created in IMOD... Please store it under this file name: \"' + mergefile + '.mod\".')
-				time.sleep(20)
-				loopcount = loopcount + 1
-				
-			if loopcount < 21:
-				callcmd = 'imodmop \"' +  mergefile + '.mod\" \"'+ mergefile + '.mrc\" \"' + mergefile + '_crop.mrc\"'
-				os.system(callcmd)
-		
-		merge_mrc.close()
-		
-		merge_mrc = mrc.mmap(mergefile + '_crop.mrc', permissive = 'True')
-		
-	
+    
+    if crop>0:
+        if not os.path.exists(mergefile+'_crop.mrc'):
+            loopcount = 0
+            print('waiting for crop model to be created ... Please store it under this file name: \"' + mergefile + '.mod\".')
+            callcmd = '3dmod \"' +  mergefile + '.mrc\"'
+            os.system(callcmd)
+            while not os.path.exists(mergefile+'.mod'):
+                if loopcount > 20: 
+                    print('Timeout - will continue without cropping!')
+                    break
+                print('waiting for crop model to be created in IMOD... Please store it under this file name: \"' + mergefile + '.mod\".')
+                time.sleep(20)
+                loopcount = loopcount + 1
+                
+            if loopcount < 21:
+                callcmd = 'imodmop \"' +  mergefile + '.mod\" \"'+ mergefile + '.mrc\" \"' + mergefile + '_crop.mrc\"'
+                os.system(callcmd)
+        
+        merge_mrc.close()
+        
+        merge_mrc = mrc.mmap(mergefile + '_crop.mrc', permissive = 'True')
+        
+    
       # load merged map for cropping
     if mapsection>0:
         im = merge_mrc.data[mapsection,:,:]
@@ -799,7 +822,7 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False):
 
     im4, p4 = map_extract(im,c,p,px_scale,imsz1,targetrot)
 
-	
+    
     if min(im4.shape) < 400:
       print('Item is too close to border of map, skipping it.')
       ntotal = ntotal - 1
@@ -924,25 +947,30 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False):
 
 # ------------------------------------------------------------
   
-def nav_selection(allitems,select=[],acquire=True):
+def nav_selection(allitems,sel=[],acquire=True):
     
 # extracts a selection of navigator items into a new navigator
 # takes an input navigator (list of dicts), an optional list of item labels (one line each) and optional whether to include items selected for acquisition
 # if only the input nav is given, it will extract all "Acquire" items
-# output is a text list (like navlines)
+# output is list of navigator items
         
     newnav = list()
+    select = sel[:]
     
     if acquire:
         acq = filter(lambda item:item.get('Acquire'),allitems)
         acq = filter(lambda item:item['Acquire']==['1'],acq)
         
         for item in acq:
-            newnav.extend(item)
-    if not (select == []):                                         
+            newnav.append(item)
+    if not (select == []):
+        if  isinstance(select,str):select=[select]                                        
         for listitem in select:
             selitem = filter(lambda item:item['# Item']==listitem,allitems)
-            newnav.extend(selitem)
+            if type(selitem)==list:
+                newnav.extend(selitem)
+            else:
+                newnav.append(selitem)
 
     return newnav
 
