@@ -329,7 +329,7 @@ def mergemap(mapitem,crop=0):
 
   #find map file
   mapfile = map_file(mapitem)
-
+  rotation = []
 
   if mapfile.find('.st')<0 and mapfile.find('.map')<0 and mapfile.find('.mrc')<0:
     #not an mrc file
@@ -373,7 +373,7 @@ def mergemap(mapitem,crop=0):
       if os.path.exists(mdocname):
             mdoclines = loadtext(mdocname)
             pixelsize = float(mdoc_item(mdoclines,'ZValue = '+str(mapsection))['PixelSpacing'][0])/ 10000 # in um
-
+            rotation = float(mdoc_item(mdoclines,'ZValue = '+str(mapsection))['RotationAngle'][0])
 
 
     # extract center positions of individual map tiles
@@ -400,6 +400,7 @@ def mergemap(mapitem,crop=0):
 
             tilepos = numpy.array(tilepos,float)
             pixelsize = float(mdoc_item(mdoclines,'MontSection = '+str(mapsection))['PixelSpacing'][0])/ 10000 # in um
+            rotation = float(mdoc_item(mdoclines,'ZValue = '+str(mapsection))['RotationAngle'][0])
 
 
         else:
@@ -411,7 +412,7 @@ def mergemap(mapitem,crop=0):
             os.system(callcmd)
             tilepos1 = loadtext('syscall.tmp')[21:-1]
             tilepos = numpy.array([float(mapitem['PtsX'][0]),  float(mapitem['PtsY'][0])])
-
+           
 
     else:
         tilepos1 = map(float,mapitem['StageXYZ'][0:2])
@@ -534,13 +535,18 @@ def mergemap(mapitem,crop=0):
 
   mergeheader['pixelsize'] = pixelsize
   mapheader['pixelsize'] = pixelsize
-
+  
+  if not rotation==[]:
+      rc=math.cos(math.radians(rotation))
+      rs=math.sin(math.radians(rotation))
+      rotmat = numpy.matrix([[rc,-rs],[rs,rc]])
 
   # generate output
 
   m['mapfile'] = mapfile
   m['mergefile'] = mergefile+'.mrc'
   m['rotmat'] = rotmat
+  m['rotation'] = rotation
   m['tilepos'] = tilepos
   m['im'] = im
   m['mappxcenter'] = mappxcenter
