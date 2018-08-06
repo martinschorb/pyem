@@ -23,6 +23,7 @@ functions to extract information from a navigator item
 - **map_file:**  extracts the file name of a map item. Looks for the image file in absolute and relative path.
 - **map_header:**  extracts parts of an MRC header. input: memory-mapped mrc object (see _mrcfile_ package)
 - **realign_map:**  determines which map to align to for given navigator item
+- **get_mergepixel** determines the pixel coordinates of a navigator item in its associated map. 
 
 main functions that provide key actions
 

@@ -730,7 +730,64 @@ def map_extract(im,c,p,px_scale,imsz1,rotm1):
 
 # --------------------------------------
 
+def get_mergepixel(navitem,mergedmap):
+# determines the pixel coordinates of a navigator item in its associated map. 
+# input:
+# - navigatr item
+# - map item as resulting from mergemap
+# output: pixel coordinates    
+    
+  
+  xval = float(navitem['StageXYZ'][0]) #(float(acq_item['PtsX'][0]))
+  yval = float(navitem['StageXYZ'][1]) #(float(acq_item['PtsY'][0]))
+  
+  pt = numpy.array([xval,yval])
+  
+  # calculate the pixel coordinates
+  im = mergedmap['im'] 
+  
+  imsz = im.shape
+  
+  #tileloc= mergedmap['tileloc']
+  
+  
+  if 'XYinPc' in navitem:
+    tileid = int(navitem['PieceOn'][0])
+    pt_px0 = map(float,navitem['XYinPc'])
+    pt_px = numpy.array(pt_px0)
+    #pt_px[0] = maps[itemid]['mapheader']['xsize'] - pt_px[0]
+    #pt_px[1] = pt_px[1]   
+    
+    
+  else:
+         
+    tilepos = mergedmap['tilepos']
+    if numpy.diff(tilepos,axis=0)[0].max() == 0:
+      print('Montage created using image shift! Problems in identifying the positions of clicked points accurately possible!')
+	  
+    if len(tilepos.shape)<2:
+      tileid = 0
+    else:
+      tiledist = numpy.sum((tilepos-pt)**2,axis=1)
+      tileid = numpy.argmin(tiledist)
+    
+    
+    # normalize coordinates
+    
+    ptn = numpy.matrix(pt - tilepos[tileid])
+    pt_px = numpy.array(ptn * numpy.transpose(mergedmap['rotmat']) / mergedmap['mapheader']['pixelsize'] + mergedmap['mappxcenter'])
+    pt_px = pt_px.squeeze()
 
+ 
+  pt_px1 = pt_px + mergedmap['tilepx'][tileid]
+  pt_px1[1] = imsz[0] - pt_px1[1]
+  
+  return pt_px1
+  
+# ------------------------------------------------------------
+  
+  
+    
 def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False):
 # takes pixel coordinates on an input map, generates virtual maps at their positions, creates polygons matching their shape.
 # input parameters:
