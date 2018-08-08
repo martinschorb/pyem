@@ -1,4 +1,4 @@
-# EM tools
+# emTools
 
 ### a Python package to interact with SerialEM to enable automated Transmission Electron Microscopy
 
