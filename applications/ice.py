@@ -150,14 +150,14 @@ for idx,nav_item in enumerate(acq):
       
       
     if (intensity > lolim) & (intensity < uplim):
-      acq_item['Color'] = '1'
+      #acq_item['Color'] = '1'
       acq_item['Note'] = ['ice OK']
       outnav.append(acq_item)
       
     else:
-      acq_item['Acquire'] = '0'
-      #acq_item=[]  
-      outnav.append(acq_item)  
+      #acq_item['Acquire'] = '0'
+      acq_item=[]  
+      #outnav.append(acq_item)  
         
     # fill navigator
 
