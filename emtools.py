@@ -687,10 +687,10 @@ def img2polygon(img, n_poly, center, radius):
 
 # --------------------------------------
 
-def map_extract(im,c,p,px_scale,imsz1,rotm1):
+def map_extract(im,c,p,px_scale,t_size,rotm1):
 # extracts an image from a given position in an existing map and links positions inside
-
-
+  imsz1 = t_size * px_scale
+ 
   # extract image (1.42x to enable rotation)
   cropsize = imsz1 * 1.42
 
@@ -711,7 +711,6 @@ def map_extract(im,c,p,px_scale,imsz1,rotm1):
   im3 = rotate(im2,angle,cval=numpy.mean(im1))
   p3 =  p2 * rotm1
 
-  t_size = imsz1/px_scale
   c3 = numpy.array(im3.shape)/2
 
   #crop to desired size
@@ -856,7 +855,7 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False):
 
   px_scale = targetheader['pixelsize'] /pixelsize
 
-  imsz1 = numpy.array([targetheader['xsize'],targetheader['ysize']]) * px_scale
+  imsz1 = numpy.array([targetheader['ysize'],targetheader['xsize']])
 
   ntotal = len(cntrs)
 

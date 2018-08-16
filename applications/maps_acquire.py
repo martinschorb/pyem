@@ -17,7 +17,7 @@
 # PARAMETERS
 
 
-navname = 'test_F30.nav'
+navname = 'nav.nav'
 # file name navigator
 
 
@@ -162,7 +162,7 @@ for idx,acq_item in enumerate(acq):
     
   px_scale = targetheader['pixelsize'] /( maps[itemid]['mapheader']['pixelsize'] )
 
-  imsz1 = numpy.array([targetheader['xsize'],targetheader['ysize']]) * px_scale 
+  imsz1 = numpy.array([targetheader['ysize'],targetheader['xsize']])
      
   im2, p2 = em.map_extract(im,pt_px1,pt_px1,px_scale,imsz1,rotm1)
 
