@@ -17,7 +17,7 @@
 # PARAMETERS
 
 
-navname = 'nav.nav'
+navname = 'nav1.nav'
 # file name navigator
 
 
@@ -130,7 +130,7 @@ for idx,acq_item in enumerate(acq):
     tileid = int(acq_item['PieceOn'][0])
     pt_px0 = map(float,acq_item['XYinPc'])
     pt_px = numpy.array(pt_px0)
-    #pt_px[0] = maps[itemid]['mapheader']['xsize'] - pt_px[0]
+    #pt_px[1] = maps[itemid]['mapheader']['ysize'] - pt_px[1]
     #pt_px[1] = pt_px[1]   
     
     
@@ -157,13 +157,16 @@ for idx,acq_item in enumerate(acq):
 
   
   
-  pt_px1 = pt_px + maps[itemid]['tilepx'][tileid]
-  pt_px1[1] = imsz[0] - pt_px1[1]
-    
+  pt_px2 = pt_px + maps[itemid]['tilepx'][tileid]
+  pt_px1 = pt_px2.copy()
+  
+  pt_px1[1] = imsz[0] - pt_px2[1]
+  #pt_px1[0] = pt_px2[1]  
+  
   px_scale = targetheader['pixelsize'] /( maps[itemid]['mapheader']['pixelsize'] )
 
   imsz1 = numpy.array([targetheader['ysize'],targetheader['xsize']])
-     
+  
   im2, p2 = em.map_extract(im,pt_px1,pt_px1,px_scale,imsz1,rotm1)
 
   #px = round(pt_px1[0])
@@ -192,11 +195,18 @@ for idx,acq_item in enumerate(acq):
     imsize2 = im2.shape
     #plt.imshow(im2)
 
-    imfile = 'virt_map_' + acq_item['# Item'] + '.tif'
+    imfile = 'virt_map_' + acq_item['# Item'] + '.mrc'
     
     if os.path.exists(imfile): os.remove(imfile)
-    tiff.imsave(imfile,im2)
-
+   # tiff.imsave(imfile,im2)
+    
+    with mrc.new(imfile) as mrcf:
+        mrcf.set_data(im2)
+        mrcf.close()
+        
+        
+   
+   
     cx = imsize2[1]
     cy = imsize2[0]
 
