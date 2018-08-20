@@ -338,22 +338,22 @@ def mergemap(mapitem,crop=0):
     print('Assuming it is a single tif file or a stitched montage.' + '\n')
     mergefile = mapfile
     im = tiff.imread(mergefile)
-    mappxcenter = numpy.array(im.shape)[0:2] / 2
+    mappxcenter = numpy.array([im.shape[1],im.shape[0]]) / 2
     mergeheader = {}
 
-    mergeheader['stacksize'] = numpy.array(im.shape)
+    mergeheader['stacksize'] = numpy.array([im.shape[1],im.shape[0]])    
     mergeheader['xsize'] = numpy.array(im.shape)[0]
     mergeheader['ysize'] = numpy.array(im.shape)[1]
     mergeheader['pixelsize'] = numpy.mean([lx / numpy.array(im.shape)[0],ly / numpy.array(im.shape)[1]])
     mapheader = mergeheader
 
-    tilepos = numpy.array([float(mapitem['PtsX'][0]),  float(mapitem['PtsY'][0])])
+    tilepos = numpy.array(map(float,mapitem['StageXYZ'])[0:2])
 
-    tilepx = [0,0]
-    tilepx=numpy.array([tilepx,tilepx])
+    tilepx = numpy.array([0,0])
     overlapx = 0
     overlapy = 0
     tileloc = [0,0]
+    m['Sloppy'] = 'NoMont'
 
   else:
    # map is mrc file
@@ -763,7 +763,7 @@ def get_mergepixel(navitem,mergedmap):
   else:
          
     tilepos = mergedmap['tilepos']
-    if numpy.diff(tilepos,axis=0)[0].max() == 0:
+    if (numpy.diff(tilepos,axis=0)[0].max() == 0) & (type(mergedmap['Sloppy']) == bool):
       print('Montage created using image shift! Problems in identifying the positions of clicked points accurately possible!')
 	  
     if len(tilepos.shape)<2:
@@ -771,18 +771,19 @@ def get_mergepixel(navitem,mergedmap):
     else:
       tiledist = numpy.sum((tilepos-pt)**2,axis=1)
       tileid = numpy.argmin(tiledist)
-    
+
     
     # normalize coordinates
     
     ptn = numpy.matrix(pt - tilepos[tileid])
+
     pt_px = numpy.array(ptn * numpy.transpose(mergedmap['rotmat']) / mergedmap['mapheader']['pixelsize'] + mergedmap['mappxcenter'])
     pt_px = pt_px.squeeze()
-
+    print(pt_px)
  
   pt_px1 = pt_px + mergedmap['tilepx'][tileid]
   pt_px1[1] = imsz[0] - pt_px1[1]
-  
+
   return pt_px1
   
 # ------------------------------------------------------------

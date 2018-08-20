@@ -119,53 +119,14 @@ for idx,acq_item in enumerate(acq):
   pt = numpy.array([xval,yval])
   
   # calculate the pixel coordinates
-  im = maps[itemid]['im'] 
   
-  imsz = im.shape
-  
-  tileloc= maps[itemid]['tileloc']
-  
-  
-  if 'XYinPc' in acq_item:
-    tileid = int(acq_item['PieceOn'][0])
-    pt_px0 = map(float,acq_item['XYinPc'])
-    pt_px = numpy.array(pt_px0)
-    #pt_px[1] = maps[itemid]['mapheader']['ysize'] - pt_px[1]
-    #pt_px[1] = pt_px[1]   
-    
-    
-  else:
-         
-    tilepos = maps[itemid]['tilepos']
-    if numpy.diff(tilepos,axis=0)[0].max() == 0:
-      print('Montage created using image shift! Problems in identifying the positions of clicked points accurately possible!')
-	  
-    if len(tilepos.shape)<2:
-      tileid = 0
-    else:
-      tiledist = numpy.sum((tilepos-pt)**2,axis=1)
-      tileid = numpy.argmin(tiledist)
-    
-    
-    # normalize coordinates
-    
-    ptn = numpy.matrix(pt - tilepos[tileid])
-    pt_px = numpy.array(ptn * numpy.transpose(maps[itemid]['rotmat']) / maps[itemid]['mapheader']['pixelsize'] + maps[itemid]['mappxcenter'])
-    pt_px = pt_px.squeeze()
-
-
-
-  
-  
-  pt_px2 = pt_px + maps[itemid]['tilepx'][tileid]
-  pt_px1 = pt_px2.copy()
-  
-  pt_px1[1] = imsz[0] - pt_px2[1]
-  #pt_px1[0] = pt_px2[1]  
+  pt_px1 = em.get_mergepixel(acq_item,maps[itemid])
   
   px_scale = targetheader['pixelsize'] /( maps[itemid]['mapheader']['pixelsize'] )
 
   imsz1 = numpy.array([targetheader['ysize'],targetheader['xsize']])
+  
+  im = maps[itemid]['im'] 
   
   im2, p2 = em.map_extract(im,pt_px1,pt_px1,px_scale,imsz1,rotm1)
 
@@ -194,16 +155,19 @@ for idx,acq_item in enumerate(acq):
 
     imsize2 = im2.shape
     #plt.imshow(im2)
+    
 
     imfile = 'virt_map_' + acq_item['# Item'] + '.mrc'
     
     if os.path.exists(imfile): os.remove(imfile)
-   # tiff.imsave(imfile,im2)
+#    tiff.imsave(imfile,im2)
+    
+    im2 = numpy.rot90(im2,3)
     
     with mrc.new(imfile) as mrcf:
-        mrcf.set_data(im2)
+        mrcf.set_data(im2.T)
         mrcf.close()
-        
+#        
         
    
    
