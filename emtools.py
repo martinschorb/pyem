@@ -351,6 +351,9 @@ def mergemap(mapitem,crop=0):
 
     tilepx = [0,0]
     tilepx=numpy.array([tilepx,tilepx])
+    overlapx = 0
+    overlapy = 0
+    tileloc = [0,0]
 
   else:
    # map is mrc file
@@ -529,12 +532,12 @@ def mergemap(mapitem,crop=0):
         
     merge_mrc.close()    
     im = numpy.rot90(numpy.transpose(im))
-    
+    mergeheader['pixelsize'] = pixelsize
+    mapheader['pixelsize'] = pixelsize
 
   # end MRC section
 
-  mergeheader['pixelsize'] = pixelsize
-  mapheader['pixelsize'] = pixelsize
+  
   
   if not rotation==[]:
       rc=math.cos(math.radians(rotation))
@@ -556,7 +559,7 @@ def mergemap(mapitem,crop=0):
   m['overlap'] = [overlapx,overlapy]
   m['tileloc'] = tileloc
   
-  merge_mrc.close()
+  
   return m
 
 
@@ -592,7 +595,8 @@ def realign_map(item,allitems):
   return result[0]
 
 # -------------------------------------
-
+  
+  
 def imcrop(im1,c,sz):
   # crops an image of a given size (2 element numpy array) around a pixel coordinate (2 element numpy array)
   # in case the coordinate is close to an edge, the cropped image will have the maximum possible width/height
@@ -754,8 +758,6 @@ def get_mergepixel(navitem,mergedmap):
     tileid = int(navitem['PieceOn'][0])
     pt_px0 = map(float,navitem['XYinPc'])
     pt_px = numpy.array(pt_px0)
-    #pt_px[0] = maps[itemid]['mapheader']['xsize'] - pt_px[0]
-    #pt_px[1] = pt_px[1]   
     
     
   else:
