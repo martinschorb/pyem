@@ -341,7 +341,7 @@ def mergemap(mapitem,crop=0):
     mappxcenter = numpy.array([im.shape[1],im.shape[0]]) / 2
     mergeheader = {}
 
-    mergeheader['stacksize'] = numpy.array([im.shape[1],im.shape[0]])    
+    mergeheader['stacksize'] = 1
     mergeheader['xsize'] = numpy.array(im.shape)[0]
     mergeheader['ysize'] = numpy.array(im.shape)[1]
     mergeheader['pixelsize'] = numpy.mean([lx / numpy.array(im.shape)[0],ly / numpy.array(im.shape)[1]])
