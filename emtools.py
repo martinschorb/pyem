@@ -779,7 +779,6 @@ def get_mergepixel(navitem,mergedmap):
 
     pt_px = numpy.array(ptn * numpy.transpose(mergedmap['rotmat']) / mergedmap['mapheader']['pixelsize'] + mergedmap['mappxcenter'])
     pt_px = pt_px.squeeze()
-    print(pt_px)
  
   pt_px1 = pt_px + mergedmap['tilepx'][tileid]
   pt_px1[1] = imsz[0] - pt_px1[1]
