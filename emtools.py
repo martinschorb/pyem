@@ -686,8 +686,13 @@ def img2polygon(img, n_poly, center, radius):
       maxdiff_ix = radius-1
 
     polypt = numpy.append(polypt,[(a[maxdiff_ix],b[maxdiff_ix])],axis=0)
+   
+    polypt1 = polypt.copy()
+    
+    polypt1[:,1] = xs - polypt[:,1]   
+    
 
-  return polypt
+  return polypt1
 
 # --------------------------------------
 
@@ -698,7 +703,7 @@ def map_extract(im,c,p,px_scale,t_size,rotm1):
   # extract image (1.42x to enable rotation)
   cropsize = imsz1 * 1.42
 
-  angle = math.degrees(math.asin(rotm1[1,0]))
+  angle = -math.degrees(math.asin(rotm1[1,0]))
 
   im1 = imcrop(im,c,cropsize)
 
@@ -713,7 +718,7 @@ def map_extract(im,c,p,px_scale,t_size,rotm1):
   # rotate
   
   im3 = rotate(im2,angle,cval=numpy.mean(im1))
-  p3 =  p2 * rotm1
+  p3 =  p2 * rotm1.T
 
   c3 = numpy.array(im3.shape)/2
 
@@ -789,7 +794,7 @@ def get_mergepixel(navitem,mergedmap):
   
   
     
-def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False):
+def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False,maps=False):
 # takes pixel coordinates on an input map, generates virtual maps at their positions, creates polygons matching their shape.
 # input parameters:
 # - im, original image for feature detection
@@ -799,7 +804,7 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False):
 # - targetitem, target map
 # - nav, all navigator items (emtools dict)
 # - sloppy (optional) if merging of original map was sloppy
-
+# - maps (optional) if the virtual maps instead of the points/polygons should be selected for acquisition
 
 
   #parse input data
@@ -884,7 +889,7 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False):
 
     p = pts[idx]
 
-    im4, p4 = map_extract(im,c,p,px_scale,imsz1,targetrot)
+    im4, p4 = map_extract(im,c,p,px_scale,imsz1,rotm1)
 
     
     if min(im4.shape) < 400:
@@ -894,11 +899,11 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False):
 
     
 
-    px = numpy.array(numpy.transpose(p4[:,0]))
+    px = numpy.array(numpy.transpose(p4[:,1]))
     px = numpy.array2string(px,separator=' ')
     px = px[2:-2]
 
-    py = numpy.array(numpy.transpose(p4[:,1]))
+    py = numpy.array(numpy.transpose(p4[:,0]))
     py = numpy.array2string(py,separator=' ')
     py = py[2:-2]
 
@@ -971,7 +976,12 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False):
     newnavitem['Note'] = newnavitem['MapFile']
     newnavitem['MapID'] = [str(mapid)]
     newnavitem['DrawnID'] = curr_map['MapID']
-    newnavitem['Acquire'] = ['0']
+    
+    if maps:
+        newnavitem['Acquire'] = ['1']
+    else:
+        newnavitem['Acquire'] = ['0']
+                
     newnavitem['MapSection'] = ['0']
     newnavitem.pop('SamePosId','')
     # newnavitem['MapWidthHeight'] = [str(im2size[0]),str(im2size[1])]
@@ -985,7 +995,12 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False):
     # Polygon
 
     polynav['# Item'] = label
-    polynav['Acquire'] = ['1']
+            
+    if maps:
+        polynav['Acquire'] = ['0']	
+    else:
+        polynav['Acquire'] = ['1']      
+    
     polynav['Draw'] = ['1']
     polynav['Regis'] = curr_map['Regis']
     polynav['DrawnID'] = [str(mapid)]
