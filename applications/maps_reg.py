@@ -48,7 +48,7 @@ regpts = filter(lambda item:item.get('RegPt'),allitems)
 
 # Find all Maps to process
 acq = filter(lambda item:item.get('Acquire'),allitems)
-acq = filter(lambda item:item['Acquire']==['1'],acq)
+acq = list(filter(lambda item:item['Acquire']==['1'],acq))
 
 
 

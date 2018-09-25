@@ -580,7 +580,7 @@ def realign_map(item,allitems):
           print('No map found to realign item '+ item['# Item'] + ' to, skipping it...')
           result=[]
       else:
-          mapitem = filter(lambda c_item:c_item['MapID']==item['SamePosId'],allitems)
+          mapitem = list(filter(lambda c_item:c_item['MapID']==item['SamePosId'],allitems))[0]
           result = realign_map(mapitem)
     else:
       mapID = item['DrawnID']
@@ -593,7 +593,7 @@ def realign_map(item,allitems):
     else:
       mapID = item['RealignedID']
 
-  result = filter(lambda item:item['MapID']==mapID,allitems)
+  result = list(filter(lambda item:item['MapID']==mapID,allitems))
 
   return result[0]
 
@@ -843,8 +843,8 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False,maps=False):
 
   pixelsize = mapheader['pixelsize']
 
-  mx = map(float,curr_map['PtsX'])
-  my = map(float,curr_map['PtsY'])
+  mx = list(map(float,curr_map['PtsX']))
+  my = list(map(float,curr_map['PtsY']))
 
   rotmat = map_rotation(mx,my)
   imsz = numpy.array(im.shape)
@@ -856,8 +856,8 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False,maps=False):
   target_mrc = mrc.mmap(targetfile, permissive = 'True')
   targetheader = map_header(target_mrc)
 
-  tx = map(float,targetitem['PtsX'])
-  ty = map(float,targetitem['PtsY'])
+  tx = list(map(float,targetitem['PtsX']))
+  ty = list(map(float,targetitem['PtsY']))
 
   targetrot = map_rotation(tx,ty)
 
@@ -954,7 +954,7 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False,maps=False):
     cnx = cnx[2:-2]
 
     cny = numpy.array(numpy.transpose(c1[:,1]))
-    cny = " ".join(map(str,cny))
+    cny = " ".join(list(map(str,cny)))
     cny = cny[1:-2]
 
 
@@ -1042,14 +1042,14 @@ def nav_selection(allitems,sel=[],acquire=True):
     
     if acquire:
         acq = filter(lambda item:item.get('Acquire'),allitems)
-        acq = filter(lambda item:item['Acquire']==['1'],acq)
+        acq = list(filter(lambda item:item['Acquire']==['1'],acq))
         
         for item in acq:
             newnav.append(item)
     if not (select == []):
         if  isinstance(select,str):select=[select]                                        
         for listitem in select:
-            selitem = filter(lambda item:item['# Item']==listitem,allitems)
+            selitem = list(filter(lambda item:item['# Item']==listitem,allitems))
             if type(selitem)==list:
                 newnav.extend(selitem)
             else:

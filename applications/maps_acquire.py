@@ -56,8 +56,8 @@ targetfile = em.map_file(targetitem)
 target_mrc = mrc.open(targetfile, permissive = 'True')
 targetheader = em.map_header(target_mrc)
 
-tx = map(float,targetitem['PtsX'])
-ty = map(float,targetitem['PtsY'])
+tx = list(map(float,targetitem['PtsX']))
+ty = list(map(float,targetitem['PtsY']))
 
 targetrot = em.map_rotation(tx,ty)
 
@@ -72,7 +72,7 @@ allitems = em.fullnav(navlines)
 
 
 acq = filter(lambda item:item.get('Acquire'),allitems)
-acq = filter(lambda item:item['Acquire']==['1'],acq)
+acq = list(filter(lambda item:item['Acquire']==['1'],acq))
 
 non_acq = [x for x in allitems if x not in acq]
 
@@ -106,8 +106,8 @@ for idx,acq_item in enumerate(acq):
         
     outnav.append(mapitem)
     
-  mx = map(float,mapitem['PtsX'])
-  my = map(float,mapitem['PtsY'])
+  mx = list(map(float,mapitem['PtsX']))
+  my = list(map(float,mapitem['PtsY']))
 
   rotmat = em.map_rotation(mx,my)
   # combine rotation matrices
@@ -184,7 +184,7 @@ for idx,acq_item in enumerate(acq):
     cnx = cnx[2:-2]
 
     cny = numpy.array(numpy.transpose(c1[:,0]))
-    cny = " ".join(map(str,cny))
+    cny = " ".join(list(map(str,cny)))
     cny = cny[1:-2]
 
 

@@ -23,7 +23,7 @@ output_table_2 = DataFrame()
 out=list()
 
 navlines_input = input_table_2['navlines']
-navlines = map(str,navlines_input.tolist())
+navlines = list(map(str,navlines_input.tolist()))
 
 (targetitem,junk) = em.nav_item(navlines,flow_variables['target_map'])
 
@@ -47,8 +47,8 @@ targetfile = em.map_file(targetitem)
 target_mrc = mrc.open(targetfile, permissive = 'True')
 targetheader = em.map_header(target_mrc)
 
-tx = map(float,targetitem['PtsX'])
-ty = map(float,targetitem['PtsY'])
+tx = list(map(float,targetitem['PtsX']))
+ty = list(map(float,targetitem['PtsY']))
   
 targetrot = em.map_rotation(tx,ty)
 
@@ -79,8 +79,8 @@ for index,input_cell in input_table_1['Labels'].iteritems():
 	pixelsize = flow_variables['map_px'+mapid]
 
     
-	mx = map(float,curr_map['PtsX'])
-	my = map(float,curr_map['PtsY'])
+	mx = list(map(float,curr_map['PtsX']))
+	my = list(map(float,curr_map['PtsY']))
   
 	maprot = em.map_rotation(tx,ty)
 		

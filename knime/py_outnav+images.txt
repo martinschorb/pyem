@@ -11,7 +11,7 @@ import emtools as em
 
 navlines_input = input_table['navlines']
 
-navlines = map(str,navlines_input.tolist())
+navlines = list(map(str,navlines_input.tolist()))
 
 navfile=flow_variables['navfile']
 
@@ -21,7 +21,7 @@ allitems = em.fullnav(navlines)
 
 
 acq = filter(lambda item:item.get('Acquire'),allitems)
-acq = filter(lambda item:item['Acquire']==['1'],acq)
+acq = list(filter(lambda item:item['Acquire']==['1'],acq))
 
 non_acq = [x for x in allitems if x not in acq]
 

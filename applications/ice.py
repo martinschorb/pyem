@@ -60,7 +60,7 @@ nnf.write("%s\n" % navlines[1])
 allitems = em.fullnav(navlines)
 
 acq = filter(lambda item:item.get('Acquire'),allitems)
-acq = filter(lambda item:item['Acquire']==['1'],acq)
+acq = list(filter(lambda item:item['Acquire']==['1'],acq))
 non_acq = [x for x in allitems if x not in acq]
 
 
