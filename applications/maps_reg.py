@@ -80,7 +80,7 @@ for mapitem in acq:
     # find maps in the same Registratoin that will be transformed as well
     sameregmaps = filter(lambda item:item.get('MapMontage'),allitems)
     sameregmaps = filter(lambda item:item['Regis']==mapreg,sameregmaps)
-    sameregmaps = filter(lambda item:item['MapWidthHeight']==mapitem['MapWidthHeight'],sameregmaps)
+    sameregmaps = list(filter(lambda item:item['MapWidthHeight']==mapitem['MapWidthHeight'],sameregmaps))
     
 #    sameregmaps.remove(mapitem)
     
@@ -102,7 +102,7 @@ for mapitem in acq:
     reg_target = regreg[pair0[0]]
     
     targetitem = regpts[pair0[0]]
-    target_mitem = filter(lambda item:item['MapID']==targetitem['DrawnID'],allitems)[0]
+    target_mitem = list(filter(lambda item:item['MapID']==targetitem['DrawnID'],allitems))[0]
     target_map = em.mergemap(target_mitem)
     
      

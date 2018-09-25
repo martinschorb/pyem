@@ -317,9 +317,10 @@ def mergemap(mapitem,crop=0):
   # extract map properties
   # grab coordinates of map corner points
 
-  mapx = map(float,mapitem['PtsX'])
-  mapy = map(float,mapitem['PtsY'])
-
+  mapx = list(map(float,mapitem['PtsX']))
+  mapy = list(map(float,mapitem['PtsY']))
+  
+  
   a=numpy.array([mapx,mapy])
   lx = numpy.sqrt(sum((a[:,2]-a[:,3])**2))
   ly = numpy.sqrt(sum((a[:,1]-a[:,2])**2))
@@ -347,7 +348,7 @@ def mergemap(mapitem,crop=0):
     mergeheader['pixelsize'] = numpy.mean([lx / numpy.array(im.shape)[0],ly / numpy.array(im.shape)[1]])
     mapheader = mergeheader
 
-    tilepos = numpy.array(map(float,mapitem['StageXYZ'])[0:2])
+    tilepos = numpy.array(list(map(float,mapitem['StageXYZ']))[0:2])
 
     tilepx = numpy.array([0,0])
     overlapx = 0
@@ -357,7 +358,7 @@ def mergemap(mapitem,crop=0):
 
   else:
    # map is mrc file
-    mapsection = map(int,mapitem['MapSection'])[0]
+    mapsection = list(map(int,mapitem['MapSection']))[0]
     mf = mrc.mmap(mapfile, permissive = 'True')   
     
     mapheader = map_header(mf)
@@ -368,7 +369,7 @@ def mergemap(mapitem,crop=0):
     mappxcenter = [mapheader['xsize']/2, mapheader['ysize']/2]
 
     mdocname = mapfile + '.mdoc'
-    m['frames'] = map(int,mapitem['MapFramesXY'])
+    m['frames'] = list(map(int,mapitem['MapFramesXY']))
 
 
     if (m['frames'] == [0,0]):
@@ -418,7 +419,7 @@ def mergemap(mapitem,crop=0):
            
 
     else:
-        tilepos1 = map(float,mapitem['StageXYZ'][0:2])
+        tilepos1 = list(map(float,mapitem['StageXYZ'][0:2]))
         tilepos = numpy.array([tilepos1,tilepos1])
 
 
@@ -426,7 +427,7 @@ def mergemap(mapitem,crop=0):
     mergefile = mapfile[:mapfile.rfind('.mrc')]
     if mergefile == []: mergefile = mapfile
 
-    mergefile = mergefile + '_merged'
+    mergefile = mergefile + '_merged'+ '_s' + str(mapsection)
 
    # mergefiletif = mergefile  + '_s' + str(mapsection) + '.tif'
     mergeheader = mapheader
@@ -455,6 +456,8 @@ def mergemap(mapitem,crop=0):
             print('----------------------------------------------------\n')
 
             callcmd = 'blendmont -imi ' + '\"' + mapfile + '\"' + ' -imo \"' + mergefile + '.mrc\" -pli \"' + mapfile + '.pcs\" -roo \"' + mergefile  + '.mrc\" -se ' + str(mapsection) + ' -al \"'+ mergefile + '.al\" -sloppy'    #os.system(callcmd)
+            #print(callcmd)
+            
             os.system(callcmd)
             #callcmd = 'mrc2tif ' +  mergefile + '.mrc ' + mergefiletif
             #os.system(callcmd)
@@ -464,10 +467,10 @@ def mergemap(mapitem,crop=0):
         
 
             # extract pixel coordinate of each tile
-        tilepx = loadtext(mergefile + '.al')
+        tilepx = list(loadtext(mergefile + '.al'))
 
         #tilepx = tilepx[:-1]
-        for j, item in enumerate(tilepx): tilepx[j] = map(float,re.split(' +',tilepx[j]))
+        for j, item in enumerate(tilepx): tilepx[j] = list(map(float,re.split(' +',tilepx[j])))
 
         tilepx = numpy.array(tilepx)
         tilepx = tilepx[tilepx[:,2] == mapsection,0:2]
@@ -477,7 +480,7 @@ def mergemap(mapitem,crop=0):
 
         tilepx1 = loadtext(mapfile + '.pcs')
         #tilepx1 = tilepx1[:-1]
-        for j, item in enumerate(tilepx1): tilepx1[j] = map(float,re.split(' +',tilepx1[j]))
+        for j, item in enumerate(tilepx1): tilepx1[j] = list(map(float,re.split(' +',tilepx1[j])))
 
         tilepx1 = numpy.array(tilepx1)
         tilepx1 = tilepx1[tilepx1[:,2] == mapsection,0:2]
@@ -526,7 +529,7 @@ def mergemap(mapitem,crop=0):
     
       # load merged map for cropping
     if mapsection>0:
-        im = merge_mrc.data[mapsection,:,:]
+        im = merge_mrc.data#[mapsection,:,:]
     else:
         im = merge_mrc.data
         
@@ -761,7 +764,7 @@ def get_mergepixel(navitem,mergedmap):
   
   if 'XYinPc' in navitem:
     tileid = int(navitem['PieceOn'][0])
-    pt_px0 = map(float,navitem['XYinPc'])
+    pt_px0 = list(map(float,navitem['XYinPc']))
     pt_px = numpy.array(pt_px0)
     
     
@@ -784,6 +787,7 @@ def get_mergepixel(navitem,mergedmap):
 
     pt_px = numpy.array(ptn * numpy.transpose(mergedmap['rotmat']) / mergedmap['mapheader']['pixelsize'] + mergedmap['mappxcenter'])
     pt_px = pt_px.squeeze()
+
  
   pt_px1 = pt_px + mergedmap['tilepx'][tileid]
   pt_px1[1] = imsz[0] - pt_px1[1]
