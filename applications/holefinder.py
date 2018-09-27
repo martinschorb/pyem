@@ -68,7 +68,7 @@ holemap = em.mergemap(holemapitem)
 maps = {}
 maps[holemapitem['# Item']]=holemap
 
-holepos = em.get_mergepixel(hole,holemap)
+holepos = em.get_pixel(hole,holemap)
 
 window = float(holesize)/holemap['mapheader']['pixelsize'] * 1.6
 

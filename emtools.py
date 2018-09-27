@@ -677,8 +677,6 @@ def map_extract(im,c,p,px_scale,t_size,mat):
   # extract image (1.42x to enable rotation)
   cropsize = imsz1 * 1.42
 
-  #angle = -math.degrees(math.asin(rotm1[1,0]))
-
   im1 = imcrop(im,c,cropsize)
 
   # center to origin

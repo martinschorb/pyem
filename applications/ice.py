@@ -81,9 +81,9 @@ if emptymapitem==thickmapitem:
 else:
     emptymap = em.mergemap(emptymapitem)
     
-emptypos = em.get_mergepixel(empty,emptymap)
+emptypos = em.get_pixel(empty,emptymap)
 
-thickpos = em.get_mergepixel(thick,thickmap)
+thickpos = em.get_pixel(thick,thickmap)
 
 
 

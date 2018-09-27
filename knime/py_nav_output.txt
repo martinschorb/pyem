@@ -9,12 +9,8 @@ from skimage.measure import regionprops
 import tifffile as tiff
 import mrcfile as mrc
 
-
-sys.path.append('C:\emtools')
-
 import emtools as em
 
-reload(em)
 
 # Create empty table
 output_table_1 = DataFrame()
@@ -47,10 +43,7 @@ targetfile = em.map_file(targetitem)
 target_mrc = mrc.open(targetfile, permissive = 'True')
 targetheader = em.map_header(target_mrc)
 
-tx = list(map(float,targetitem['PtsX']))
-ty = list(map(float,targetitem['PtsY']))
-  
-targetrot = em.map_rotation(tx,ty)
+t_mat = em.map_matrix(targetitem)
 
 binning = flow_variables['bin']
 
@@ -78,12 +71,7 @@ for index,input_cell in input_table_1['Labels'].iteritems():
 	(curr_map,junk) = em.nav_item(navlines,flow_variables['map'+mapid])
 	pixelsize = flow_variables['map_px'+mapid]
 
-    
-	mx = list(map(float,curr_map['PtsX']))
-	my = list(map(float,curr_map['PtsY']))
-  
-	maprot = em.map_rotation(tx,ty)
-		
+	map_mat = maps[itemid]['matrix'] 	
 	
 	midx = midx + 1
 	

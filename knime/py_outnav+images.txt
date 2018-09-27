@@ -4,9 +4,6 @@ from KNIPImage import KNIPImage
 import sys
 import os
 
-
-sys.path.append('C:\emtools')
-
 import emtools as em
 
 navlines_input = input_table['navlines']
@@ -18,7 +15,6 @@ navfile=flow_variables['navfile']
 os.chdir(os.path.dirname(navfile))
 
 allitems = em.fullnav(navlines)
-
 
 acq = filter(lambda item:item.get('Acquire'),allitems)
 acq = list(filter(lambda item:item['Acquire']==['1'],acq))
