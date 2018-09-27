@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# maps_acquire.py - (C) 2017 Martin Schorb EMBL
+# maps_acquire.py - (C) 2018 Martin Schorb EMBL
 #
 # takes a SerialEM navigator and generates virtual maps from a given low-mag map at the posisiton of selected points
 # 
@@ -25,7 +25,6 @@ target_map = 'refmap'
 # one example map at the desired settings (NavLabel)
 
 
-
 # ====================================================================================
 
 
@@ -37,13 +36,9 @@ import numpy
 
 #import matplotlib.pyplot as plt
 
-import tifffile as tiff
+#import tifffile as tiff
 import mrcfile as mrc
-
 import emtools as em
-
-reload(em)
-
 
 
 # start script
@@ -56,10 +51,7 @@ targetfile = em.map_file(targetitem)
 target_mrc = mrc.open(targetfile, permissive = 'True')
 targetheader = em.map_header(target_mrc)
 
-tx = list(map(float,targetitem['PtsX']))
-ty = list(map(float,targetitem['PtsY']))
-
-targetrot = em.map_rotation(tx,ty)
+t_mat = em.map_matrix(targetitem)
 
 newnavf = navname[:-4] + '_automaps.nav'
 nnf = open(newnavf,'w')
@@ -68,7 +60,6 @@ nnf.write("%s\n" % navlines[1])
 
 
 allitems = em.fullnav(navlines)
-
 
 
 acq = filter(lambda item:item.get('Acquire'),allitems)
@@ -85,6 +76,7 @@ newmapid = em.newID(allitems,10000)
 outnav=list()
 ntotal = len(acq)
 
+newnav = list()
 
 
 
@@ -104,14 +96,14 @@ for idx,acq_item in enumerate(acq):
     # NoRealign
     mapitem['Color'] = '5'
         
-    outnav.append(mapitem)
+    newnav.append(mapitem)
     
-  mx = list(map(float,mapitem['PtsX']))
-  my = list(map(float,mapitem['PtsY']))
 
-  rotmat = em.map_rotation(mx,my)
   # combine rotation matrices
-  rotm1 = rotmat.T * targetrot  
+  
+  map_mat = maps[itemid]['matrix'] 
+  
+  maptf = numpy.linalg.inv(map_mat) * t_mat  
   
   xval = float(acq_item['StageXYZ'][0]) #(float(acq_item['PtsX'][0]))
   yval = float(acq_item['StageXYZ'][1]) #(float(acq_item['PtsY'][0]))
@@ -119,43 +111,22 @@ for idx,acq_item in enumerate(acq):
   pt = numpy.array([xval,yval])
   
   # calculate the pixel coordinates
-  
-  pt_px1 = em.get_mergepixel(acq_item,maps[itemid])
-  
+
+  pt_px1 = em.get_pixel(acq_item,maps[itemid])
+
   px_scale = targetheader['pixelsize'] /( maps[itemid]['mapheader']['pixelsize'] )
 
   imsz1 = numpy.array([targetheader['ysize'],targetheader['xsize']])
   
   im = maps[itemid]['im'] 
-  
-  im2, p2 = em.map_extract(im,pt_px1,pt_px1,px_scale,imsz1,rotm1)
 
-  #px = round(pt_px1[0])
-  #py = round(pt_px1[1])
+  im2, p2 = em.map_extract(im,pt_px1,pt_px1,px_scale,imsz1,maptf)
   
+
   if min(im2.shape)<200:
     print('Warning! Item ' + acq_item['# Item'] + ' is not within the map frame. Ignoring it')
   else:
 
-    #xel = range(int(px - imsz1[0]/2) , int(px + round(float(imsz1[0])/2)))
-    #yel = range(int(py - imsz1[1]/2) , int(py + round(float(imsz1[1])/2)))
-    
-    #im = maps[itemid]['im']
-    
-    #imsize = numpy.array(im.shape)
-    
-    #im1=im[yel,:]
-
-    #im1=im1[:,xel]
-	      
-
-
-  #    print(points[i])
-    #im2 = zoom(im1,1/px_scale)
-
-    imsize2 = im2.shape
-    #plt.imshow(im2)
-    
 
     imfile = 'virt_map_' + acq_item['# Item'] + '.mrc'
     
@@ -163,21 +134,20 @@ for idx,acq_item in enumerate(acq):
 #    tiff.imsave(imfile,im2)
     
     im2 = numpy.rot90(im2,3)
-    
+
     with mrc.new(imfile) as mrcf:
         mrcf.set_data(im2.T)
-        mrcf.close()
-#        
+        mrcf.close()#        
         
-   
-   
-    cx = imsize2[1]
-    cy = imsize2[0]
+    cx = im2.shape[0]
+    cy = im2.shape[1]
 
     a = [[0,0],[cx,0],[cx,cy],[0,cy],[0,0]]
     a = numpy.matrix(a) - [cx/2 , cy/2]
+    
+    t_mat_i = numpy.linalg.inv(t_mat)
 
-    c1 = a*maps[itemid]['rotmat'] * targetheader['pixelsize'] + pt
+    c1 = a*t_mat_i.T + pt
 
     cnx = numpy.array(numpy.transpose(c1[:,1]))
     cnx = numpy.array2string(cnx,separator=' ')
@@ -228,9 +198,9 @@ for idx,acq_item in enumerate(acq):
   outnav.sort()
 
 
-newnav = list()
 #for nitem in non_acq: 
 #    newnav.append(nitem)
+  
 for nitem in outnav:
     newnav.append(nitem)
    

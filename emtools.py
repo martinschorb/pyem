@@ -28,9 +28,9 @@ import os
 import os.path
 import sys
 import numpy
-import math
-from scipy.ndimage.interpolation import zoom
-from scipy.ndimage import rotate
+
+import skimage.transform as tf
+
 import tifffile as tiff
 import re
 import mrcfile as mrc
@@ -278,29 +278,14 @@ def duplicate_items(navitems,labels=[],reg=True):
     
   return outitems    
     
-# -------------------------------  
-#%%
 
-def map_rotation(mapx,mapy):
-    # determine rotation of coordinate frame
-
-  a12 = math.atan2((mapx[1]-mapx[2]),(mapy[1]-mapy[2]))
-  a43 = math.atan2((mapx[4]-mapx[3]),(mapy[4]-mapy[3]))
-  a23 = math.atan2((mapx[2]-mapx[3]),(mapy[2]-mapy[3]))
-  a14 = math.atan2((mapx[1]-mapx[4]),(mapy[1]-mapy[4]))
+# -------------------------------------
 
 
-  meanangle = numpy.mean([a12,a43,a23-math.pi/2,a14-math.pi/2])
-
-
-  # convert to Matrix notation
-
-  ct = math.cos(meanangle)
-  st = math.sin(meanangle)
-
-  rotmat = numpy.matrix([[ct,-st],[st,ct]])
-
-  return rotmat
+def map_matrix(mapitem):
+  # calculates the matrix relating pixel and stage coordinates  
+    
+  return numpy.matrix(list(map(float,mapitem['MapScaleMat']))).reshape(2,2)*(int(mapitem['MapBinning'][0])/int(mapitem['MontBinning'][0]))
 
 
 # -------------------------------
@@ -315,22 +300,11 @@ def mergemap(mapitem,crop=0):
   m['Sloppy'] = False
 
   # extract map properties
-  # grab coordinates of map corner points
-
-  mapx = list(map(float,mapitem['PtsX']))
-  mapy = list(map(float,mapitem['PtsY']))
   
+  mat = map_matrix(mapitem)
   
-  a=numpy.array([mapx,mapy])
-  lx = numpy.sqrt(sum((a[:,2]-a[:,3])**2))
-  ly = numpy.sqrt(sum((a[:,1]-a[:,2])**2))
-
-  # determine map rotation
-  rotmat = map_rotation(mapx,mapy)
-
   #find map file
   mapfile = map_file(mapitem)
-  rotation = []
 
   if mapfile.find('.st')<0 and mapfile.find('.map')<0 and mapfile.find('.mrc')<0:
     #not an mrc file
@@ -345,7 +319,7 @@ def mergemap(mapitem,crop=0):
     mergeheader['stacksize'] = 1
     mergeheader['xsize'] = numpy.array(im.shape)[0]
     mergeheader['ysize'] = numpy.array(im.shape)[1]
-    mergeheader['pixelsize'] = numpy.mean([lx / numpy.array(im.shape)[0],ly / numpy.array(im.shape)[1]])
+    mergeheader['pixelsize'] = 1./numpy.sqrt(abs(numpy.linalg.det(mat)))
     mapheader = mergeheader
 
     tilepos = numpy.array(list(map(float,mapitem['StageXYZ']))[0:2])
@@ -377,7 +351,7 @@ def mergemap(mapitem,crop=0):
       if os.path.exists(mdocname):
             mdoclines = loadtext(mdocname)
             pixelsize = float(mdoc_item(mdoclines,'ZValue = '+str(mapsection))['PixelSpacing'][0])/ 10000 # in um
-            rotation = float(mdoc_item(mdoclines,'ZValue = '+str(mapsection))['RotationAngle'][0])
+            #rotation = float(mdoc_item(mdoclines,'ZValue = '+str(mapsection))['RotationAngle'][0])
 
 
     # extract center positions of individual map tiles
@@ -397,25 +371,27 @@ def mergemap(mapitem,crop=0):
                 tileidx_offset = 0
 
             tilepos=list()
-            for i in range(0,numpy.min([montage_tiles,mapheader['stacksize']])-1):
+            for i in range(0,numpy.min([montage_tiles,mapheader['stacksize']])):
                 tile = mdoc_item(mdoclines,'ZValue = ' + str(tileidx_offset+i))                
                 tilepos.append(tile['StagePosition'])
                 if 'AlignedPieceCoordsVS' in tile: m['Sloppy'] = True
 
             tilepos = numpy.array(tilepos,float)
             pixelsize = float(mdoc_item(mdoclines,'MontSection = '+str(mapsection))['PixelSpacing'][0])/ 10000 # in um
-            rotation = float(mdoc_item(mdoclines,'ZValue = '+str(mapsection))['RotationAngle'][0])
+           # rotation = float(mdoc_item(mdoclines,'ZValue = '+str(mapsection))['RotationAngle'][0])
 
 
         else:
             if mapheader['stacksize'] > montage_tiles:
-                    raise Exception('Multiple maps stored in an MRC stack without mdoc file for metadata. I cannot reliably determine the pixel size.')
-
-
+                    print('WARNING: Multiple maps stored in an MRC stack without mdoc file for metadata. I will guess the pixel size.')
+            
+            pixelsize = 1./numpy.sqrt(abs(numpy.linalg.det(mat)))
             callcmd = 'extracttilts ' + mapfile + ' -stage -all > syscall.tmp'
             os.system(callcmd)
-            tilepos1 = loadtext('syscall.tmp')[21:-1]
-            tilepos = numpy.array([float(mapitem['PtsX'][0]),  float(mapitem['PtsY'][0])])
+            tilepos1 = loadtext('syscall.tmp')[20:-1]
+            tilepos = numpy.array([numpy.fromstring(tilepos1[0],dtype=float,sep=' '),numpy.fromstring(tilepos1[1],dtype=float,sep=' ')])
+            for item in tilepos1[2:] : tilepos=numpy.append(tilepos,[numpy.fromstring(item,dtype=float,sep=' ')],axis=0)
+            
            
 
     else:
@@ -540,19 +516,13 @@ def mergemap(mapitem,crop=0):
 
   # end MRC section
 
-  
-  
-  if not rotation==[]:
-      rc=math.cos(math.radians(rotation))
-      rs=math.sin(math.radians(rotation))
-      rotmat = numpy.matrix([[rc,-rs],[rs,rc]])
 
   # generate output
-
+  
   m['mapfile'] = mapfile
   m['mergefile'] = mergefile+'.mrc'
-  m['rotmat'] = rotmat
-  m['rotation'] = rotation
+  m['matrix'] = mat
+  
   m['tilepos'] = tilepos
   m['im'] = im
   m['mappxcenter'] = mappxcenter
@@ -597,8 +567,9 @@ def realign_map(item,allitems):
 
   return result[0]
 
+
 # -------------------------------------
-  
+ 
   
 def imcrop(im1,c,sz):
   # crops an image of a given size (2 element numpy array) around a pixel coordinate (2 element numpy array)
@@ -699,14 +670,14 @@ def img2polygon(img, n_poly, center, radius):
 
 # --------------------------------------
 
-def map_extract(im,c,p,px_scale,t_size,rotm1):
+def map_extract(im,c,p,px_scale,t_size,mat):
 # extracts an image from a given position in an existing map and links positions inside
   imsz1 = t_size * px_scale
  
   # extract image (1.42x to enable rotation)
   cropsize = imsz1 * 1.42
 
-  angle = -math.degrees(math.asin(rotm1[1,0]))
+  #angle = -math.degrees(math.asin(rotm1[1,0]))
 
   im1 = imcrop(im,c,cropsize)
 
@@ -714,14 +685,19 @@ def map_extract(im,c,p,px_scale,t_size,rotm1):
   p1 = p - c
 
   # interpolate image
-  im2 = zoom(im1,1/px_scale)
-
-  p2 = p1/px_scale
-
-  # rotate
   
-  im3 = rotate(im2,angle,cval=numpy.mean(im1))
-  p3 =  p2 * rotm1.T
+  mat_i = numpy.linalg.inv(mat)
+  
+  affmat=numpy.append(mat_i,[[0],[0]],1)
+  affmat=numpy.append(affmat,[[0,0,1]],0)
+  
+  tform = tf.AffineTransform(affmat)
+  
+  im2 = tf.warp(im1,tform,output_shape = numpy.round(t_size*1.41) )
+  
+  im3 = numpy.int8(im2*127)
+
+  p3 = p1 * mat.T
 
   c3 = numpy.array(im3.shape)/2
 
@@ -731,8 +707,8 @@ def map_extract(im,c,p,px_scale,t_size,rotm1):
 
   p4=p3.copy()
 
-  p4[:,1] =  t_size[0]/2 - p3[:,0]
-  p4[:,0] =  t_size[1]/2 - p3[:,1]
+  p4[:,0] =  t_size[1]/2 + p3[:,0]
+  p4[:,1] =  t_size[0]/2 + p3[:,1]
 
   return im4, p4
 
@@ -741,11 +717,12 @@ def map_extract(im,c,p,px_scale,t_size,rotm1):
 
 # --------------------------------------
 
-def get_mergepixel(navitem,mergedmap):
+def get_pixel(navitem,mergedmap,tile=False):
 # determines the pixel coordinates of a navigator item in its associated map. 
 # input:
-# - navigatr item
+# - navigator item
 # - map item as resulting from mergemap
+# - tile(optional) output is pixel and tile index of closest map tile
 # output: pixel coordinates    
     
   
@@ -783,16 +760,20 @@ def get_mergepixel(navitem,mergedmap):
     
     # normalize coordinates
     
-    ptn = numpy.matrix(pt - tilepos[tileid])
+    ptn = numpy.array(pt - tilepos[tileid])
 
-    pt_px = numpy.array(ptn * numpy.transpose(mergedmap['rotmat']) / mergedmap['mapheader']['pixelsize'] + mergedmap['mappxcenter'])
-    pt_px = pt_px.squeeze()
-
+    pt_px = numpy.array(ptn*mergedmap['matrix'].T).squeeze()
+    pt_px[0] = (mergedmap['mappxcenter'][0]) + pt_px[0]
+    pt_px[1] = (mergedmap['mappxcenter'][1]) - pt_px[1]
  
-  pt_px1 = pt_px + mergedmap['tilepx'][tileid]
-  pt_px1[1] = imsz[0] - pt_px1[1]
-
-  return pt_px1
+   # output
+   
+  if tile:
+      return (pt_px,tileid)
+  else:
+      pt_px1 = pt_px + mergedmap['tilepx'][tileid]
+      pt_px1[1] = imsz[0] - pt_px1[1]
+      return pt_px1
   
 # ------------------------------------------------------------
   
