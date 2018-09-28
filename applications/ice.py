@@ -42,6 +42,7 @@ goodrange = 50    #  percent
 # dependencies
 
 import emtools as em
+import numpy
 
 # start script
 
@@ -90,8 +91,8 @@ thickpos = em.get_pixel(thick,thickmap)
 window = checkwindow / thickmap['mapheader']['pixelsize']/1000
 
 
-im_t = em.imcrop(thickmap['im'],thickpos,[window,window])
-im_e = em.imcrop(emptymap['im'],emptypos,[window,window])
+im_t = em.imcrop(numpy.array(thickmap['im']),thickpos,[window,window])
+im_e = em.imcrop(numpy.array(emptymap['im']),emptypos,[window,window])
 
 i_thick = im_t.mean()
 i_empty = im_e.mean()
@@ -134,7 +135,7 @@ for idx,nav_item in enumerate(acq):
   
   ptpx=em.get_mergepixel(acq_item,maps[itemid])
   
-  im_curr = em.imcrop(maps[itemid]['im'],ptpx,[window,window])
+  im_curr = em.imcrop(numpy.array(maps[itemid]['im']),ptpx,[window,window])
   
   intensity = im_curr.mean()
     

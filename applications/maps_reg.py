@@ -131,7 +131,7 @@ for mapitem in acq:
     # Transform and export all maps in this Registration
     for tfmmap in sameregmaps:
         srcmap = em.mergemap(tfmmap)
-        warped = tf.warp(srcmap['im'], tform, output_shape = target_map['im'].shape)
+        warped = tf.warp(numpy.array(srcmap['im']), tform, output_shape = target_map['im'].shape)
         
         if warped.dtype == 'float': 
             if srcmap['im'].dtype == 'uint8':

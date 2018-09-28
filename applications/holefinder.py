@@ -73,7 +73,7 @@ holepos = em.get_pixel(hole,holemap)
 window = float(holesize)/holemap['mapheader']['pixelsize'] * 1.6
 
 
-im_h = em.imcrop(holemap['im'],holepos,[window,window])
+im_h = em.imcrop(numpy.array(holemap['im']),holepos,[window,window])
 
 
 

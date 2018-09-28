@@ -118,7 +118,7 @@ for idx,acq_item in enumerate(acq):
 
   imsz1 = numpy.array([targetheader['ysize'],targetheader['xsize']])
   
-  im = maps[itemid]['im'] 
+  im = numpy.array(maps[itemid]['im'])
 
   im2, p2 = em.map_extract(im,pt_px1,pt_px1,px_scale,imsz1,maptf)
   

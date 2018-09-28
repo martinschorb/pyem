@@ -741,7 +741,7 @@ def get_pixel(navitem,mergedmap,tile=False):
     tileid = int(navitem['PieceOn'][0])
     pt_px0 = list(map(float,navitem['XYinPc']))
     pt_px = numpy.array(pt_px0)
-    
+    tileidx = int(numpy.argwhere(mergedmap['sections']==tileid)[0][0])
     
   else:
          
@@ -753,7 +753,7 @@ def get_pixel(navitem,mergedmap,tile=False):
       tileid = 0
     else:
       tiledist = numpy.sum((tilepos-pt)**2,axis=1)
-      tileid = numpy.argmin(tiledist)
+      tileidx = numpy.argmin(tiledist)
 
     
     # normalize coordinates
@@ -764,12 +764,12 @@ def get_pixel(navitem,mergedmap,tile=False):
     pt_px[0] = (mergedmap['mappxcenter'][0]) + pt_px[0]
     pt_px[1] = (mergedmap['mappxcenter'][1]) - pt_px[1]
  
-   # output
+   # output   
    
   if tile:
-      return (pt_px,tileid)
+      return (pt_px,tileidx)
   else:
-      pt_px1 = pt_px + mergedmap['tilepx'][tileid]
+      pt_px1 = pt_px + mergedmap['tilepx'][tileidx]
       pt_px1[1] = imsz[0] - pt_px1[1]
       return pt_px1
   
@@ -822,26 +822,22 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False,maps=False):
 
   pixelsize = mapheader['pixelsize']
 
-  mx = list(map(float,curr_map['PtsX']))
-  my = list(map(float,curr_map['PtsY']))
-
-  rotmat = map_rotation(mx,my)
   imsz = numpy.array(im.shape)
 
+  map_mat = map_matrix(curr_map)
 
   # target reference
 
   targetfile = map_file(targetitem)
   target_mrc = mrc.mmap(targetfile, permissive = 'True')
   targetheader = map_header(target_mrc)
+  
+  
+  t_mat = map_matrix(targetitem)
 
-  tx = list(map(float,targetitem['PtsX']))
-  ty = list(map(float,targetitem['PtsY']))
-
-  targetrot = map_rotation(tx,ty)
 
   # combine rotation matrices
-  rotm1 = rotmat.T * targetrot
+  maptf = numpy.linalg.inv(map_mat) * t_mat
 
   px_scale = targetheader['pixelsize'] /pixelsize
 
@@ -857,8 +853,6 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False,maps=False):
 
   startid = newID(nav,divmod(curr_id,delim)[0]*delim)
 
-
-
   mapid = startid + 1
   idx=0
 
@@ -872,14 +866,13 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False,maps=False):
 
     p = pts[idx]
 
-    im4, p4 = map_extract(im,c,p,px_scale,imsz1,rotm1)
+    im4, p4 = map_extract(im,c,p,px_scale,imsz1,maptf)
 
     
     if min(im4.shape) < 400:
       print('Item is too close to border of map, skipping it.')
       ntotal = ntotal - 1
       continue
-
     
 
     px = numpy.array(numpy.transpose(p4[:,1]))
@@ -909,37 +902,31 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False,maps=False):
 
     if os.path.exists(imfile): os.remove(imfile)
     tiff.imsave(imfile,im4)
-
-    t_size = imsz1/px_scale
-
-    cx = t_size[1]
-    cy = t_size[0]
+    
+    #  map corner points
+    
+    cx = im4.shape[0]
+    cy = im4.shape[1]
 
     a = [[0,0],[cx,0],[cx,cy],[0,cy],[0,0]]
     a = numpy.matrix(a) - [cx/2 , cy/2]
-
-    a = a * px_scale
-
-    c_out = c
-
-    c_out[1] = imsz[0] -c_out[1]
     
-    c1 = numpy.array(a) * targetrot
-    c1 = c1 + numpy.array(c_out)
+    t_mat_i = numpy.linalg.inv(maptf)
 
-    
-    cnx = numpy.array(numpy.transpose(c1[:,0]))
+    c1 = a*t_mat_i.T
+
+    cnx = numpy.array(numpy.transpose(c1[:,1]))
     cnx = numpy.array2string(cnx,separator=' ')
     cnx = cnx[2:-2]
 
-    cny = numpy.array(numpy.transpose(c1[:,1]))
+    cny = numpy.array(numpy.transpose(c1[:,0]))
     cny = " ".join(list(map(str,cny)))
     cny = cny[1:-2]
 
 
-
-
-
+    c_out = c
+    c_out[1] = imsz[0] -c_out[1]
+    
     # fill navigator
 
     # map for realignment
