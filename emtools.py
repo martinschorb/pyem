@@ -750,7 +750,7 @@ def get_pixel(navitem,mergedmap,tile=False):
       print('Montage created using image shift! Problems in identifying the positions of clicked points accurately possible!')
 	  
     if len(tilepos.shape)<2:
-      tileid = 0
+      tileidx = 0
     else:
       tiledist = numpy.sum((tilepos-pt)**2,axis=1)
       tileidx = numpy.argmin(tiledist)
@@ -758,7 +758,7 @@ def get_pixel(navitem,mergedmap,tile=False):
     
     # normalize coordinates
     
-    ptn = numpy.array(pt - tilepos[tileid])
+    ptn = numpy.array(pt - tilepos[tileidx])
 
     pt_px = numpy.array(ptn*mergedmap['matrix'].T).squeeze()
     pt_px[0] = (mergedmap['mappxcenter'][0]) + pt_px[0]
