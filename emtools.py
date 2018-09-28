@@ -473,7 +473,7 @@ def mergemap(mapitem,crop=0):
 
         tileloc = numpy.array([tpx / xstep,tpy/ystep]).T
 
-        m['sections'] = tileloc[:,0]*m['frames'][1]+tileloc[:,1]
+        m['sections'] = list(map(int,tileloc[:,0]*m['frames'][1]+tileloc[:,1]))
 
         overlapx = mapheader['xsize'] - xstep
         overlapy = mapheader['ysize'] - ystep
