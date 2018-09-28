@@ -473,7 +473,7 @@ def mergemap(mapitem,crop=0):
 
         tileloc = numpy.array([tpx / xstep,tpy/ystep]).T
 
-        m['sections'] = list(map(int,tileloc[:,0]*m['frames'][1]+tileloc[:,1]))
+        m['sections'] = numpy.array(map(int,tileloc[:,0]*m['frames'][1]+tileloc[:,1]))
 
         overlapx = mapheader['xsize'] - xstep
         overlapy = mapheader['ysize'] - ystep
@@ -741,7 +741,7 @@ def get_pixel(navitem,mergedmap,tile=False):
     tileid = int(navitem['PieceOn'][0])
     pt_px0 = list(map(float,navitem['XYinPc']))
     pt_px = numpy.array(pt_px0)
-    tileidx = int(numpy.argwhere(mergedmap['sections']==tileid)[0][0])
+    tileidx = numpy.argwhere(mergedmap['sections']==tileid)[0][0]
     
   else:
          
