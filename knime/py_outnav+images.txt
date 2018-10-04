@@ -3,12 +3,11 @@ from KNIPImage import KNIPImage
 
 import sys
 import os
-
 import emtools as em
 
 navlines_input = input_table['navlines']
 
-navlines = list(map(str,navlines_input.tolist()))
+navlines = map(str,navlines_input.tolist())
 
 navfile=flow_variables['navfile']
 
@@ -16,8 +15,9 @@ os.chdir(os.path.dirname(navfile))
 
 allitems = em.fullnav(navlines)
 
+
 acq = filter(lambda item:item.get('Acquire'),allitems)
-acq = list(filter(lambda item:item['Acquire']==['1'],acq))
+acq = filter(lambda item:item['Acquire']==['1'],acq)
 
 non_acq = [x for x in allitems if x not in acq]
 

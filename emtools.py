@@ -30,7 +30,7 @@ import sys
 import numpy
 
 import skimage.transform as tf
-
+from scipy.ndimage.interpolation import affine_transform
 import tifffile as tiff
 import re
 import mrcfile as mrc
@@ -670,7 +670,7 @@ def img2polygon(img, n_poly, center, radius):
 
 # --------------------------------------
 
-def map_extract(im,c,p,px_scale,t_size,mat):
+def map_extract(im,c,p,px_scale,t_size,mat,int8=False):
 # extracts an image from a given position in an existing map and links positions inside
   imsz1 = t_size * px_scale
  
@@ -685,15 +685,16 @@ def map_extract(im,c,p,px_scale,t_size,mat):
   # interpolate image
   
   mat_i = numpy.linalg.inv(mat)
+
+  o_size = numpy.array(map(int,numpy.round(t_size*1.42)))
+  offset = numpy.squeeze(numpy.array(cropsize/2-numpy.dot(mat_i,o_size/2)))
   
-  affmat=numpy.append(mat_i,[[0],[0]],1)
-  affmat=numpy.append(affmat,[[0,0,1]],0)
+  if int8:
+     im1=numpy.round(255.0 * (im1 - im1.min()) / (im1.max() - im1.min() - 1.0)).astype(numpy.uint8) 
   
-  tform = tf.AffineTransform(affmat)
+  im2 = affine_transform(im1,mat_i,offset=offset,output_shape=o_size)
   
-  im2 = tf.warp(im1,tform,output_shape = numpy.round(t_size*1.41) )
-  
-  im3 = numpy.int8(im2*127)
+  im3 = im2 #numpy.int8(im2*127)
 
   p3 = p1 * mat.T
 
@@ -905,15 +906,20 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False,maps=False):
     
     #  map corner points
     
-    cx = im4.shape[0]
-    cy = im4.shape[1]
+    cx = imsz1[0]
+    cy = imsz1[1]
 
     a = [[0,0],[cx,0],[cx,cy],[0,cy],[0,0]]
     a = numpy.matrix(a) - [cx/2 , cy/2]
     
     t_mat_i = numpy.linalg.inv(maptf)
 
-    c1 = a*t_mat_i.T
+    c1 = a*t_mat_i
+    
+    c_out = c
+    c_out[1] = imsz[0] -c_out[1]
+
+    c1 = c1 + [c_out[1],c_out[0]]
 
     cnx = numpy.array(numpy.transpose(c1[:,1]))
     cnx = numpy.array2string(cnx,separator=' ')
@@ -924,8 +930,7 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False,maps=False):
     cny = cny[1:-2]
 
 
-    c_out = c
-    c_out[1] = imsz[0] -c_out[1]
+
     
     # fill navigator
 

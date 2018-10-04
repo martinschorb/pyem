@@ -11,7 +11,6 @@ import mrcfile as mrc
 
 import emtools as em
 
-
 # Create empty table
 output_table_1 = DataFrame()
 output_table_2 = DataFrame()
@@ -19,9 +18,9 @@ output_table_2 = DataFrame()
 out=list()
 
 navlines_input = input_table_2['navlines']
-navlines = list(map(str,navlines_input.tolist()))
+navlines = map(str,navlines_input.tolist())
 
-(targetitem,junk) = em.nav_item(navlines,flow_variables['target_map'])
+targetitem,junk = em.nav_item(navlines,flow_variables['target_map'])
 
 
 allitems = em.fullnav(navlines)
@@ -43,7 +42,10 @@ targetfile = em.map_file(targetitem)
 target_mrc = mrc.open(targetfile, permissive = 'True')
 targetheader = em.map_header(target_mrc)
 
-t_mat = em.map_matrix(targetitem)
+tx = map(float,targetitem['PtsX'])
+ty = map(float,targetitem['PtsY'])
+  
+targetrot = em.map_rotation(tx,ty)
 
 binning = flow_variables['bin']
 
@@ -68,14 +70,19 @@ for index,input_cell in input_table_1['Labels'].iteritems():
 	
 	
 	imsize = numpy.array(orig1.shape)
-	(curr_map,junk) = em.nav_item(navlines,flow_variables['map'+mapid])
+	curr_map,junk = em.nav_item(navlines,flow_variables['map'+mapid])
 	pixelsize = flow_variables['map_px'+mapid]
 
-	map_mat = maps[itemid]['matrix'] 	
+    
+	mx = map(float,curr_map['PtsX'])
+	my = map(float,curr_map['PtsY'])
+  
+	maprot = em.map_rotation(tx,ty)
+		
 	
 	midx = midx + 1
 	
-	for label in a[800:]:
+	for label in a:
 		s = label.image	
 		bb = numpy.array(label.bbox)
 		p = em.img2polygon(s,20,label.local_centroid, numpy.max(s.shape))

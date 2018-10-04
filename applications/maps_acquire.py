@@ -17,7 +17,7 @@
 # PARAMETERS
 
 
-navname = 'nav1.nav'
+navname = 'nav.nav'
 # file name navigator
 
 
