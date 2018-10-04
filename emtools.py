@@ -914,7 +914,7 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False,maps=False):
     
     t_mat_i = numpy.linalg.inv(maptf)
 
-    c1 = a*t_mat_i
+    c1 = a.T*t_mat_i
     
     c_out = c
     c_out[1] = imsz[0] -c_out[1]

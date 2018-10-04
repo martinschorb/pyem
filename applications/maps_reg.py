@@ -91,7 +91,7 @@ for mapitem in acq:
     
     
     # find the corresponding registration point pairs and target map
-    pair0 = numpy.where(regidx==mapregpt_idx[0])[0]
+    pair0 = numpy.where(regidx==regidx[mapregpt_idx[0]])[0]
     
     # determine correct order for this pair
     if regreg[pair0[0]]==mapreg:
