@@ -143,7 +143,7 @@ for mapitem in acq:
         
         # file names and export
         startname = os.path.splitext(os.path.basename(srcmap['mapfile']))[0]
-        targetname = os.path.splitext(os.path.basename(target_map['mapfile']))[0]
+        targetname = os.path.splitext(os.path.basename(target_map['mergefile']))[0]
         outfile = startname+'->'+targetname+'.tif'
         tiff.imsave(outfile,warped)
 
