@@ -377,7 +377,12 @@ def mergemap(mapitem,crop=0):
                 if 'AlignedPieceCoordsVS' in tile: m['Sloppy'] = True
 
             tilepos = numpy.array(tilepos,float)
-            pixelsize = float(mdoc_item(mdoclines,'MontSection = '+str(mapsection))['PixelSpacing'][0])/ 10000 # in um
+            if mdoc_item(mdoclines,'MontSection') == []:
+                print('Warning: mrc stack without montage information. Assume pixel size is consistent for all sections.')
+                str1=mdoclines[0]
+                pixelsize = float(mdoclines[0][str1.find('=')+1:])
+            else:
+                pixelsize = float(mdoc_item(mdoclines,'MontSection = '+str(mapsection))['PixelSpacing'][0])/ 10000 # in um
            # rotation = float(mdoc_item(mdoclines,'ZValue = '+str(mapsection))['RotationAngle'][0])
 
 
