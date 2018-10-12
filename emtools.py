@@ -21,6 +21,10 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+# Python mudule for interpreting and modifying Navigator files created using SerialEM. For detailed information,
+# see https://doi.org/10.1101/389502
+# Information and documentation of the individual functions can be found in Readme.md
+
 # dependencies
 #%%
 #import fnmatch
@@ -28,8 +32,7 @@ import os
 import os.path
 import sys
 import numpy
-
-import skimage.transform as tf
+#import skimage.transform as tf
 from scipy.ndimage.interpolation import affine_transform
 import tifffile as tiff
 import re
@@ -37,15 +40,16 @@ import mrcfile as mrc
 import time
 from operator import itemgetter
 
-# define supporting functions
+# define functions
 
 
 #%%
 
 def loadtext(fname):
 
-    # loads a text file, such as nav or adoc, returns it as a list
+    # loads a text file, such as nav or adoc, returns it as a list of strings
 
+    # check if file exists
     if not os.path.exists(fname):
         print('ERROR: ' + fname + ' does not exist! Exiting' + '\n')
         sys.exit(1)
@@ -56,7 +60,6 @@ def loadtext(fname):
     for line in f.readlines():
         lines.append(line.strip())
 
- #   lines.append('')
     f.close()
     return lines
 
@@ -77,7 +80,7 @@ def nav_item(inlines,label):
     if lines[-1] != '':
          lines = lines+['']
     
-
+    # search for a navigator item of given label
     searchstr = '[Item = ' + label + ']'
     if not searchstr in lines:
         print('ERROR: Navigator Item ' + label + ' not found!')
@@ -88,6 +91,7 @@ def nav_item(inlines,label):
 
         item = lines[itemstartline:itemstartline+itemendline]
         result = parse_adoc(item)
+        # create a dictionary entry that contains the label. Comment # is given in case it is exported directly.
         result['# Item']=lines[itemstartline-1][lines[itemstartline-1].find(' = ') + 3:-1]
         
         lines[itemstartline-1:itemstartline+itemendline+1]=[]
@@ -101,12 +105,12 @@ def nav_item(inlines,label):
 
 def mdoc_item(lines1,label):
 
-    # extracts the content block of an item of givel label in a mdoc file
+    # extracts the content block of an item of given label in a mdoc file
     # returns it as a dictionary
     if lines1[-1] != '':
         lines = lines1+['']
 
-
+    # search for mdoc key item with the given label
     searchstr = '[' + label + ']'
     if not searchstr in lines:
         print('ERROR: Item ' + label + ' not found!')
@@ -127,13 +131,12 @@ def mdoc_item(lines1,label):
 def parse_adoc(lines):
     # converts an adoc-format string list into a dictionary
 
-    answer = {}
+    output = {}
     for line in lines:
         entry = line.split()
-        if entry: answer.update({entry[0]: entry[2:]})
+        if entry: output.update({entry[0]: entry[2:]})
 
-
-    return answer
+    return output
 
 # -------------------------------
 #%%
@@ -141,17 +144,17 @@ def parse_adoc(lines):
 def map_file(mapitem):
 
     # extracts map file name from navigator and checks for existance
-           
+    
+
+    # get string from navigator item       
     mapfile = ' '.join(mapitem['MapFile'])
     cdir = os.getcwd()
-    print(mapfile)
 
     if os.path.exists(mapfile):
         return mapfile
-    
+        print('current map: ' + mapfile)
     else:
     #    print('Warning: ' + mapfile + ' does not exist!' + '\n')
-
        mapfile1 = mapfile[mapfile.rfind('\\')+1:]
        dir1 = mapfile[:mapfile.rfind('\\')]
        dir2=dir1[dir1.rfind('\\')+1:]
@@ -258,9 +261,10 @@ def fullnav(inlines):
 # -------------------------------
 #%%
 
-def duplicate_items(navitems,labels=[],reg=True):
-# duplicates items from a list, optional second parameter is a list of labels of the items to duplicate. Default is to use the 'Acquire' flag. 
-# third parameter determines whether the registration of duplicate items should be changed (default:yes)
+def duplicate_items(navitems,labels=[],prefix='',reg=True):
+# duplicates items from a list, optional second parameter is a list of labels of the items to duplicate.
+# Default is to use the 'Acquire' flag. Third parameter defines a prefix for the created duplictes (defatul:none)
+# The fourth parameter determines whether the registration of duplicate items should be changed (default:yes)
     
   outitems = navitems[:]
   
@@ -273,7 +277,7 @@ def duplicate_items(navitems,labels=[],reg=True):
   for item in dupitems :
       newitem = item.copy()
       if reg:newitem['Regis']=[str(newreg(dupitems))]
-      newitem['# Item']='D_'+item['# Item']
+      newitem['# Item'] = prefix + item['# Item']
       outitems.append(newitem)
     
   return outitems    
@@ -291,10 +295,11 @@ def map_matrix(mapitem):
 # -------------------------------
 #%%
 
-def mergemap(mapitem,crop=0):
+def mergemap(mapitem,crop=False):
 
   # processes a map item and merges the mosaic using IMOD
   # generates a dictionary with metadata for this procedure
+  # if crop is selected, a 3dmod session will be opened and the user needs to draw a model of the desired region. The script continues after saving the model file and closing 3dmod.
 
   m=dict()
   m['Sloppy'] = False
@@ -351,9 +356,7 @@ def mergemap(mapitem,crop=0):
       if os.path.exists(mdocname):
             mdoclines = loadtext(mdocname)
             pixelsize = float(mdoc_item(mdoclines,'ZValue = '+str(mapsection))['PixelSpacing'][0])/ 10000 # in um
-            #rotation = float(mdoc_item(mdoclines,'ZValue = '+str(mapsection))['RotationAngle'][0])
-
-
+  
     # extract center positions of individual map tiles
     if mapheader['stacksize'] > 1:
 
@@ -377,7 +380,7 @@ def mergemap(mapitem,crop=0):
                 if 'AlignedPieceCoordsVS' in tile: m['Sloppy'] = True
 
             tilepos = numpy.array(tilepos,float)
-            if mdoc_item(mdoclines,'MontSection') == []:
+            if mdoc_item(mdoclines,'MontSection') == []: #older mdoc file format, created before SerialEM 3.7x
                 print('Warning: mrc stack without montage information. Assume pixel size is consistent for all sections.')
                 str1=mdoclines[0]
                 pixelsize = float(mdoclines[0][str1.find('=')+1:])
@@ -410,7 +413,6 @@ def mergemap(mapitem,crop=0):
 
     mergefile = mergefile + '_merged'+ '_s' + str(mapsection)
 
-   # mergefiletif = mergefile  + '_s' + str(mapsection) + '.tif'
     mergeheader = mapheader
 
     if mapheader['stacksize'] < 2:
@@ -466,8 +468,6 @@ def mergemap(mapitem,crop=0):
         tilepx1 = numpy.array(tilepx1)
         tilepx1 = tilepx1[tilepx1[:,2] == mapsection,0:2]
 
-
-
         tpx = tilepx1[:,0]
         tpy = tilepx1[:,1]
 
@@ -484,15 +484,15 @@ def mergemap(mapitem,crop=0):
         overlapy = mapheader['ysize'] - ystep
 
         
-    
-    if crop>0:
+    # cropping of merged file to only include areas of interest. The user needs to create an IMOD model file and close 3dmod to proceed.
+    if crop:
         if not os.path.exists(mergefile+'_crop.mrc'):
             loopcount = 0
             print('waiting for crop model to be created ... Please store it under this file name: \"' + mergefile + '.mod\".')
             callcmd = '3dmod \"' +  mergefile + '.mrc\"'
             os.system(callcmd)
             while not os.path.exists(mergefile+'.mod'):
-                if loopcount > 20: 
+                if loopcount > 20: # wait for 6.5 minutes for the model file to be created.
                     print('Timeout - will continue without cropping!')
                     break
                 print('waiting for crop model to be created in IMOD... Please store it under this file name: \"' + mergefile + '.mod\".')
@@ -628,8 +628,10 @@ def pol2cart(rho, phi):
 #%%
 
 def img2polygon(img, n_poly, center, radius):
-    # converts a binary image into a polygon (list of points) describing its outline
+  # converts a binary image into a polygon (list of points) describing its outline
+  # parameters: image, n of polygon, center around which to draw the polygon, maximum radius of polygon
 
+  # define threshold based on image type
   if img.dtype.kind is 'b':
     thresh = 1
   elif img.dtype.kind is 'i':
@@ -638,18 +640,19 @@ def img2polygon(img, n_poly, center, radius):
         thresh = img.max()/2
   else: thresh = img.max()/2
 
+  # close the polygon
   n_poly = n_poly + 1
 
   xs , ys = img.shape
 
   polypt = numpy.empty((0,2))
 
+  # draw equi-angular lines from the center to determine the intersection with the binary image
   polyphi = numpy.linspace(0,2*numpy.pi,n_poly)
-
   endpts = pol2cart(radius,polyphi)
-
   endpts = numpy.array(center) + endpts
-
+  
+  # find the intersection points and mark the coordinates
   for pt in endpts:
     x, y = numpy.linspace(center[0], pt[0] , radius), numpy.linspace(center[1], pt[1], radius)
     a, b = x.astype(numpy.int),y.astype(numpy.int)
@@ -670,7 +673,6 @@ def img2polygon(img, n_poly, center, radius):
     
     polypt1[:,1] = xs - polypt[:,1]   
     
-
   return polypt1
 
 # --------------------------------------

@@ -32,7 +32,7 @@ for item in non_acq:
 outim = list()
 maps = list()
 midx = 1
-crop = 1
+crop = True
 
 
 for acq_item in acq:
