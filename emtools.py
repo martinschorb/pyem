@@ -489,7 +489,7 @@ def mergemap(mapitem,crop=False):
         if not os.path.exists(mergefile+'_crop.mrc'):
             loopcount = 0
             print('waiting for crop model to be created ... Please store it under this file name: \"' + mergefile + '.mod\".')
-            callcmd = '3dmod \"' +  mergefile + '.mrc ' + mergefile + '.mod\"'
+            callcmd = '3dmod \"' +  mergefile + '.mrc\" \"' + mergefile + '.mod\"'
             os.system(callcmd)
             while not os.path.exists(mergefile+'.mod'):
                 if loopcount > 20: # wait for 6.5 minutes for the model file to be created.
@@ -500,12 +500,12 @@ def mergemap(mapitem,crop=False):
                 loopcount = loopcount + 1
                 
             if loopcount < 21:
+                print('Model file found. Will now generate the cropped map image.')
                 callcmd = 'imodmop \"' +  mergefile + '.mod\" \"'+ mergefile + '.mrc\" \"' + mergefile + '_crop.mrc\"'
                 os.system(callcmd)
-        
-        merge_mrc.close()
-        
-        merge_mrc = mrc.mmap(mergefile + '_crop.mrc', permissive = 'True')
+                
+                merge_mrc.close()
+                merge_mrc = mrc.mmap(mergefile + '_crop.mrc', permissive = 'True')        
         
     
       # load merged map for cropping
