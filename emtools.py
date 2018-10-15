@@ -380,7 +380,7 @@ def mergemap(mapitem,crop=False):
                 if 'AlignedPieceCoordsVS' in tile: m['Sloppy'] = True
 
             tilepos = numpy.array(tilepos,float)
-            if mdoc_item(mdoclines,'MontSection') == []: #older mdoc file format, created before SerialEM 3.7x
+            if mdoc_item(mdoclines,'MontSection = 0') == []: #older mdoc file format, created before SerialEM 3.7x
                 print('Warning: mrc stack without montage information. Assume pixel size is consistent for all sections.')
                 str1=mdoclines[0]
                 pixelsize = float(mdoclines[0][str1.find('=')+1:])
