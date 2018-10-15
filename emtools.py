@@ -489,7 +489,7 @@ def mergemap(mapitem,crop=False):
         if not os.path.exists(mergefile+'_crop.mrc'):
             loopcount = 0
             print('waiting for crop model to be created ... Please store it under this file name: \"' + mergefile + '.mod\".')
-            callcmd = '3dmod \"' +  mergefile + '.mrc\"'
+            callcmd = '3dmod \"' +  mergefile + '.mrc ' + mergefile + '.mod\"'
             os.system(callcmd)
             while not os.path.exists(mergefile+'.mod'):
                 if loopcount > 20: # wait for 6.5 minutes for the model file to be created.
