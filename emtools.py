@@ -225,7 +225,7 @@ def newID(allitems,startid):
     for item in allitems:
         if 'MapID' in item:
             if str(startid) == item['MapID'][0]:
-                newid = newID(startid+1)
+                newid = newID(allitems,startid+1)
 
     return newid
 
