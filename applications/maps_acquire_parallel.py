@@ -80,7 +80,6 @@ ntotal = len(acq)
 
 newnav = list()
 
-t=time.time()
 for idx,acq_item in enumerate(acq):
   print('Processing source map for navitem '+ str(idx+1) + '/' + str(ntotal) + ' (%2.0f%% done)' %(idx*100/ntotal))
 
