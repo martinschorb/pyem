@@ -173,7 +173,7 @@ def map_file(mapitem):
                     mapfile2 = mapfile
             else:
                 print('ERROR: ' + mapfile1 + ' does not exist! Exiting' + '\n')
-                # sys.exit(1)  # kills KNIME ;-)
+                sys.exit(1)  # kills KNIME ;-)
                 
             return mapfile2
 
@@ -432,7 +432,9 @@ def mergemap(mapitem,crop=False):
 
             # merge the montage to a single file
             callcmd = 'extractpieces ' +  '\"' + mapfile + '\" \"'  +  mapfile + '.pcs\"'
-            os.system(callcmd)
+            a=os.system(callcmd)
+            print(callcmd)
+            print(a)
 
             print('----------------------------------------------------\n')
             print('Merging the map montage into a single image....' + '\n')
@@ -756,12 +758,17 @@ def get_pixel(navitem,mergedmap,tile=False):
     tilepos = mergedmap['tilepos']
     if (numpy.diff(tilepos,axis=0)[0].max() == 0) & (type(mergedmap['Sloppy']) == bool):
       print('Montage created using image shift! Problems in identifying the positions of clicked points accurately possible!')
-	  
+	
+       
     if len(tilepos.shape)<2:
       tileidx = 0
     else:
-      tiledist = numpy.sum((tilepos-pt)**2,axis=1)
-      tileidx = numpy.argmin(tiledist)
+      if 'PieceOn' in navitem:
+          tileid = int(navitem['PieceOn'][0])
+          tileidx = numpy.argwhere(mergedmap['sections']==tileid)[0][0]
+      else:  
+          tiledist = numpy.sum((tilepos-pt)**2,axis=1)
+          tileidx = numpy.argmin(tiledist)
 
     
     # normalize coordinates

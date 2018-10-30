@@ -34,6 +34,8 @@ import os
 import os.path
 import numpy
 
+import multiprocessing as mp
+
 #import matplotlib.pyplot as plt
 
 #import tifffile as tiff
@@ -71,21 +73,19 @@ non_acq.remove(targetitem)
     
 maps = {}
 
-newmapid = em.newID(allitems,10000)
+newmapid = [em.newID(allitems,10000)]
 
 outnav=list()
 ntotal = len(acq)
 
 newnav = list()
 
-
-
+t=time.time()
 for idx,acq_item in enumerate(acq):
-  print('Processing navitem '+ str(idx+1) + '/' + str(ntotal) + ' (%2.0f%% done)' %(idx*100/ntotal))
+  print('Processing source map for navitem '+ str(idx+1) + '/' + str(ntotal) + ' (%2.0f%% done)' %(idx*100/ntotal))
 
-  newmapid = em.newID(allitems,newmapid + 1)
   mapitem = em.realign_map(acq_item,allitems)
-  
+  newmapid.append(em.newID(allitems,newmapid[-1] + 1))
   itemid = mapitem['# Item']
     
   if not itemid in maps.keys():
@@ -97,7 +97,12 @@ for idx,acq_item in enumerate(acq):
     mapitem['Color'] = '5'
         
     newnav.append(mapitem)
+       
     
+def point2virtmap(acq_item, ix, ntotal, maps, targetheader, targetitem, outitem):
+  print('Processing navitem '+ str(ix+1) + '/' + str(ntotal) + ' (%2.0f%% done)' %(ix*100/ntotal))
+  mapitem = em.realign_map(acq_item,allitems)  
+  itemid = mapitem['# Item']    
 
   # combine rotation matrices
   
@@ -162,14 +167,6 @@ for idx,acq_item in enumerate(acq):
 
     # fill navigator
 
-    acq_item['Acquire'] = '0'
-    
-    # NoRealign
-    # acq_item['Color'] = '5'
-
-    outnav.append(acq_item)
-
-
     newnavitem = dict(targetitem)
     
 
@@ -181,7 +178,7 @@ for idx,acq_item in enumerate(acq):
     newnavitem['PtsX'] = cny.split()
     newnavitem['NumPts'] = ['1']
     newnavitem['Note'] = newnavitem['MapFile']
-    newnavitem['MapID'] = [str(newmapid)]
+    newnavitem['MapID'] = [str(newmapid[ix])]
     newnavitem['Acquire'] = ['1']
     newnavitem['MapSection'] = ['0']
     newnavitem['SamePosId'] = acq_item['MapID']
@@ -192,11 +189,21 @@ for idx,acq_item in enumerate(acq):
     newnavitem['NumPts'] = ['5']
     newnavitem['# Item'] = 'map_' + acq_item['# Item']    
 
-    outnav.append(newnavitem)
+    outitem.put(newnavitem)
 
-  
-  
-  outnav.sort()
+
+
+outitem = mp.Queue()
+
+processes = [mp.Process(target=point2virtmap, args=(x, ix, ntotal, maps, targetheader, targetitem, outitem)) for ix,x in enumerate(acq)]
+
+for p in processes:
+    p.start()
+    
+for p in processes:
+    p.join()
+    
+outnav = [outitem.get() for p in processes]
 
 
 #for nitem in non_acq: 
