@@ -1,20 +1,19 @@
 KNIME:
 
-Preferences-> Updates -> Available Software Sites -> Stable Community Contribution
-load workflow
+"Preferences-> Updates -> Available Software Sites -> Stable Community Contributions" needs to be enabled.
+
+load the KNIME workflow cells_01 from the code repository
 install all missing packages
 
-Preferences -> KNIME -> Python, point it to the anaconda installation directory.
+Preferences -> KNIME -> Python, python 2 needs to to the anaconda installation directory.
 
 Anaconda:
 
-start anaconda prompt
+#start anaconda prompt, there type
 conda install -c conda-forge tifffile numpy scipy pandas scikit-image
 pip install mrcfile
+pip install -e /path/to/package 
+# provide the respective directory where emtools was dowloaded/cloned into.
+# this will install emtools.py from the installation directory
 
-install emtools.py in local directory
 
-in all python nodes put the line
-
-sys.path.append('C:\emtools')
-pip install -e /path/to/package
