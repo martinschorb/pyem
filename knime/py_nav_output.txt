@@ -45,8 +45,6 @@ targetheader = em.map_header(target_mrc)
 tx = map(float,targetitem['PtsX'])
 ty = map(float,targetitem['PtsY'])
   
-targetrot = em.map_rotation(tx,ty)
-
 binning = flow_variables['bin']
 
 midx = 1
@@ -76,9 +74,7 @@ for index,input_cell in input_table_1['Labels'].iteritems():
     
 	mx = map(float,curr_map['PtsX'])
 	my = map(float,curr_map['PtsY'])
-  
-	maprot = em.map_rotation(tx,ty)
-		
+  	
 	
 	midx = midx + 1
 	
