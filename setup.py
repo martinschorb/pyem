@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(name='emtools',
-      version='20180927',
+      version='20181126',
       py_modules=['emtools'],
       description='Tools to interact with Serial EM enabling automated transmission electron microscopy.',
       long_description=long_description,
