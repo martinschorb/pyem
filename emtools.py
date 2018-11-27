@@ -448,6 +448,7 @@ def mergemap(mapitem,crop=False):
             #os.system(callcmd)
             
         merge_mrc =  mrc.mmap(mergefile + '.mrc', permissive = 'True')
+        im = merge_mrc.data
         mergeheader = map_header(merge_mrc)
         
 
@@ -508,14 +509,11 @@ def mergemap(mapitem,crop=False):
                 
                 merge_mrc.close()
 
-        merge_mrc = mrc.mmap(mergefile + '_crop.mrc', permissive = 'True')        
+        merge_mrc = mrc.mmap(mergefile + '_crop.mrc', permissive = 'True')
+        im_cropped = merge_mrc.data
+        m['im_cropped'] = im_cropped        
         
     
-      # load merged map for cropping
-    if mapsection>0:
-        im = merge_mrc.data#[mapsection,:,:]
-    else:
-        im = merge_mrc.data
         
     merge_mrc.close()    
     im = numpy.rot90(numpy.transpose(im))

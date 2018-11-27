@@ -32,13 +32,13 @@ for item in non_acq:
 outim = list()
 maps = list()
 midx = 1
-crop = True
+crop = 1
 
 
 for acq_item in acq:
   mapfile = acq_item['MapFile']
   map1 = em.mergemap(acq_item,crop)
-  im = map1['im']
+  im = map1['im_crop']
 
   mapid = "_{0}".format(midx)
   
