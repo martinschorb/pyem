@@ -511,6 +511,7 @@ def mergemap(mapitem,crop=False):
 
         merge_mrc = mrc.mmap(mergefile + '_crop.mrc', permissive = 'True')
         im_cropped = merge_mrc.data
+        im_cropped = numpy.rot90(numpy.transpose(im_cropped))
         m['im_cropped'] = im_cropped        
         
     
