@@ -2,14 +2,21 @@
 
 ### a Python package to interact with SerialEM to enable automated Transmission Electron Microscopy
 
-## Installation instructions
+1. [Installation instructions](#installation)
+  - How to use this jupyter notebook
+  - Install necessary dependencies in Python
+  - [install/update emTools](https://git.embl.de/schorb/serialem_tools/raw/master/emTools.ipynb)
+
+2. [Function List](#Functions)
+
+## Installation instructions<a name="installation"></a>
 
 - Install Anaconda from [here](https://www.anaconda.com/download/ "Download Anaconda"). EmTools has been tested to work with both Python 2 and 3. Choose the appropriate OS.
 - Start the Anaconda [Navigator](http://docs.anaconda.com/anaconda/user-guide/getting-started/ "Getting started with Anaconda").
 - as explained in [section 4](http://docs.anaconda.com/anaconda/user-guide/getting-started/#run-python-in-a-jupyter-notebook "Run Python in a Jupyter Notebook"), install and start a Jupyter notebook.
 - Download this [tutorial file](https://git.embl.de/schorb/serialem_tools/raw/master/emTools.ipynb) (use "save link as..."), open it in your Jupyter session and follow the instructions.
 
-## Function list:
+## Function list:<a name="Functions"></a>
 
 generic functions to parse/manipulate navigator/adoc files
 
