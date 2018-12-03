@@ -4,8 +4,8 @@
 
 1. [Installation instructions](#installation)
   - How to use this jupyter notebook
-  - Install necessary dependencies in Python
-  - [install/update emTools](https://git.embl.de/schorb/serialem_tools/raw/master/emTools.ipynb)
+  - install necessary dependencies in Python
+  - install/update emTools
 
 2. [Function List](#Functions)
 
@@ -16,7 +16,7 @@
 - as explained in [section 4](http://docs.anaconda.com/anaconda/user-guide/getting-started/#run-python-in-a-jupyter-notebook "Run Python in a Jupyter Notebook"), install and start a Jupyter notebook.
 - Download this [tutorial file](https://git.embl.de/schorb/serialem_tools/raw/master/emTools.ipynb) (use "save link as..."), open it in your Jupyter session and follow the instructions.
 
-## Function list:<a name="Functions"></a>
+## Function list:[](#){name=Functions}
 
 generic functions to parse/manipulate navigator/adoc files
 
