@@ -1149,13 +1149,15 @@ def pointitem(label,regis=1):
 # The corresponding MapID and Position need to be defined externally!
     
     point=dict()
-    point['# Item'] = [label]
-    point['Color'] = ['1']
+    point['# Item'] = label
+    point['Color'] = ['0']
+    
+    if type(regis)==list:
+        regis=''.join(regis)
+    
     point['Regis'] = [str(regis)]
     point['NumPts'] = ['1']
-    point['Type'] = ['0']
-    point['Draw'] = ['1']
-    
+    point['Type'] = ['0']    
     
     return point
     
