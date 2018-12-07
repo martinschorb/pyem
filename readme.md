@@ -3,9 +3,6 @@
 ### a Python package to interact with SerialEM to enable automated Transmission Electron Microscopy
 
 1. [Installation instructions](#installation)
-  - How to use this jupyter notebook
-  - install necessary dependencies in Python
-  - install/update emTools
 
 2. [Function List](#Functions)
 
