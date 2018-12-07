@@ -1146,6 +1146,8 @@ def ordernav(nav,delim=''):
         
 def pointitem(label,regis=1):
 # creates a default point item containing all necessary item parameters.
+# The corresponding MapID and Position need to be defined externally!
+    
     point=dict()
     point['# Item'] = [label]
     point['Color'] = ['1']
@@ -1155,5 +1157,6 @@ def pointitem(label,regis=1):
     point['Draw'] = ['1']
     
     
+    return point
     
     
