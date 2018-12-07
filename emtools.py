@@ -1142,3 +1142,18 @@ def ordernav(nav,delim=''):
     
     return newnav
         
+# ------------------------------------------------------------ 
+        
+def pointitem(label,regis=1):
+# creates a default point item containing all necessary item parameters.
+    point=dict()
+    point['# Item'] = [label]
+    point['Color'] = ['1']
+    point['Regis'] = [str(regis)]
+    point['NumPts'] = ['1']
+    point['Type'] = ['0']
+    point['Draw'] = ['1']
+    
+    
+    
+    
