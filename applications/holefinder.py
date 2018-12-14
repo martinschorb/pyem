@@ -33,7 +33,7 @@ holesize = 2  # µm
 
 # dependencies
 
-import py-EM as em
+import pyEM as em
 import numpy
 from skimage.feature import match_template
 from skimage.filters import gaussian

@@ -38,7 +38,7 @@ import numpy
 
 #import tifffile as tiff
 import mrcfile as mrc
-import py-EM as em
+import pyEM as em
 
 
 # start script
