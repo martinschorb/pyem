@@ -28,7 +28,7 @@ navname = 'nav2.nav'
 # dependencies
 
 
-import emtools as em
+import py-EM as em
 import numpy
 import os
 import tifffile as tiff

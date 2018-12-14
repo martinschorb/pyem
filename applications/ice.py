@@ -41,7 +41,7 @@ goodrange = 50    #  percent
 
 # dependencies
 
-import emtools as em
+import py-EM as em
 import numpy
 
 # start script

@@ -5,9 +5,9 @@ from distutils.core import setup
 with open("readme.md", "r") as fh:
     long_description = fh.read()
 
-setup(name='emtools',
-      version='20181207',
-      py_modules=['emtools'],
+setup(name='py-EM',
+      version='20181214',
+      py_modules=['py-EM'],
       description='Tools to interact with Serial EM enabling automated transmission electron microscopy.',
       long_description=long_description,
       long_description_content_type="text/markdown",

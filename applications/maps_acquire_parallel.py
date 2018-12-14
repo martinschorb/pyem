@@ -40,7 +40,7 @@ import multiprocessing as mp
 
 #import tifffile as tiff
 import mrcfile as mrc
-import emtools as em
+import py-EM as em
 
 
 # start script
