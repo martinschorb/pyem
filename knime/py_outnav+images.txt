@@ -3,7 +3,7 @@ from KNIPImage import KNIPImage
 
 import sys
 import os
-import emtools as em
+import pyEM as em
 
 navlines_input = input_table['navlines']
 
@@ -38,7 +38,7 @@ crop = 1
 for acq_item in acq:
   mapfile = acq_item['MapFile']
   map1 = em.mergemap(acq_item,crop)
-  im = map1['im_crop']
+  im = map1['im_cropped']
 
   mapid = "_{0}".format(midx)
   

@@ -2,7 +2,7 @@ from pandas import DataFrame
 
 import sys
 
-import emtools as em
+import pyEM as em
 
 # Create empty table
 output_table = DataFrame()
