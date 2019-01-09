@@ -209,10 +209,17 @@ def itemtonav(item,name):
 
     dlist = list()
     dlist.append('[Item = ' + name + ']')
-    for key, value in item.iteritems():
-      if not key == '# Item':
-        dlist.append(key + ' = ' + " ".join(value))
-
+    
+    # Python 2 
+    if py_ver[0] <3 :
+      for key, value in item.iteritems():
+        if not key == '# Item':
+          dlist.append(key + ' = ' + " ".join(value))
+    else:    
+    # Python 3+    
+      for key, value in item.items():
+        if not key == '# Item':
+          dlist.append(key + ' = ' + " ".join(value))
     dlist.append('')
     return dlist
 
