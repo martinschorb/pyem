@@ -40,6 +40,10 @@ import mrcfile as mrc
 import time
 from operator import itemgetter
 
+
+# get python version
+py_ver = sys.version_info
+
 # define functions
 
 
