@@ -6,9 +6,9 @@
 
 2. [Get started](#tutorials)
 
-3. [Set up integration in SerialEM GUI](https://git.embl.de/schorb/pyem/raw/master/serialemtools.md)
+3. [Set up integration in SerialEM GUI](https://git.embl.de/schorb/pyem/raw/master/doc/serialemtools.md)
 
-4. [Set up KNIME] 
+4. [Set up KNIME](https://git.embl.de/schorb/pyem/raw/master/doc/knime.md) 
 
 5. [Function List](#Functions)
 
@@ -24,6 +24,16 @@
 ## Get started<a name="tutorials"></a>
 In order to access the Tutorials on how to use py-EM, follow these steps:
 Download this [tutorial file](https://git.embl.de/schorb/pyem/raw/master/pyEM.ipynb) (use "save link as..."), open it in your Jupyter session and follow the instructions.
+
+
+## Set up integration in SerialEM GUI
+
+Find out how to make py-EM and other external tools available through SerialEM's GUI [here](https://git.embl.de/schorb/pyem/raw/master/doc/serialemtools.md)
+
+## Set up integration in SerialEM GUI
+
+Find out how to link py-EM and other external tools using KNIME [here](https://git.embl.de/schorb/pyem/raw/master/doc/knime.md)
+
 
 
 ## Function list:<a name="Functions"></a>
