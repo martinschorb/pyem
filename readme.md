@@ -6,9 +6,9 @@
 
 2. [Get started](#tutorials)
 
-3. [Set up integration in SerialEM GUI](https://git.embl.de/schorb/pyem/master/doc/serialemtools.md)
+3. [Set up integration in SerialEM GUI](https://git.embl.de/schorb/pyem/blob/master/doc/serialemtools.md)
 
-4. [Set up KNIME](https://git.embl.de/schorb/pyem/master/doc/knime.md) 
+4. [Set up KNIME](https://git.embl.de/schorb/pyem/blob/master/doc/knime.md) 
 
 5. [Function List](#Functions)
 
@@ -28,11 +28,11 @@ Download this [tutorial file](https://git.embl.de/schorb/pyem/raw/master/pyEM.ip
 
 ## Set up integration in SerialEM GUI
 
-Find out how to make py-EM and other external tools available through SerialEM's GUI [here](https://git.embl.de/schorb/pyem/master/doc/serialemtools.md)
+Find out how to make py-EM and other external tools available through SerialEM's GUI [here](https://git.embl.de/schorb/pyem/blob/master/doc/serialemtools.md)
 
 ## Set up integration in SerialEM GUI
 
-Find out how to link py-EM and other external tools using KNIME [here](https://git.embl.de/schorb/pyem/master/doc/knime.md)
+Find out how to link py-EM and other external tools using KNIME [here](https://git.embl.de/schorb/pyem/blob/master/doc/knime.md)
 
 
 
