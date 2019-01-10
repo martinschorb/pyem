@@ -13,7 +13,11 @@ ToolArguments 1 %navfile%
 ```
 would open the currently active Navigator file in a text editor. 
 
+### Example: Sort current Navigator
+
 In this example, we like to order the Navigator File that is currently open in SerialEM. This requires that the Python environment that contains the py-EM installation is executed and calls the desired function.
+
+#### define py-EM specific python launcher
 
 In order to run the python environment, you need to define it in a batch file. A template is provided [here](https://git.embl.de/schorb/pyem/raw/master/tutorials/callpython.bat?inline=false) (if it opens inside the browser, use "save link as...").
 
@@ -23,6 +27,8 @@ set root=C:\Users\YOURUSER\Anaconda3
 ```
 
 The python script we like to run contains the functionality described in [Tutorial 1](https://git.embl.de/schorb/pyem/tree/master#tutorials) and you can download it from [here](https://git.embl.de/schorb/pyem/raw/master/applications/sortnav.py?inline=false) (if it opens inside the browser, use "save link as...").
+
+#### add script to SerialEM's Tools Menu
 
 We now need to add the parameters to run tihs script using the python caller from above to SerialEM's property file.
 
