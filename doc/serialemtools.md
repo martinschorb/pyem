@@ -15,4 +15,11 @@ would open the currently active Navigator file in a text editor.
 
 In this example, we like to order the Navigator File that is currently open in SerialEM. This requires that the Python environment that contains the py-EM installation is executed and calls the desired function.
 
-In order to run the python environment, you need to define it in a batch file. A template is provided [here].
+In order to run the python environment, you need to define it in a batch file. A template is provided [here](https://git.embl.de/schorb/pyem/raw/master/tutorials/callpython.bat).
+
+You need to change the first line of this script to point to your Anaconda installation/environment that hosts py-EM. In a default installation (for a single user), you might just need to replace the user name.
+```
+set root=C:\Users\YOURUSER\Anaconda3
+```
+
+
