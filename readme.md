@@ -32,7 +32,7 @@ In order to access the Tutorials on how to use py-EM, follow these steps:
 
 Find out how to make py-EM and other external tools available through SerialEM's GUI [here](https://git.embl.de/schorb/pyem/blob/master/doc/serialemtools.md)
 
-## Set up integration in SerialEM GUI
+## Set up KNIME
 
 Find out how to link py-EM and other external tools using KNIME [here](https://git.embl.de/schorb/pyem/blob/master/doc/knime.md)
 
