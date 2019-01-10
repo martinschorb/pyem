@@ -30,7 +30,7 @@ The python script we like to run contains the functionality described in [Tutori
 
 #### add script to SerialEM's Tools Menu
 
-We now need to add the parameters to run this script using the python caller from above to SerialEM's property file.
+We now need to [add the parameters to run this script](https://bio3d.colorado.edu/SerialEM/hlp/html/menu_tools.htm "Tools Menu - SerialEM Help") using the python caller from above to [SerialEM's property file](https://bio3d.colorado.edu/SerialEM/hlp/html//about_properties.htm "Property files - SerialEM Help").
 
 ```
 ExternalTool Sort Navigator
