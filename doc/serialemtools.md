@@ -21,7 +21,7 @@ In this example, we like to order the Navigator File that is currently open in S
 
 In order to run the python environment, you need to define it in a batch file. A template is provided [here](https://git.embl.de/schorb/pyem/raw/master/tutorials/callpython.bat?inline=false) (if it opens inside the browser, use "save link as...").
 
-You need to change the first line of this script to point to your Anaconda installation/environment that hosts py-EM. In a default installation (for a single user), you might just need to replace the user name.
+You need to change the first line of this script to point to your Anaconda installation/environment that hosts py-EM. In a default installation (for a single user), you might just need to replace the user name `YOURUSER`.
 ```
 set root=C:\Users\YOURUSER\Anaconda3
 ```
@@ -38,7 +38,7 @@ ToolCommand 4  C:\scripts\callpython.bat
 ToolArguments 4 C:\scripts\sortnav.py %navfile%
 ```
 
-Where C:\scripts needs to be replaced with the directory of your scripts and the index of the tool call (here: 4) should simply add to any tools that are already listed.
+Where `C:\scripts` needs to be replaced with the directory of your scripts and the index of the tool call (here: 4) should simply add to any tools that are already listed.
 
 When you now start SerialEM, there should be a "Tools" Menu appearing that hosts all the external commands you have defined.
 ![Tools Menu](https://git.embl.de/schorb/pyem/raw/master/doc/images/serialemtools.png)
