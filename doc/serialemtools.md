@@ -43,3 +43,9 @@ Where C:\scripts needs to be replaced with the directory of your scripts and the
 When you now start SerialEM, there should be a "Tools" Menu appearing that hosts all the external commands you have defined.
 ![Tools Menu](https://git.embl.de/schorb/pyem/raw/master/doc/images/serialemtools.png)
 
+You can now run the procedure by clicking this menu entry
+
+![Running scipt](https://git.embl.de/schorb/pyem/raw/master/doc/images/sortnav.png)
+
+and the sorted Navigator file will appear in the same directory as the current one.
+
