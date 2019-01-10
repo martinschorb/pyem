@@ -1,4 +1,4 @@
-set root=C:\Users\emcf\Anaconda3
+set root=C:\Users\YOURUSER\Anaconda3
 
 call %root%\Scripts\activate.bat %root%
 call python %1 %2 %3 %4
