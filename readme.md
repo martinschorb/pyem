@@ -23,7 +23,9 @@
 
 ## Get started<a name="tutorials"></a>
 In order to access the Tutorials on how to use py-EM, follow these steps:
-Download this [tutorial file](https://git.embl.de/schorb/pyem/raw/master/pyEM.ipynb) (use "save link as..."), open it in your Jupyter session and follow the instructions.
+
+- as explained in [section 4](http://docs.anaconda.com/anaconda/user-guide/getting-started/#run-python-in-a-jupyter-notebook "Run Python in a Jupyter Notebook"), install and start a Jupyter notebook.
+- Download this [tutorial file](https://git.embl.de/schorb/pyem/raw/master/pyEM.ipynb) (use "save link as..."), open it in your Jupyter session and follow the instructions.
 
 
 ## Set up integration in SerialEM GUI
