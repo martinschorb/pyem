@@ -30,7 +30,7 @@ The python script we like to run contains the functionality described in [Tutori
 
 #### add script to SerialEM's Tools Menu
 
-We now need to add the parameters to run tihs script using the python caller from above to SerialEM's property file.
+We now need to add the parameters to run this script using the python caller from above to SerialEM's property file.
 
 ```
 ExternalTool Sort Navigator
