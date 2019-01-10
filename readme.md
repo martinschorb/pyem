@@ -4,7 +4,15 @@
 
 1. [Installation instructions](#installation)
 
-2. [Function List](#Functions)
+2. [Get started](#tutorials)
+
+3. [Set up integration in SerialEM GUI](https://git.embl.de/schorb/pyem/raw/master/serialemtools.md)
+
+4. [Set up KNIME] 
+
+5. [Function List](#Functions)
+
+
 
 ## Installation instructions<a name="installation"></a>
 
@@ -12,6 +20,11 @@
 - Start the Anaconda [Navigator](http://docs.anaconda.com/anaconda/user-guide/getting-started/ "Getting started with Anaconda").
 - as explained in [section 4](http://docs.anaconda.com/anaconda/user-guide/getting-started/#run-python-in-a-jupyter-notebook "Run Python in a Jupyter Notebook"), install and start a Jupyter notebook.
 - Download this [tutorial file](https://git.embl.de/schorb/pyem/raw/master/pyEM.ipynb) (use "save link as..."), open it in your Jupyter session and follow the instructions.
+
+## Get started<a name="tutorials"></a>
+In order to access the Tutorials on how to use py-EM, follow these steps:
+Download this [tutorial file](https://git.embl.de/schorb/pyem/raw/master/pyEM.ipynb) (use "save link as..."), open it in your Jupyter session and follow the instructions.
+
 
 ## Function list:<a name="Functions"></a>
 
