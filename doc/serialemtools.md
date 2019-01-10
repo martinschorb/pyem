@@ -24,4 +24,16 @@ set root=C:\Users\YOURUSER\Anaconda3
 
 The python script we like to run contains the functionality described in [Tutorial 1](https://git.embl.de/schorb/pyem/tree/master#tutorials) and you can download it from [here](https://git.embl.de/schorb/pyem/raw/master/applications/sortnav.py?inline=false) (if it opens inside the browser, use "save link as...").
 
+We now need to add the parameters to run tihs script using the python caller from above to SerialEM's property file.
+
+```
+ExternalTool Sort Navigator
+ToolCommand 4  C:\scripts\callpython.bat
+ToolArguments 4 C:\scripts\sortnav.py %navfile%
+```
+
+Where C:\scripts needs to be replaced with the directory of your scripts and the index of the tool call (here: 4) should simply add to any tools that are already listed.
+
+When you now start SerialEM, there should be a "Tools" Menu appearing that hosts all the external commands you have defined.
+![Tools Menu](https://git.embl.de/schorb/pyem/raw/master/doc/images/serialemtools.png)
 
