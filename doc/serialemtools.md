@@ -38,7 +38,7 @@ ToolCommand 4  C:\scripts\callpython.bat
 ToolArguments 4 C:\scripts\sortnav.py %navfile%
 ```
 
-Where `C:\scripts` needs to be replaced with the directory of your scripts and the index of the tool call (here: 4) should simply add to any tools that are already listed.
+Where `C:\scripts` needs to be replaced with the directory of your scripts and the index of the tool call (here: `4`) should simply add to any tools that are already listed.
 
 When you now start SerialEM, there should be a "Tools" Menu appearing that hosts all the external commands you have defined.
 ![Tools Menu](https://git.embl.de/schorb/pyem/raw/master/doc/images/serialemtools.png)
