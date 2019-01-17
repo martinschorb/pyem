@@ -19,6 +19,8 @@ In the Preferences, go to "KNIME > Python". Provide the location of the python b
 
 ![KNIME Python](https://git.embl.de/schorb/pyem/raw/master/doc/images/knime_python.png)
 
+More in-depth information in setting up the python integration can be found [here](https://docs.knime.com/2018-12/python_installation_guide/index.html).
+
 
 Import the desired workflow from [here](https://git.embl.de/schorb/pyem/tree/master/knime). KNIME will now ask you if it should fetch the necessary nodes from its repositories. Install all of them and the KNIME workflow should run as it is.
 
