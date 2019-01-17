@@ -492,7 +492,7 @@ def mergemap(mapitem,crop=False):
 
         tileloc = numpy.array([tpx / xstep,tpy/ystep]).T
 
-        m['sections'] = numpy.array(map(int,tileloc[:,0]*m['frames'][1]+tileloc[:,1]))
+        m['sections'] = numpy.array(list(map(int,tileloc[:,0]*m['frames'][1]+tileloc[:,1])))
 
         overlapx = mapheader['xsize'] - xstep
         overlapy = mapheader['ysize'] - ystep
@@ -706,7 +706,7 @@ def map_extract(im,c,p,px_scale,t_size,mat,int8=False):
   
   mat_i = numpy.linalg.inv(mat)
 
-  o_size = numpy.array(map(int,numpy.round(t_size*1.42)))
+  o_size = numpy.array(list(map(int,numpy.round(t_size*1.42))))
   offset = numpy.squeeze(numpy.array(cropsize/2-numpy.dot(mat_i,o_size/2)))
   
   if int8:
