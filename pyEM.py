@@ -34,7 +34,7 @@ import sys
 import numpy
 #import skimage.transform as tf
 from scipy.ndimage.interpolation import affine_transform
-import tifffile as tiff
+from skimage import io
 import re
 import mrcfile as mrc
 import time
@@ -328,7 +328,7 @@ def mergemap(mapitem,crop=False):
     print('Warning: ' + mapfile + ' is not an MRC file!' + '\n')
     print('Assuming it is a single tif file or a stitched montage.' + '\n')
     mergefile = mapfile
-    im = tiff.imread(mergefile)
+    im = io.imread(mergefile)
     mappxcenter = numpy.array([im.shape[1],im.shape[0]]) / 2
     mergeheader = {}
 
@@ -927,7 +927,7 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False,maps=False):
     imfile = 'virt_' + label + '.tif'
 
     if os.path.exists(imfile): os.remove(imfile)
-    tiff.imsave(imfile,im4)
+    io.imsave(imfile,im4)
     
     #  map corner points
     
