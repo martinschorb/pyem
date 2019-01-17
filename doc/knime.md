@@ -30,3 +30,9 @@ Import the desired workflow from [here](https://git.embl.de/schorb/pyem/tree/mas
 In the Python nodes, you need to select the Python version the node should use. If you create your own workflows, this is set to what you chose as default. If you download a workflow, you might have to change it.
 
 ![KNIME Python_node](https://git.embl.de/schorb/pyem/raw/master/doc/images/knime_pynode.png)
+
+
+
+If you get an error message that the KNIP extension is missing, install it using "File > Install KNIME Extensions".
+
+![KNIME IP Python](https://git.embl.de/schorb/pyem/raw/master/doc/images/KNIP.png)
