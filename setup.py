@@ -17,7 +17,6 @@ setup(name='py-EM',
       install_requires=[
       'numpy',
       'scipy',
-      'tifffile',
       #'re',
       'mrcfile',
       #'time',
