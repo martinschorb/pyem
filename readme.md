@@ -19,13 +19,13 @@
 - Install Anaconda from [here](https://www.anaconda.com/download/ "Download Anaconda"). Py-EM has been tested to work with both Python 2 and 3. Choose the appropriate OS.
 - Start the Anaconda [Navigator](http://docs.anaconda.com/anaconda/user-guide/getting-started/ "Getting started with Anaconda").
 - as explained in [section 4](http://docs.anaconda.com/anaconda/user-guide/getting-started/#run-python-in-a-jupyter-notebook "Run Python in a Jupyter Notebook"), install and start a Jupyter notebook.
-- Download this [tutorial file](https://git.embl.de/schorb/pyem/raw/master/pyEM.ipynb) (use "save link as..."), open it in your Jupyter session and follow the instructions.
+- Download this [tutorial file](https://git.embl.de/schorb/pyem/raw/master/pyEM.ipynb?inline=false) (use "save link as..." if it shows in the browser), open it in your Jupyter session and follow the instructions.
 
 ## Get started<a name="tutorials"></a>
 In order to access the Tutorials on how to use py-EM, follow these steps:
 
 - as explained in [section 4](http://docs.anaconda.com/anaconda/user-guide/getting-started/#run-python-in-a-jupyter-notebook "Run Python in a Jupyter Notebook"), install and start a Jupyter notebook.
-- Download this [tutorial file](https://git.embl.de/schorb/pyem/raw/master/pyEM.ipynb) (use "save link as..."), open it in your Jupyter session and follow the instructions.
+- Download this [tutorial file](https://git.embl.de/schorb/pyem/raw/master/pyEM.ipynb?inline=false) (use "save link as..." if it shows in the browser), open it in your Jupyter session and follow the instructions.
 
 
 ## Set up integration in SerialEM GUI
