@@ -22,7 +22,7 @@ In the Preferences, go to "KNIME > Python". Provide the location of the python b
 <b> When using KNIME > 3.6 under Windows and an Anaconda installation, you have to call Python using a batch script to ensure the environment is properly activated. </b> To do so, download and modify [this script](https://git.embl.de/schorb/pyem/raw/master/tutorials/startpython.bat?inline=false) (you might need to rename it to `*.bat` by removing the `*.txt`) to match your Anaconda installation and provide it to KNIME's Python settings.
 More in-depth information in setting up the python integration can be found [here](https://docs.knime.com/2018-12/python_installation_guide/index.html).
 
-![KNIME Python](https://git.embl.de/schorb/pyem/raw/master/doc/images/startpython.png)
+![KNIME Python](https://git.embl.de/schorb/pyem/raw/master/doc/images/knimepython.png)
 
 Import the desired workflow from [here](https://git.embl.de/schorb/pyem/tree/master/knime). KNIME will now ask you if it should fetch the necessary nodes from its repositories. Install all of them and the KNIME workflow should run as it is.
 
