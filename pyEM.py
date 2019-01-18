@@ -683,8 +683,8 @@ def img2polygon(img, n_poly, center, radius):
     polypt = numpy.append(polypt,[(a[maxdiff_ix],b[maxdiff_ix])],axis=0)
    
     polypt1 = polypt.copy()
-    
-    polypt1[:,1] = xs - polypt[:,1]   
+    polypt1[:,0] = polypt[:,1]
+    polypt1[:,1] = ys - polypt[:,0]   
     
   return polypt1
 
