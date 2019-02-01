@@ -33,6 +33,7 @@ target_map = 'refmap'
 import os
 import os.path
 import numpy
+from operator import itemgetter
 
 #import matplotlib.pyplot as plt
 
@@ -196,7 +197,7 @@ for idx,acq_item in enumerate(acq):
 
   
   
-  outnav.sort()
+  outnav.sort(key=itemgetter('# Item'))
 
 
 #for nitem in non_acq: 

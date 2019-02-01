@@ -33,6 +33,7 @@ target_map = 'refmap'
 import os
 import os.path
 import numpy
+from operator import itemgetter
 
 import multiprocessing as mp
 
@@ -86,7 +87,7 @@ for idx,acq_item in enumerate(acq):
   mapitem = em.realign_map(acq_item,allitems)
   newmapid.append(em.newID(allitems,newmapid[-1] + 1))
   itemid = mapitem['# Item']
-    
+  
   if not itemid in maps.keys():
     maps[itemid] = em.mergemap(mapitem)
     groupid = em.newID(allitems,999000000+int(mapitem['MapID'][0][-6:]))
@@ -204,6 +205,7 @@ for p in processes:
     
 outnav = [outitem.get() for p in processes]
 
+outnav.sort(key=itemgetter('# Item'))
 
 #for nitem in non_acq: 
 #    newnav.append(nitem)
