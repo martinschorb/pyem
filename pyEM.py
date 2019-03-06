@@ -466,7 +466,7 @@ def mergemap(mapitem,crop=False,black=False):
 
             callcmd = 'blendmont -imi ' + '\"' + mapfile + '\"' + ' -imo \"' + mergefile + '.mrc\" -pli \"' + mapfile + '.pcs\" -roo \"' + mergefile  + '.mrc\" -se ' + str(mapsection) + ' -al \"'+ mergefile + '.al\" -sloppy'    #os.system(callcmd)
             if black:
-                callcmd = callcmd + '-fill 0'
+                callcmd = callcmd + ' -fill 0'
             
             #print(callcmd)
             
