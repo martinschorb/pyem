@@ -39,7 +39,7 @@ import re
 import mrcfile as mrc
 import time
 from operator import itemgetter
-
+import fnmatch
 
 # get python version
 py_ver = sys.version_info
@@ -184,7 +184,19 @@ def map_file(mapitem):
 
 # -------------------------------
 #%%
+def findfile(searchstr, searchdir):
+    
+    # will find files that match a search string in subfolders of the provided search directory
+    output = list()
+    for rootdir,dirs,files in os.walk(searchdir):
+        for file in files:
+            if fnmatch.fnmatch(file,searchstr):
+                output.append(os.path.join(rootdir,file))
+    return output
 
+
+# -------------------------------
+#%%
 def map_header(m):
 
     # extracts MRC header information for a given mrc.object (legacy from reading mrc headers)
