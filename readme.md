@@ -75,3 +75,6 @@ accessory functions;
 - **map_matrix:**  determine the matrix relating pixel and stage coordinates of a map
 - **cart2pol, pol2cart:** coordinate conversions
 - **imcrop:**  crops an image of a given size (2 element numpy array) around a pixel coordinate (2 element numpy array)
+- **findfile** will find files that match a search string in subfolders of the provided search directory
+    
+   
