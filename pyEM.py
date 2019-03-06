@@ -318,11 +318,12 @@ def map_matrix(mapitem):
 # -------------------------------
 #%%
 
-def mergemap(mapitem,crop=False):
+def mergemap(mapitem,crop=False,black=False):
 
   # processes a map item and merges the mosaic using IMOD
   # generates a dictionary with metadata for this procedure
   # if crop is selected, a 3dmod session will be opened and the user needs to draw a model of the desired region. The script continues after saving the model file and closing 3dmod.
+  # black option will fill the empty spaces between tiles with 0
 
   m=dict()
   m['Sloppy'] = False
@@ -464,6 +465,9 @@ def mergemap(mapitem,crop=False):
             print('----------------------------------------------------\n')
 
             callcmd = 'blendmont -imi ' + '\"' + mapfile + '\"' + ' -imo \"' + mergefile + '.mrc\" -pli \"' + mapfile + '.pcs\" -roo \"' + mergefile  + '.mrc\" -se ' + str(mapsection) + ' -al \"'+ mergefile + '.al\" -sloppy'    #os.system(callcmd)
+            if black:
+                callcmd = callcmd + '-fill 0'
+            
             #print(callcmd)
             
             os.system(callcmd)
