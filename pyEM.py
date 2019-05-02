@@ -683,7 +683,7 @@ def img2polygon(img, n_poly, center, radius):
 
   # draw equi-angular lines from the center to determine the intersection with the binary image
   polyphi = numpy.linspace(0,2*numpy.pi,n_poly)
-  endpts = em.pol2cart(radius,polyphi)
+  endpts = pol2cart(radius,polyphi)
   endpts = numpy.array(center) + endpts
   
   # find the intersection points and mark the coordinates
