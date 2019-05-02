@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# emtools.py
+# pyEM.py
 
 # Copyright (c) 2017, Martin Schorb
 # Copyright (c) 2017, European Molecular Biology Laboratory
@@ -22,7 +22,7 @@
 """
 
 # Python mudule for interpreting and modifying Navigator files created using SerialEM. For detailed information,
-# see https://doi.org/10.1101/389502
+# see  https://doi.org/10.1038/s41592-019-0396-9
 # Information and documentation of the individual functions can be found in Readme.md
 
 # dependencies
