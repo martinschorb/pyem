@@ -31,7 +31,7 @@ In order to access the Tutorials on how to use py-EM, follow these steps:
 
 ## Community and Support<a name="community"></a>
 
-In order to receive announcements about updates or major changes in py-EM, we have set up a mailing list. in order to join it, please send an email to pyem-subscribe@embl.de.
+In order to receive announcements about updates or major changes in py-EM, we have set up a mailing list. In order to join it, please send an email to pyem-subscribe@embl.de.
 
 Specific questions about applications and tricks should be posted to the forum at https://forum.image.sc joining lots of related scientific open software projects.
 
