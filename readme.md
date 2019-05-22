@@ -6,11 +6,13 @@
 
 2. [Get started](#tutorials)
 
-3. [Set up integration in SerialEM GUI](https://git.embl.de/schorb/pyem/blob/master/doc/serialemtools.md)
+3. [Community and Support](#community)
 
-4. [Set up KNIME](https://git.embl.de/schorb/pyem/blob/master/doc/knime.md) 
+4. [Set up integration in SerialEM GUI](https://git.embl.de/schorb/pyem/blob/master/doc/serialemtools.md)
 
-5. [Function List](#Functions)
+5. [Set up KNIME](https://git.embl.de/schorb/pyem/blob/master/doc/knime.md) 
+
+6. [Function List](#Functions)
 
 
 
@@ -26,6 +28,14 @@ In order to access the Tutorials on how to use py-EM, follow these steps:
 
 - as explained in [section 4](http://docs.anaconda.com/anaconda/user-guide/getting-started/#run-python-in-a-jupyter-notebook "Run Python in a Jupyter Notebook"), install and start a Jupyter notebook.
 - Download this [tutorial file](https://git.embl.de/schorb/pyem/raw/master/pyEM.ipynb?inline=false) (use "save link as..." if it shows in the browser), open it in your Jupyter session and follow the instructions.
+
+## Community and Support<a name="community"></a>
+
+In order to receive announcements about updates or major changes in py-EM, we have set up a mailing list. in order to join it, please send an email to pyem-subscribe@embl.de.
+
+Specific questions about applications and tricks should be posted to the forum at https://forum.image.sc joining lots of related scientific open software projects.
+
+Please contact me if you like to contribute applications or other pieces of code to py-EM and you will get an account for this gitlab platform.
 
 
 ## Set up integration in SerialEM GUI
