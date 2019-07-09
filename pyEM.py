@@ -1093,8 +1093,14 @@ def nav_selection(allitems,sel=[],acquire=True,maps=False):
             selitem = nav_find(allitems,'# Item',listitem)
             
             newnav.extend(selitem)
-                
-        
+    
+    if maps:        
+        for item in newnav:
+            if 'DrawnID'in item.keys():
+                drawnmap = nav_find(allitems,'MapID',item['DrawnID'])
+                if (nav_find(newnav,'MapID',item['DrawnID'])==[]):
+                    newnav.extend(drawnmap)
+                    
     return newnav
 
 
