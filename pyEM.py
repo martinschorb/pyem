@@ -1047,10 +1047,36 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False,maps=False):
 
 # ------------------------------------------------------------
   
-def nav_selection(allitems,sel=[],acquire=True):
+def nav_find(allitems,key,val):
+# returns the navigator/mdoc entries with the given key/value pair
+# takes an input navigator (list of dicts), a target key (item property) and the desired values to match    
+# output is the list of navigator items    
+         
+    filtered = list(filter(lambda item:item.get(key),allitems))
+    
+    # deals with integer, string or list entries
+    if type(val)==int: val=str(val)
+    if not key == '# Item':
+        if type(val)==str: val=[val]
+    
+    found = list(filter(lambda item:item[key]==val,filtered))
+       
+
+    if not found == []:
+        newnav=found
+    else:
+        newnav=[]           
+        
+        
+    
+    return newnav
+
+# ------------------------------------------------------------
+
+def nav_selection(allitems,sel=[],acquire=True,maps=False):
     
 # extracts a selection of navigator items into a new navigator
-# takes an input navigator (list of dicts), an optional list of item labels (one line each) and optional whether to include items selected for acquisition
+# takes an input navigator (list of dicts), an optional list of item labels (one line each) and optional whether to include items selected for acquisition, optionally, all maps the selected points were clicked on are also returned
 # if only the input nav is given, it will extract all "Acquire" items
 # output is list of navigator items
         
@@ -1058,20 +1084,17 @@ def nav_selection(allitems,sel=[],acquire=True):
     select = sel[:]
     
     if acquire:
-        acq = filter(lambda item:item.get('Acquire'),allitems)
-        acq = list(filter(lambda item:item['Acquire']==['1'],acq))
+        newnav = nav_find(allitems,'Acquire','1')       
         
-        for item in acq:
-            newnav.append(item)
+        
     if not (select == []):
         if  isinstance(select,str):select=[select]                                        
         for listitem in select:
-            selitem = list(filter(lambda item:item['# Item']==listitem,allitems))
-            if type(selitem)==list:
-                newnav.extend(selitem)
-            else:
-                newnav.append(selitem)
-
+            selitem = nav_find(allitems,'# Item',listitem)
+            
+            newnav.extend(selitem)
+                
+        
     return newnav
 
 
