@@ -45,58 +45,58 @@ import pyEM as em
 
 
 # start script
-
-
-navlines = em.loadtext(navname)
-(targetitem,junk) = em.nav_item(navlines,target_map)
-
-targetfile = em.map_file(targetitem)
-target_mrc = mrc.open(targetfile, permissive = 'True')
-targetheader = em.map_header(target_mrc)
-
-t_mat = em.map_matrix(targetitem)
-
-newnavf = navname[:-4] + '_automaps.nav'
-nnf = open(newnavf,'w')
-nnf.write("%s\n" % navlines[0])
-nnf.write("%s\n" % navlines[1])
-
-
-allitems = em.fullnav(navlines)
-
-
-acq = filter(lambda item:item.get('Acquire'),allitems)
-acq = list(filter(lambda item:item['Acquire']==['1'],acq))
-
-non_acq = [x for x in allitems if x not in acq]
-
-non_acq.remove(targetitem)
+if __name__ == '__main__':
     
-maps = {}
-
-newmapid = [em.newID(allitems,10000)]
-
-outnav=list()
-ntotal = len(acq)
-
-newnav = list()
-
-for idx,acq_item in enumerate(acq):
-  print('Processing source map for navitem '+ str(idx+1) + '/' + str(ntotal) + ' (%2.0f%% done)' %(idx*100/ntotal))
-
-  mapitem = em.realign_map(acq_item,allitems)
-  newmapid.append(em.newID(allitems,newmapid[-1] + 1))
-  itemid = mapitem['# Item']
-  
-  if not itemid in maps.keys():
-    maps[itemid] = em.mergemap(mapitem)
-    groupid = em.newID(allitems,999000000+int(mapitem['MapID'][0][-6:]))
-    non_acq.remove(mapitem)
+    navlines = em.loadtext(navname)
+    (targetitem,junk) = em.nav_item(navlines,target_map)
     
-    # NoRealign
-    mapitem['Color'] = '5'
+    targetfile = em.map_file(targetitem)
+    target_mrc = mrc.open(targetfile, permissive = 'True')
+    targetheader = em.map_header(target_mrc)
+    
+    t_mat = em.map_matrix(targetitem)
+    
+    newnavf = navname[:-4] + '_automaps.nav'
+    nnf = open(newnavf,'w')
+    nnf.write("%s\n" % navlines[0])
+    nnf.write("%s\n" % navlines[1])
+    
+    
+    allitems = em.fullnav(navlines)
+    
+    
+    acq = filter(lambda item:item.get('Acquire'),allitems)
+    acq = list(filter(lambda item:item['Acquire']==['1'],acq))
+    
+    non_acq = [x for x in allitems if x not in acq]
+    
+    non_acq.remove(targetitem)
         
-    newnav.append(mapitem)
+    maps = {}
+    
+    newmapid = [em.newID(allitems,10000)]
+    
+    outnav=list()
+    ntotal = len(acq)
+    
+    newnav = list()
+    
+    for idx,acq_item in enumerate(acq):
+      print('Processing source map for navitem '+ str(idx+1) + '/' + str(ntotal) + ' (%2.0f%% done)' %(idx*100/ntotal))
+    
+      mapitem = em.realign_map(acq_item,allitems)
+      newmapid.append(em.newID(allitems,newmapid[-1] + 1))
+      itemid = mapitem['# Item']
+      
+      if not itemid in maps.keys():
+        maps[itemid] = em.mergemap(mapitem)
+        groupid = em.newID(allitems,999000000+int(mapitem['MapID'][0][-6:]))
+        non_acq.remove(mapitem)
+        
+        # NoRealign
+        mapitem['Color'] = '5'
+            
+        newnav.append(mapitem)
        
     
 def point2virtmap(acq_item, ix, ntotal, maps, targetheader, targetitem, outitem):
