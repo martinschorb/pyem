@@ -43,14 +43,15 @@ import multiprocessing as mp
 import mrcfile as mrc
 import pyEM as em
 
-def point2virtmap(acq_item, ix, ntotal, maps, targetheader, targetitem, allitems, newmapid, groupid, outitem):
+def point2virtmap(acq_item, ix, ntotal, targetheader, targetitem, allitems, newmapid, groupid, outitem):
   print('Processing navitem '+ str(ix+1) + '/' + str(ntotal) + ' (%2.0f%% done)' %(ix*100/ntotal))
   mapitem = em.realign_map(acq_item,allitems)  
-  itemid = mapitem['# Item']    
+  itemid = mapitem['# Item']
+  thismap = em.mergemap(mapitem)
 
   # combine rotation matrices
   t_mat = em.map_matrix(targetitem)  
-  map_mat = maps[itemid]['matrix'] 
+  map_mat = thismap['matrix'] 
   
   maptf = numpy.linalg.inv(map_mat) * t_mat  
   
@@ -61,13 +62,13 @@ def point2virtmap(acq_item, ix, ntotal, maps, targetheader, targetitem, allitems
   
   # calculate the pixel coordinates
 
-  pt_px1 = em.get_pixel(acq_item,maps[itemid])
+  pt_px1 = em.get_pixel(acq_item,thismap)
 
-  px_scale = targetheader['pixelsize'] /( maps[itemid]['mapheader']['pixelsize'] )
+  px_scale = targetheader['pixelsize'] /(thismap['mapheader']['pixelsize'] )
 
   imsz1 = numpy.array([targetheader['ysize'],targetheader['xsize']])
   
-  im = numpy.array(maps[itemid]['im'])
+  im = numpy.array(thismap['im'])
 
   im2, p2 = em.map_extract(im,pt_px1,pt_px1,px_scale,imsz1,maptf)
   
@@ -194,7 +195,7 @@ if __name__ == '__main__':
     
     outitem = mp.Queue()
     
-    processes = [mp.Process(target=point2virtmap, args=(x, ix, ntotal, maps, targetheader, targetitem, allitems, newmapid, groupid, outitem)) for ix,x in enumerate(acq)]
+    processes = [mp.Process(target=point2virtmap, args=(x, ix, ntotal, targetheader, targetitem, allitems, newmapid, groupid, outitem)) for ix,x in enumerate(acq)]
     
     for p in processes:
         p.start()
