@@ -1,7 +1,13 @@
-## Setting up integration in SerialEM GUI
+# Setting up integration in SerialEM GUI
 
 SerialEM comes with the capability of launching external command from its graphical user interface (GUI).
 A detailed description of how this integration works can be found [here](https://bio3d.colorado.edu/SerialEM/hlp/html/menu_tools.htm "Tools Menu - SerialEM Help").
+
+1. [About SerialEM Tools Menu](#tools)
+
+2. [Example 1 - sort a Navigator](#sort)
+
+##About the SerialEM Tools Menu<a name="tools"></a>
 
 In order to enable the menu that shows external tools, a section needs to be added to [SerialEM's property file](https://bio3d.colorado.edu/SerialEM/hlp/html//about_properties.htm "Property files - SerialEM Help"), that specifies the tools and the commands that should be run.
 
@@ -13,11 +19,11 @@ ToolArguments 1 %navfile%
 ```
 would open the currently active Navigator file in a text editor. 
 
-### Example: Sort current Navigator
+## Example1 : Sort current Navigator<a name="sort"></a>
 
 In this example, we like to order the Navigator File that is currently open in SerialEM. This requires that the Python environment that contains the py-EM installation is executed and calls the desired function.
 
-#### define py-EM specific python launcher
+#### define py-EM specific python launcher<a name="launcher"></a>
 
 In order to run the python environment, you need to define it in a batch file. A template is provided [here](https://git.embl.de/schorb/pyem/raw/master/tutorials/callpython.bat?inline=false) (if it opens inside the browser, use "save link as...").
 
@@ -48,4 +54,5 @@ You can now run the procedure by clicking this menu entry
 ![Running scipt](https://git.embl.de/schorb/pyem/raw/master/doc/images/sortnav.png)
 
 and the sorted Navigator file will appear in the same directory as the current one.
+
 
