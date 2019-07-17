@@ -75,4 +75,4 @@ ToolArguments 5 C:\scripts\maps_acquire_cmd.py %navfile%
 ```
 
 This should start the process and show a result similar to this:
-![Running scipt](https://git.embl.de/schorb/pyem/raw/master/doc/images/virtmap_tools.png)
+![Running scipt](https://git.embl.de/schorb/pyem/raw/master/doc/images/virtmaps_tools.png)
