@@ -9,7 +9,7 @@
 #  - the navigator label of a map acquired in the target conditions (will be cloned for the virtual maps)
 #
 # output:
-# - one tif file at the desired virtual magnification and image size for each item
+# - one mrc file at the desired virtual magnification and image size for each item
 # - a new navigator file containing all new maps with acquisition already enabled
 
 
@@ -18,10 +18,15 @@
 
 
 import sys
+import os
 
 navname = sys.argv[1]
-
 # file name navigator
+
+# change path to working directory
+os.chdir(os.path.dirname(navname))
+
+
 
 
 target_map = 'refmap'
