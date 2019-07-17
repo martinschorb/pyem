@@ -11,7 +11,7 @@ A detailed description of how this integration works can be found [here](https:/
 
 ## About the SerialEM Tools Menu<a name="tools"></a>
 
-In order to enable the menu that shows external tools, a section needs to be added to [SerialEM's property file](https://bio3d.colorado.edu/SerialEM/hlp/html//about_properties.htm "Property files - SerialEM Help"), that specifies the tools and the commands that should be run.
+In order to enable the [menu that shows external tools](https://bio3d.colorado.edu/SerialEM/hlp/html/menu_tools.htm "Tools Menu - SerialEM Help"), a section needs to be added to [SerialEM's property file](https://bio3d.colorado.edu/SerialEM/hlp/html//about_properties.htm "Property files - SerialEM Help"), that specifies the tools and the commands that should be run.
 
 This set of propeties:
 ```
@@ -57,11 +57,22 @@ You can now run the procedure by clicking this menu entry
 
 and the sorted Navigator file will appear in the same directory as the current one.
 
-## Run the generation of virtual maps from within SerialEM<a name="vmaps"></a>
+
+
+
+## Example 2 : Run the generation of virtual maps from within SerialEM<a name="vmaps"></a>
 
 You can integrate the execution of the generation of virtual maps as described in the [publication](https://doi.org/10.1038/s41592-019-0396-9) into SerialEM. Therefore, you want to call the script [`maps_acquire_cmd.py`](https://git.embl.de/schorb/pyem/raw/master/applications/maps_acquire_cmd.py?inline=false) that is provided in the [`applications`](https://git.embl.de/schorb/pyem/tree/master/applications) directory.
 
 The Navigator label of the reference map is defined in the header of the script. Make sure that your map is called the same in the current navigator that you like to process (here: `refmap`).
 
+Make sure that you have configured your launcher for Python/Anaconda properly (as described [here](#launcher)). Then [add the parameters to run the script](https://bio3d.colorado.edu/SerialEM/hlp/html/menu_tools.htm "Tools Menu - SerialEM Help") using the python launcher from above to [SerialEM's property file](https://bio3d.colorado.edu/SerialEM/hlp/html//about_properties.htm "Property files - SerialEM Help").
 
+```
+ExternalTool Generate virtual Maps from template ('refmap')
+ToolCommand 5  C:\scripts\callpython.bat
+ToolArguments 5 C:\scripts\maps_acquire_cmd.py %navfile%
+```
 
+This should start the process and show a result similar to this:
+![Running scipt](https://git.embl.de/schorb/pyem/raw/master/doc/images/virtmap_tools.png)
