@@ -129,7 +129,7 @@ def point2virtmap(acq_item, ix, ntotal, targetheader, targetitem, allitems, newm
     newnavitem['SamePosId'] = acq_item['MapID']
     newnavitem['GroupID'] = [str(groupid)]
     # newnavitem['MapWidthHeight'] = [str(im2size[0]),str(im2size[1])]
-    newnavitem['ImageType'] = ['2']
+    newnavitem['ImageType'] = ['0']
     newnavitem['MapMinMaxScale'] = [str(numpy.min(im2)),str(numpy.max(im2))]
     newnavitem['NumPts'] = ['5']
     newnavitem['# Item'] = 'map_' + acq_item['# Item']    

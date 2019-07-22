@@ -1014,25 +1014,25 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False,maps=False):
     curr_map['Acquire'] = ['0']
 
     # Polygon
-
-    polynav['# Item'] = label
-            
-    if maps:
-        polynav['Acquire'] = ['0']	
-    else:
+    nav_maps.append(newnavitem)  
+                
+    #do not export points/polygons when maps are inteded output.
+        
+    if not maps:
+        polynav['# Item'] = label
         polynav['Acquire'] = ['1']      
+        
+        polynav['Draw'] = ['1']
+        polynav['Regis'] = curr_map['Regis']
+        polynav['DrawnID'] = [str(mapid)]
+        polynav['CoordsInMap'] = [str(int(cx/2)) , str(int(cy/2)),curr_map['StageXYZ'][2]]
+        polynav['PtsX'] = px.split()
+        polynav['PtsY'] = py.split()
+        polynav['GroupID'] = [str(newID(nav,startid+70000))]
     
-    polynav['Draw'] = ['1']
-    polynav['Regis'] = curr_map['Regis']
-    polynav['DrawnID'] = [str(mapid)]
-    polynav['CoordsInMap'] = [str(int(cx/2)) , str(int(cy/2)),curr_map['StageXYZ'][2]]
-    polynav['PtsX'] = px.split()
-    polynav['PtsY'] = py.split()
-    polynav['GroupID'] = [str(newID(nav,startid+70000))]
-
-    nav_maps.append(newnavitem)
-
-    nav_pol.append(polynav)
+        
+    
+        nav_pol.append(polynav)
 
 
 
@@ -1183,10 +1183,12 @@ def ordernav(nav,delim=''):
 # It considers the indexing after a delimiter in the string.
 # example: s01_cell-1,s02_cell-1,s01_cell-02, ...    is sorted by cells instead of s...
 # when no delimiter is given, the navigator is sorted by its label.
+    
+    nav1=nav.copy()
 
     non_idx = 0
     
-    for item in nav: 
+    for item in nav1: 
         if delim=='' :
             item['# Sorting'] = item['# Item']
                 
@@ -1196,9 +1198,12 @@ def ordernav(nav,delim=''):
         else:
             item['# Sorting'] = item['# Item'][item['# Item'].find(delim)+1:]
     
-    newnav = sorted(nav,key = itemgetter('# Sorting'))
+    newnav = sorted(nav1.copy(),key = itemgetter('# Sorting'))
                                          
-    for item in newnav: item.pop('# Sorting')
+    for item in newnav: 
+        print(item['# Item'])
+        print(item['# Sorting'])           
+        item.pop('# Sorting')
 
     
     return newnav
