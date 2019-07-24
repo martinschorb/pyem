@@ -1201,8 +1201,6 @@ def ordernav(nav,delim=''):
     newnav = sorted(nav1.copy(),key = itemgetter('# Sorting'))
                                          
     for item in newnav: 
-        print(item['# Item'])
-        print(item['# Sorting'])           
         item.pop('# Sorting')
 
     
