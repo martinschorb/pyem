@@ -35,7 +35,7 @@ view_map = 'viewmap'
 # one example map at the desired settings (View) (NavLabel)
 
 preview_map = 'previewmap'
-# one example map at the desired settings (View) (NavLabel)
+# one example map at the desired settings (Preview) (NavLabel)
 
 
 # ====================================================================================
