@@ -1,5 +1,9 @@
 # py-EM
 
+![py-EM](doc/images/py-EM.png "py-EM Logo")
+
+
+
 ### a Python package to interact with SerialEM to enable [automated Transmission Electron Microscopy](https://doi.org/10.1038/s41592-019-0396-9)
 
 1. [Installation instructions](#installation)
