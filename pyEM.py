@@ -298,6 +298,8 @@ def duplicate_items(navitems,labels=[],prefix='',reg=True):
   
   if labels==[]:
       dupitems = nav_selection(navitems)
+      for item in dupitems : item['Acquire'] = ['0']
+      
       
   else:
       dupitems = nav_selection(navitems,labels,False)     
