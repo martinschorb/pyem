@@ -719,6 +719,8 @@ def map_extract(im,c,p,px_scale,t_size,mat,int8=False):
   cropsize = imsz1 * 1.42
 
   im1 = imcrop(im,c,cropsize)
+  
+  realsize = numpy.array(im1.shape)
 
   # center to origin
   p1 = p - c
@@ -726,31 +728,43 @@ def map_extract(im,c,p,px_scale,t_size,mat,int8=False):
   # interpolate image
   
   mat_i = numpy.linalg.inv(mat)
+  
+# mat_hom = numpy.concatenate((mat,numpy.array([[0],[0]])),axis=1)
+#  mat_hom = numpy.concatenate((mat_hom,[[0,0,1]]),axis=0)
+  
+#  m_t1 = numpy.concatenate((numpy.eye(2),[[-realsize[1]/2],[-realsize[0]/2]]),axis=1)
 
-  o_size = numpy.array(list(map(int,numpy.round(t_size*1.42))))
-  offset = numpy.squeeze(numpy.array(cropsize/2-numpy.dot(mat_i,o_size/2)))
+#  m_t1 = numpy.concatenate((m_t1,[[0,0,1]]),axis=0)
+  
+  newcenter = numpy.dot(mat,realsize/2)
+  
+#  m_t2 = numpy.concatenate((numpy.eye(2),[[newcenter[1]],[newcenter[0]]]),axis=1)
+#  m_t2 = numpy.concatenate((m_t2,[[0,0,1]]),axis=0)
+
+
+  #o_size = numpy.array(list(map(int,numpy.round(realsize / px_scale))))
+  o_size = numpy.abs(newcenter[0:2]).astype(int)*2
+ # offset = numpy.squeeze(numpy.array(realsize/2-numpy.dot(mat_i,o_size/2)))
   
   if int8:
      im1=numpy.round(255.0 * (im1 - im1.min()) / (im1.max() - im1.min() - 1.0)).astype(numpy.uint8) 
   
-  im2 = affine_transform(im1,mat_i,offset=offset,output_shape=o_size)
+  im2 = affine_transform(im1,mat_i,output_shape=o_size)
   
-  im3 = im2 #numpy.int8(im2*127)
-
   p3 = p1 * mat.T
 
-  c3 = numpy.array(im3.shape)/2
+  c3 = numpy.array(im2.shape)/2
 
   #crop to desired size
 
-  im4 = imcrop(im3,[c3[1],c3[0]],t_size)
+  im3 = imcrop(im2,[c3[1],c3[0]],t_size)
 
   p4=p3.copy()
 
   p4[:,0] =  t_size[1]/2 + p3[:,0]
   p4[:,1] =  t_size[0]/2 + p3[:,1]
 
-  return im4, p4
+  return im3, p4
 
 
 
