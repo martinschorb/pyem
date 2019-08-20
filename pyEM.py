@@ -21,7 +21,7 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-# Python mudule for interpreting and modifying Navigator files created using SerialEM. For detailed information,
+# Python module for interpreting and modifying Navigator files created using SerialEM. For detailed information,
 # see  https://doi.org/10.1038/s41592-019-0396-9
 # Information and documentation of the individual functions can be found in Readme.md
 
@@ -773,32 +773,40 @@ def map_extract(im,c,p,px_scale,t_size,mat,int8=False):
 
 # --------------------------------------
 
-def get_pixel(navitem,mergedmap,tile=False):
+def get_pixel(navitem,mergedmap,tile=False,outline=False):
 # determines the pixel coordinates of a navigator item in its associated map. 
 # input:
 # - navigator item
 # - map item as resulting from mergemap
 # - tile(optional) output is pixel and tile index of closest map tile
+# - outline(optional) return coordinates of outline (map/polygon) instead of center point    
 # output: pixel coordinates    
     
   
   xval = float(navitem['StageXYZ'][0]) #(float(acq_item['PtsX'][0]))
   yval = float(navitem['StageXYZ'][1]) #(float(acq_item['PtsY'][0]))
   
-  pt = numpy.array([xval,yval])
+  pt0 = numpy.array([xval,yval])
   
+  pt = pt0.copy()
   # calculate the pixel coordinates
   im = mergedmap['im'] 
   
   imsz = im.shape
   
-  #tileloc= mergedmap['tileloc']
   
+  if outline:  
+    xval1 = numpy.array(navitem['PtsX']).astype(float)
+    yval1 = numpy.array(navitem['PtsY']).astype(float)
+  
+    pt = numpy.vstack((xval1,yval1)).T 
+      
   
   if 'XYinPc' in navitem:
     tileid = int(navitem['PieceOn'][0])
     pt_px0 = list(map(float,navitem['XYinPc']))
     pt_px = numpy.array(pt_px0)
+    pt_px = numpy.reshape(pt_px,(1,2))
     tileidx = numpy.argwhere(mergedmap['sections']==tileid)[0][0]
     
   else:
@@ -815,19 +823,21 @@ def get_pixel(navitem,mergedmap,tile=False):
           tileid = int(navitem['PieceOn'][0])
           tileidx = numpy.argwhere(mergedmap['sections']==tileid)[0][0]
       else:  
-          tiledist = numpy.sum((tilepos-pt)**2,axis=1)
+          tiledist = numpy.sum((tilepos-pt0)**2,axis=1)
           tileidx = numpy.argmin(tiledist)
 
-    
+
     # normalize coordinates
     
     ptn = numpy.array(pt - tilepos[tileidx])
 
-    pt_px = numpy.array(ptn*mergedmap['matrix'].T).squeeze()
-    pt_px[0] = (mergedmap['mappxcenter'][0]) + pt_px[0]
-    pt_px[1] = (mergedmap['mappxcenter'][1]) - pt_px[1]
+    pt_px = numpy.array(ptn*mergedmap['matrix'].T)
+    pt_px[:,0] = (mergedmap['mappxcenter'][0]) + pt_px[:,0]
+    pt_px[:,1] = (mergedmap['mappxcenter'][1]) - pt_px[:,1]
  
    # output   
+  if (not outline):      
+      pt_px = pt_px.squeeze()
    
   if tile:
       return (pt_px,tileidx)
@@ -835,7 +845,7 @@ def get_pixel(navitem,mergedmap,tile=False):
       pt_px1 = pt_px + mergedmap['tilepx'][tileidx]
       pt_px1[1] = imsz[0] - pt_px1[1]
       return pt_px1
-  
+   
 # ------------------------------------------------------------
   
   
