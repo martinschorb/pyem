@@ -707,7 +707,7 @@ def img2polygon(img, n_poly, center, radius):
    
     polypt1 = polypt.copy()
     
-    polypt1[:,0] = polypt[:,0]   
+    polypt1[:,1] = ys-polypt[:,0]   
     
   return polypt1
 
@@ -843,7 +843,7 @@ def get_pixel(navitem,mergedmap,tile=False,outline=False):
       return (pt_px,tileidx)
   else:
       pt_px1 = pt_px + mergedmap['tilepx'][tileidx]
-      pt_px1[1] = imsz[0] - pt_px1[1]
+      #pt_px1[1] = imsz[0] - pt_px1[1]
       return pt_px1
    
 # ------------------------------------------------------------
