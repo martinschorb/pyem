@@ -731,22 +731,10 @@ def map_extract(im,c,p,px_scale,t_size,mat,int8=False):
   
   mat_i = numpy.linalg.inv(mat)
   
-# mat_hom = numpy.concatenate((mat,numpy.array([[0],[0]])),axis=1)
-#  mat_hom = numpy.concatenate((mat_hom,[[0,0,1]]),axis=0)
-  
-#  m_t1 = numpy.concatenate((numpy.eye(2),[[-realsize[1]/2],[-realsize[0]/2]]),axis=1)
-
-#  m_t1 = numpy.concatenate((m_t1,[[0,0,1]]),axis=0)
   
   newcenter = numpy.array(numpy.dot(mat,realsize/2)).squeeze()
   
-#  m_t2 = numpy.concatenate((numpy.eye(2),[[newcenter[1]],[newcenter[0]]]),axis=1)
-#  m_t2 = numpy.concatenate((m_t2,[[0,0,1]]),axis=0)
-
-
-  #o_size = numpy.array(list(map(int,numpy.round(realsize / px_scale))))
   o_size = numpy.abs(newcenter[0:2]).astype(int)*2
- # offset = numpy.squeeze(numpy.array(realsize/2-numpy.dot(mat_i,o_size/2)))
   
   if int8:
      im1=numpy.round(255.0 * (im1 - im1.min()) / (im1.max() - im1.min() - 1.0)).astype(numpy.uint8) 
@@ -843,7 +831,7 @@ def get_pixel(navitem,mergedmap,tile=False,outline=False):
       return (pt_px,tileidx)
   else:
       pt_px1 = pt_px + mergedmap['tilepx'][tileidx]
-      #pt_px1[1] = imsz[0] - pt_px1[1]
+      pt_px1[1] = imsz[0] - pt_px1[1]
       return pt_px1
    
 # ------------------------------------------------------------
