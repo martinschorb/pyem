@@ -738,7 +738,7 @@ def map_extract(im,c,p,px_scale,t_size,mat,int8=False):
 
 #  m_t1 = numpy.concatenate((m_t1,[[0,0,1]]),axis=0)
   
-  newcenter = numpy.dot(mat,realsize/2)
+  newcenter = numpy.array(numpy.dot(mat,realsize/2)).squeeze()
   
 #  m_t2 = numpy.concatenate((numpy.eye(2),[[newcenter[1]],[newcenter[0]]]),axis=1)
 #  m_t2 = numpy.concatenate((m_t2,[[0,0,1]]),axis=0)
