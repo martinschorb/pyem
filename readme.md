@@ -37,6 +37,8 @@ In order to access the Tutorials on how to use py-EM, follow these steps:
 
 In order to receive announcements about updates or major changes in py-EM, we have set up a mailing list. In order to join it, please send an email to pyem-subscribe@embl.de.
 
+Specific questions about applications and tricks should be posted to the joint forum of related scientific open software projects at https://forum.image.sc/tags/py-em.
+
 Please contact me if you like to contribute applications or other pieces of code to py-EM and you will get an account for this gitlab platform.
 
 

@@ -32,8 +32,8 @@ import os
 import os.path
 import sys
 import numpy
-#import skimage.transform as tf
-from scipy.ndimage.interpolation import affine_transform
+import skimage.transform as tf
+
 from skimage import io
 import re
 import mrcfile as mrc
@@ -722,39 +722,40 @@ def map_extract(im,c,p,px_scale,t_size,mat,int8=False):
 
   im1 = imcrop(im,c,cropsize)
   
-  realsize = numpy.array(im1.shape)
+#  realsize = numpy.array(im1.shape)
 
   # center to origin
   p1 = p - c
 
-  # interpolate image
-  
+  # create homogenous matrices
   mat_i = numpy.linalg.inv(mat)
   
+  M = numpy.concatenate((mat_i,numpy.array([[0],[0]])),axis=1)
+  M = numpy.concatenate((M,[[0,0,1]]),axis=0)
   
-  newcenter = numpy.array(numpy.dot(mat,realsize/2)).squeeze()
+  mat1 = numpy.eye(3)
+  mat1[0,2] = -(t_size[1]-1)/2
+  mat1[1,2] = -(t_size[0]-1)/2
   
-  o_size = numpy.abs(newcenter[0:2]).astype(int)*2
+  mat2 = numpy.eye(3)
+  mat2[0,2] = (cropsize[1]-1)/2
+  mat2[1,2] = (cropsize[0]-1)/2
+  
+  M1 = numpy.dot(mat2,M)
+  M2 = numpy.dot(M1,mat1)
   
   if int8:
-     im1=numpy.round(255.0 * (im1 - im1.min()) / (im1.max() - im1.min() - 1.0)).astype(numpy.uint8) 
+     im1 = numpy.round(255.0 * (im1 - im1.min()) / (im1.max() - im1.min() - 1.0)).astype(numpy.uint8) 
+    
+    # interpolate image
+  im2 = tf.warp(im1,M2,output_shape=t_size)
   
-  im2 = affine_transform(im1,mat_i,output_shape=o_size)
-  
-  p3 = p1 * mat.T
+  p4 = p1 * mat.T
 
-  c3 = numpy.array(im2.shape)/2
+  p4[:,0] =  t_size[1]/2 + p4[:,0]
+  p4[:,1] =  t_size[0]/2 + p4[:,1]
 
-  #crop to desired size
-
-  im3 = imcrop(im2,[c3[1],c3[0]],t_size)
-
-  p4=p3.copy()
-
-  p4[:,0] =  t_size[1]/2 + p3[:,0]
-  p4[:,1] =  t_size[0]/2 + p3[:,1]
-
-  return im3, p4
+  return im2, p4
 
 
 
