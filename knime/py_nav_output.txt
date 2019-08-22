@@ -77,18 +77,16 @@ for index,input_cell in input_table_1['Labels'].iteritems():
 	
 	midx = midx + 1
 	
-	for label in a[:8]:
+	for label in a:
 		s = label.image	
 		bb = numpy.array(label.bbox)
 		p = em.img2polygon(s,20,label.local_centroid, numpy.max(s.shape))
 		p[:,0] = p[:,0]+bb[1]
 		p[:,1] = p[:,1]+bb[0]
 		p = p*binning
-		#p[:,1] = orig1.shape[0]-p[:,1]
 		polys.append(p)
 
 		c = [(bb[1]+(bb[3]-bb[1])/2)*binning, (bb[0]+(bb[2]-bb[0])/2)*binning]
-		#c[1]=orig1.shape[0]-c[1]
 		centers.append(c)
 
 	outnav = em.pts2nav(orig1,polys,centers,curr_map,targetitem,nav,flow_variables['sloppy'+mapid])

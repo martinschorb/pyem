@@ -88,7 +88,7 @@ def virtmapfrompoint(acq_item,idx,allitems,maps,targetitem,resultlist):
       
       map_mat = maps[itemid]['matrix'] 
       
-      maptf = numpy.linalg.inv(map_mat) * t_mat  
+      maptf = (numpy.linalg.inv(map_mat) * t_mat).T  
       
       xval = float(acq_item['StageXYZ'][0]) #(float(acq_item['PtsX'][0]))
       yval = float(acq_item['StageXYZ'][1]) #(float(acq_item['PtsY'][0]))

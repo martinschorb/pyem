@@ -704,12 +704,9 @@ def img2polygon(img, n_poly, center, radius):
       maxdiff_ix = radius-1
 
     polypt = numpy.append(polypt,[(a[maxdiff_ix],b[maxdiff_ix])],axis=0)
-   
-    polypt1 = polypt.copy()
+     
     
-    polypt1[:,1] = ys-polypt[:,0]   
-    
-  return polypt1
+  return polypt
 
 # --------------------------------------
 
@@ -722,7 +719,7 @@ def map_extract(im,c,p,px_scale,t_size,mat,int8=False):
 
   im1 = imcrop(im,c,cropsize)
   
-#  realsize = numpy.array(im1.shape)
+  realsize = numpy.array(im1.shape)
 
   # center to origin
   p1 = p - c
@@ -738,8 +735,8 @@ def map_extract(im,c,p,px_scale,t_size,mat,int8=False):
   mat1[1,2] = -(t_size[0]-1)/2
   
   mat2 = numpy.eye(3)
-  mat2[0,2] = (cropsize[1]-1)/2
-  mat2[1,2] = (cropsize[0]-1)/2
+  mat2[0,2] = (realsize[1]-1)/2
+  mat2[1,2] = (realsize[0]-1)/2
   
   M1 = numpy.dot(mat2,M)
   M2 = numpy.dot(M1,mat1)
@@ -748,12 +745,19 @@ def map_extract(im,c,p,px_scale,t_size,mat,int8=False):
      im1 = numpy.round(255.0 * (im1 - im1.min()) / (im1.max() - im1.min() - 1.0)).astype(numpy.uint8) 
     
     # interpolate image
-  im2 = tf.warp(im1,M2,output_shape=t_size)
+  im2 = tf.warp(im1,M2,output_shape=t_size,preserve_range=True)
+  
+  if int8:
+      im2=im2.astype(numpy.int8)
+  else:
+      im2=im2.astype(numpy.int16)
   
   p4 = p1 * mat.T
 
   p4[:,0] =  t_size[1]/2 + p4[:,0]
   p4[:,1] =  t_size[0]/2 + p4[:,1]
+  
+  
 
   return im2, p4
 
@@ -899,7 +903,7 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False,maps=False):
 
 
   # combine rotation matrices
-  maptf = numpy.linalg.inv(map_mat) * t_mat
+  maptf = (numpy.linalg.inv(map_mat) * t_mat).T
 
   px_scale = targetheader['pixelsize'] /pixelsize
 
@@ -936,12 +940,13 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False,maps=False):
       ntotal = ntotal - 1
       continue
     
+    p4[:,1] = imsz1[0] - p4[:,1]
 
-    px = numpy.array(numpy.transpose(p4[:,1]))
+    px = numpy.array(numpy.transpose(p4[:,0]))
     px = numpy.array2string(px,separator=' ')
     px = px[2:-2]
 
-    py = numpy.array(numpy.transpose(p4[:,0]))
+    py = numpy.array(numpy.transpose(p4[:,1]))
     py = numpy.array2string(py,separator=' ')
     py = py[2:-2]
 
@@ -960,20 +965,26 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False,maps=False):
 
     label = curr_map['# Item'] + '_' + str(idx).zfill(3)
     idx = idx + 1
-    imfile = 'virt_' + label + '.tif'
+    imfile = 'virt_' + label + '.mrc'
 
     if os.path.exists(imfile): os.remove(imfile)
-    io.imsave(imfile,im4)
+    
+    im5 = numpy.rot90(im4,3)
+
+    with mrc.new(imfile) as mrcf:
+        mrcf.set_data(im5.T)
+        mrcf.close()# 
     
     #  map corner points
-    
+
+
     cx = imsz1[0]
     cy = imsz1[1]
 
     a = [[0,0],[cx,0],[cx,cy],[0,cy],[0,0]]
     a = numpy.matrix(a) - [cx/2 , cy/2]
     
-    t_mat_i = numpy.linalg.inv(maptf)
+    t_mat_i = numpy.linalg.inv(maptf.T)
 
     c1 = a*t_mat_i
     

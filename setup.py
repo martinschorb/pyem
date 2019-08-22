@@ -6,7 +6,7 @@ with open("readme.md", "r") as fh:
     long_description = fh.read()
 
 setup(name='py-EM',
-      version='20190822',
+      version='20190822h',
       py_modules=['pyEM'],
       description='Tools to interact with Serial EM enabling automated transmission electron microscopy.',
       long_description=long_description,
