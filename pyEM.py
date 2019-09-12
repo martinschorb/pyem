@@ -305,6 +305,8 @@ def duplicate_items(navitems,labels=[],prefix='',reg=True,maps=False):
 # duplicates items from a list, optional second parameter is a list of labels of the items to duplicate.
 # Default is to use the 'Acquire' flag. Third parameter defines a prefix for the created duplictes (defatul:none)
 # The fourth parameter determines whether the registration of duplicate items should be changed (default:yes)
+# if the maps flag is set, all maps that contain the label of the selected items or that were used to draw these are duplicated as well.
+
     
   outitems = navitems[:]
   
