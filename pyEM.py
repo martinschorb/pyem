@@ -286,10 +286,22 @@ def fullnav(inlines):
 
   return c
 
+
 # -------------------------------
 #%%
 
-def duplicate_items(navitems,labels=[],prefix='',reg=True):
+def navlabel_match(navitems,searchstr):
+# identifies navigator items whose labels contain the given string
+
+    r=re.compile(r'.*'+searchstr+'.*')
+    
+    return list(filter(lambda item:r.match(item['# Item']),navitems))
+
+
+# -------------------------------
+#%%
+
+def duplicate_items(navitems,labels=[],prefix='',reg=True,maps=False):
 # duplicates items from a list, optional second parameter is a list of labels of the items to duplicate.
 # Default is to use the 'Acquire' flag. Third parameter defines a prefix for the created duplictes (defatul:none)
 # The fourth parameter determines whether the registration of duplicate items should be changed (default:yes)
@@ -308,6 +320,30 @@ def duplicate_items(navitems,labels=[],prefix='',reg=True):
       newitem = item.copy()
       if reg:newitem['Regis']=[str(newreg(dupitems))]
       newitem['# Item'] = prefix + item['# Item']
+      newitem['MapID'] = [str(newID(outitems,int(newitem['MapID'][0])))]
+      
+      if maps:
+          drawnmap = realign_map(newitem,navitems)
+          
+          if (not drawnmap == []):    
+              dupdrawn = drawnmap.copy()
+              dupdrawn['# Item'] = prefix + drawnmap['# Item']
+              dupdrawn['MapID'] = [str(newID(outitems,int(dupdrawn['MapID'][0])))]
+              newitem['DrawnID'] = dupdrawn['MapID']                     
+              
+              othermaps = navlabel_match(navitems,dupdrawn['# Item'])
+              othermaps.pop(othermaps.index(nav_selection(othermaps,sel=dupdrawn['# Item'],acquire=False)[0]));              
+                                                           
+              if reg:
+                  for mapitem in othermaps:
+                      mapitem['Regis']=[str(newreg(dupitems))]                                           
+                                                           
+              
+              outitems.extend(othermaps)
+              outitems.append(dupdrawn)                               
+                                                           
+              
+              
       outitems.append(newitem)
     
   return outitems    
@@ -563,7 +599,7 @@ def mergemap(mapitem,crop=False,black=False):
   m['mapfile'] = mapfile
   m['mergefile'] = mergefile+'.mrc'
   m['matrix'] = mat
-  
+  similar
   m['tilepos'] = tilepos
   m['im'] = im
   m['mappxcenter'] = mappxcenter
