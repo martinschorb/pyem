@@ -334,16 +334,16 @@ def duplicate_items(navitems,labels=[],prefix='',reg=True,maps=False):
               newitem['DrawnID'] = dupdrawn['MapID']                     
               
               othermaps = navlabel_match(navitems,dupdrawn['# Item'])
-              othermaps = othermaps.copy()
-              othermaps.pop(othermaps.index(nav_selection(othermaps,sel=dupdrawn['# Item'],acquire=False)[0]));              
+              othermaps1 = othermaps[:]
+              othermaps1.pop(othermaps1.index(nav_selection(othermaps1,sel=dupdrawn['# Item'],acquire=False)[0]));              
                                                            
               if reg:
                   dupdrawn['Regis']=[str(newreg(dupitems))]
-                  for mapitem in othermaps:
+                  for mapitem in othermaps1:
                       mapitem['Regis']=[str(newreg(dupitems))]                                           
                                                            
               
-              outitems.extend(othermaps)
+              outitems.extend(othermaps1)
               outitems.append(dupdrawn)                               
                                                            
               
