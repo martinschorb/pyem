@@ -308,7 +308,7 @@ def duplicate_items(navitems,labels=[],prefix='',reg=True,maps=False):
 # if the maps flag is set, all maps that contain the label of the selected items or that were used to draw these are duplicated as well.
 
     
-  outitems = navitems[:]
+  outitems = navitems.copy()
   
   if labels==[]:
       dupitems = nav_selection(navitems)
@@ -334,7 +334,7 @@ def duplicate_items(navitems,labels=[],prefix='',reg=True,maps=False):
               newitem['DrawnID'] = dupdrawn['MapID']                     
               
               othermaps = navlabel_match(navitems,dupdrawn['# Item'])
-              othermaps1 = othermaps[:]
+              othermaps1=othermaps.copy()
               othermaps1.pop(othermaps1.index(nav_selection(othermaps1,sel=dupdrawn['# Item'],acquire=False)[0]));              
                                                            
               if reg:
