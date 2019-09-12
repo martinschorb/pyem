@@ -337,6 +337,7 @@ def duplicate_items(navitems,labels=[],prefix='',reg=True,maps=False):
               othermaps.pop(othermaps.index(nav_selection(othermaps,sel=dupdrawn['# Item'],acquire=False)[0]));              
                                                            
               if reg:
+                  dupdrawn['Regis']=[str(newreg(dupitems))]
                   for mapitem in othermaps:
                       mapitem['Regis']=[str(newreg(dupitems))]                                           
                                                            
