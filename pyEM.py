@@ -33,7 +33,7 @@ import os.path
 import sys
 import numpy
 import skimage.transform as tf
-
+import copy
 from skimage import io
 import re
 import mrcfile as mrc
@@ -308,7 +308,7 @@ def duplicate_items(navitems,labels=[],prefix='',reg=True,maps=False):
 # if the maps flag is set, all maps that contain the label of the selected items or that were used to draw these are duplicated as well.
 
     
-  outitems = navitems.copy()
+  outitems = copy.deepcopy(navitems)
   
   if labels==[]:
       dupitems = nav_selection(navitems)
@@ -319,7 +319,7 @@ def duplicate_items(navitems,labels=[],prefix='',reg=True,maps=False):
       dupitems = nav_selection(navitems,labels,False)     
 
   for item in dupitems :
-      newitem = item.copy()
+      newitem = copy.deepcopy(item)
       if reg:newitem['Regis']=[str(newreg(dupitems))]
       newitem['# Item'] = prefix + item['# Item']
       newitem['MapID'] = [str(newID(outitems,int(newitem['MapID'][0])))]
@@ -328,22 +328,21 @@ def duplicate_items(navitems,labels=[],prefix='',reg=True,maps=False):
           drawnmap = realign_map(newitem,navitems)
           
           if (not drawnmap == []):    
-              dupdrawn = drawnmap.copy()
+              dupdrawn = copy.deepcopy(drawnmap)
               dupdrawn['# Item'] = prefix + drawnmap['# Item']
               dupdrawn['MapID'] = [str(newID(outitems,int(dupdrawn['MapID'][0])))]
               newitem['DrawnID'] = dupdrawn['MapID']                     
               
               othermaps = navlabel_match(navitems,dupdrawn['# Item'])
-              othermaps1=othermaps.copy()
-              othermaps1.pop(othermaps1.index(nav_selection(othermaps1,sel=dupdrawn['# Item'],acquire=False)[0]));              
+              othermaps.pop(othermaps.index(nav_selection(othermaps,sel=dupdrawn['# Item'],acquire=False)[0]));              
                                                            
               if reg:
                   dupdrawn['Regis']=[str(newreg(dupitems))]
-                  for mapitem in othermaps1:
+                  for mapitem in othermaps:
                       mapitem['Regis']=[str(newreg(dupitems))]                                           
                                                            
               
-              outitems.extend(othermaps1)
+              outitems.extend(othermaps)
               outitems.append(dupdrawn)                               
                                                            
               
