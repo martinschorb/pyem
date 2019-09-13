@@ -602,7 +602,6 @@ def mergemap(mapitem,crop=False,black=False):
   m['mapfile'] = mapfile
   m['mergefile'] = mergefile+'.mrc'
   m['matrix'] = mat
-  similar
   m['tilepos'] = tilepos
   m['im'] = im
   m['mappxcenter'] = mappxcenter
