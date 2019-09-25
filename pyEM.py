@@ -380,25 +380,34 @@ def mergemap(mapitem,crop=False,black=False):
   
   #find map file
   mapfile = map_file(mapitem)
+  
+  mapsection = list(map(int,mapitem['MapSection']))[0]
 
   if mapfile.find('.st')<0 and mapfile.find('.map')<0 and mapfile.find('.mrc')<0:
     #not an mrc file
 
     print('Warning: ' + mapfile + ' is not an MRC file!' + '\n')
-    print('Assuming it is a single tif file or a stitched montage.' + '\n')
-    mergefile = mapfile
-    im = io.imread(mergefile)
-    mappxcenter = numpy.array([im.shape[1],im.shape[0]]) / 2
     mergeheader = {}
-
     mergeheader['stacksize'] = 1
+    
+    if '.idoc' in mapfile:
+        # List of tif files with additional metadata
+        mergefile = mapfile[:mapfile.find('.idoc')]+'{:04d}'.format(mapsection)+'.tif'
+        idoctxt=loadtext(mapfile)
+        idoc = mdoc_item(idoctxt,'Image = '+os.path.basename(mergefile))
+        mergeheader['pixelsize'] = float(idoc['PixelSpacing'][0])/ 10000 # in um
+            
+    else:        
+        print('Assuming it is a single tif file or a stitched montage.' + '\n')
+        mergefile = mapfile
+        mergeheader['pixelsize'] = 1./numpy.sqrt(abs(numpy.linalg.det(mat)))     
+
+    im = io.imread(mergefile)
+    mappxcenter = numpy.array([im.shape[1],im.shape[0]]) / 2 
     mergeheader['xsize'] = numpy.array(im.shape)[0]
-    mergeheader['ysize'] = numpy.array(im.shape)[1]
-    mergeheader['pixelsize'] = 1./numpy.sqrt(abs(numpy.linalg.det(mat)))
-    mapheader = mergeheader
-
-    tilepos = numpy.array(list(map(float,mapitem['StageXYZ']))[0:2])
-
+    mergeheader['ysize'] = numpy.array(im.shape)[1]    
+    mapheader = mergeheader    
+    tilepos = numpy.array(list(map(float,mapitem['StageXYZ']))[0:2])    
     tilepx = numpy.array([0,0])
     overlapx = 0
     overlapy = 0
@@ -407,7 +416,7 @@ def mergemap(mapitem,crop=False,black=False):
 
   else:
    # map is mrc file
-    mapsection = list(map(int,mapitem['MapSection']))[0]
+    
     mf = mrc.mmap(mapfile, permissive = 'True')   
     
     mapheader = map_header(mf)
