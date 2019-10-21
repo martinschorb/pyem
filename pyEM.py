@@ -600,7 +600,8 @@ def mergemap(mapitem,crop=False,black=False):
         
     
         
-    merge_mrc.close()    
+    merge_mrc.close()
+    mf.close()    
     im = numpy.rot90(numpy.transpose(im))
     mergeheader['pixelsize'] = pixelsize
     mapheader['pixelsize'] = pixelsize
