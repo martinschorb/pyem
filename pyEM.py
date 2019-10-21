@@ -507,9 +507,9 @@ def mergemap(mapitem,crop=False,black=False):
         tileloc = [0,0]
         imd = merge_mrc.data
         
-        if len(imd.shape==3):
+        if len(imd.shape)==3:
             im=imd[mapsection,:,:]
-        elif len(imd.shape==2):
+        elif len(imd.shape)==2:
             im=imd
 
     else:
