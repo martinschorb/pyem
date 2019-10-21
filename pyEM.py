@@ -506,7 +506,11 @@ def mergemap(mapitem,crop=False,black=False):
         overlapy = 0
         tileloc = [0,0]
         imd = merge_mrc.data
-        im=imd[mapsection,:,:]
+        
+        if len(imd.shape==3):
+            im=imd[mapsection,:,:]
+        elif len(imd.shape==2):
+            im=imd
 
     else:
         if not os.path.exists(mergefile+'.mrc'):
