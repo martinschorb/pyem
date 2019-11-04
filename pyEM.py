@@ -544,20 +544,22 @@ def mergemap(mapitem,crop=False,black=False):
         tilepx = list(loadtext(mergefile + '.al'))
 
         #tilepx = tilepx[:-1]
-        for j, item in enumerate(tilepx): tilepx[j] = list(map(float,re.split(' +',tilepx[j])))
+        for j, item in enumerate(tilepx): tilepx[j] = list(re.split(' +',item))
 
         tilepx = numpy.array(tilepx)
-        tilepx = tilepx[tilepx[:,2] == mapsection,0:2]
+        tilepx = tilepx[tilepx[:,2] == str(mapsection),0:2]
+        tilepx = tilepx.astype(numpy.float)
 
 
         # use original tile coordinates(pixels) from SerialEM to determine tile position in montage
 
         tilepx1 = loadtext(mapfile + '.pcs')
         #tilepx1 = tilepx1[:-1]
-        for j, item in enumerate(tilepx1): tilepx1[j] = list(map(float,re.split(' +',tilepx1[j])))
+        for j, item in enumerate(tilepx1): tilepx1[j] = list(re.split(' +',item))
 
         tilepx1 = numpy.array(tilepx1)
-        tilepx1 = tilepx1[tilepx1[:,2] == mapsection,0:2]
+        tilepx1 = tilepx1[tilepx1[:,2] == str(mapsection),0:2]
+        tilepx1 = tilepx1.astype(numpy.float)
 
         tpx = tilepx1[:,0]
         tpy = tilepx1[:,1]
