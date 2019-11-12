@@ -1088,7 +1088,7 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False,maps=False):
     newnavitem['MapSection'] = ['0']
     newnavitem.pop('SamePosId','')
     # newnavitem['MapWidthHeight'] = [str(im2size[0]),str(im2size[1])]
-    newnavitem['ImageType'] = ['2']
+    newnavitem['ImageType'] = ['0']
     newnavitem['MapMinMaxScale'] = [str(numpy.min(im4)),str(numpy.max(im4))]
     newnavitem['NumPts'] = ['5']
     newnavitem['# Item'] = 'm_' + label
