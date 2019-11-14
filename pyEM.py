@@ -771,7 +771,9 @@ def map_extract(im,c,p,px_scale,t_size,mat,int8=False):
   imsz1 = t_size * px_scale
  
   # extract image (1.42x to enable rotation)
-  cropsize = imsz1 * 1.42
+  cropsize1 = imsz1 * 1.42
+  
+  cropsize = numpy.array([cropsize1.max(),cropsize1.max()])
 
   im1 = imcrop(im,c,cropsize)
   
@@ -940,7 +942,7 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False,maps=False):
     
   merge = mergemap(curr_map)
 
-  mapfile = merge['mapfile']
+  #mapfile = merge['mapfile']
   #map_mrc = mrc.mmap(mapfile, permissive = 'True')
   mapheader = merge['mapheader']
 
