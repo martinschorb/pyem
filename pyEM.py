@@ -937,16 +937,18 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False,maps=False):
 
 
   # read information from maps
+    
+  merge = mergemap(curr_map)
 
-  mapfile = map_file(curr_map)
-  map_mrc = mrc.mmap(mapfile, permissive = 'True')
-  mapheader = map_header(map_mrc)
+  mapfile = merge['mapfile']
+  #map_mrc = mrc.mmap(mapfile, permissive = 'True')
+  mapheader = merge['mapheader']
 
   pixelsize = mapheader['pixelsize']
 
   imsz = numpy.array(im.shape)
 
-  map_mat = map_matrix(curr_map)
+  map_mat = merge['matrix']
 
   # target reference
 
@@ -1021,6 +1023,7 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False,maps=False):
 
     label = curr_map['# Item'] + '_' + str(idx).zfill(3)
     idx = idx + 1
+    
     imfile = 'virt_' + label + '.mrc'
 
     if os.path.exists(imfile): os.remove(imfile)
@@ -1049,16 +1052,6 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False,maps=False):
 
     c1 = c1 + [c_out[1],c_out[0]]
 
-    cnx = numpy.array(numpy.transpose(c1[:,1]))
-    cnx = numpy.array2string(cnx,separator=' ')
-    cnx = cnx[2:-2]
-
-    cny = numpy.array(numpy.transpose(c1[:,0]))
-    cny = " ".join(list(map(str,cny)))
-    cny = cny[1:-2]
-
-
-
     
     # fill navigator
 
@@ -1069,10 +1062,20 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False,maps=False):
     newnavitem.pop('RawStageXY','')
     if curr_map['MapFramesXY'] == ['0', '0']:
         newnavitem['CoordsInMap'] = [str(c_out[0]),str(c_out[1]),curr_map['StageXYZ'][2]]
-    elif sloppy:
-        newnavitem['CoordsInAliMontVS'] = [str(c_out[0]),str(c_out[1]),curr_map['StageXYZ'][2]]
+   
     else:
         newnavitem['CoordsInAliMont'] = [str(c_out[0]),str(c_out[1]),curr_map['StageXYZ'][2]]
+      #  convert aligned pixel coordinates into piece coordinates to ensure map has a proper bounding box
+      
+      
+        
+    cnx = numpy.array(numpy.transpose(c1[:,1]))
+    cnx = numpy.array2string(cnx,separator=' ')
+    cnx = cnx[2:-2]
+
+    cny = numpy.array(numpy.transpose(c1[:,0]))
+    cny = " ".join(list(map(str,cny)))
+    cny = cny[1:-2]
 
     newnavitem['PtsX'] = cnx.split()
     newnavitem['PtsY'] = cny.split()
