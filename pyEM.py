@@ -1071,7 +1071,7 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False,maps=False):
       #  newnavitem['CoordsInAliMont'] = [str(c_out[0]),str(c_out[1]),curr_map['StageXYZ'][2]]
       #  convert aligned pixel coordinates into piece coordinates to ensure map has a proper bounding box
       
-      tilecenters = merge['tilepx']+np.array([merge['mapheader']['xsize']/2,merge['mapheader']['ysize']/2])
+      tilecenters = merge['tilepx']+numpy.array([merge['mapheader']['xsize']/2,merge['mapheader']['ysize']/2])
       tiledist = numpy.sum((tilecenters-c_out)**2,axis=1)
       tileidx = numpy.argmin(tiledist)
       c_out = c_out - merge['tilepx'][tileidx]
