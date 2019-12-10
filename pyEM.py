@@ -1040,13 +1040,13 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False,maps=False):
     #  map corner points
 
 
-    cx = imsz1[0]
-    cy = imsz1[1]
+    cx = imsz1[1]
+    cy = imsz1[0]
 
     a = [[0,0],[cx,0],[cx,cy],[0,cy],[0,0]]
     a = numpy.matrix(a) - [cx/2 , cy/2]
     
-    t_mat_i = numpy.linalg.inv(maptf.T)
+    t_mat_i = numpy.linalg.inv(maptf)
 
     c1 = a*t_mat_i
     
@@ -1075,7 +1075,7 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False,maps=False):
       tiledist = numpy.sum((tilecenters-c_out)**2,axis=1)
       tileidx = numpy.argmin(tiledist)
       c_out = c_out - merge['tilepx'][tileidx]
-      c1 = c1 + c_out
+      c1 = numpy.fliplr(c1 + c_out)
       newnavitem['CoordsInPiece'] = [str(c_out[0]),str(c_out[1]),curr_map['StageXYZ'][2]]
       newnavitem['PieceOn'] = [str(tileidx)]
         
