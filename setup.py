@@ -5,7 +5,7 @@ from distutils.core import setup
 with open("readme.md", "r") as fh:
     long_description = fh.read()
 
-setup(name='pyEM',
+setup(name='py-EM',
       version='20191210',
       py_modules=['pyEM'],
       description='Tools to interact with Serial EM enabling automated transmission electron microscopy.',
