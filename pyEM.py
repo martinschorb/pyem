@@ -416,7 +416,7 @@ def mergemap(mapitem,crop=False,black=False):
 
   else:
    # map is mrc file
-    
+       
     mf = mrc.mmap(mapfile, permissive = 'True')   
     
     mapheader = map_header(mf)
@@ -873,7 +873,8 @@ def get_pixel(navitem,mergedmap,tile=False,outline=False):
       if 'PieceOn' in navitem:
           tileid = int(navitem['PieceOn'][0])
           tileidx = numpy.argwhere(mergedmap['sections']==tileid)[0][0]
-      else:  
+      else:
+          #TODO   this points to the lower left corner of the tiles NOT to the center!!! ISSUE #2
           tiledist = numpy.sum((tilepos-pt0)**2,axis=1)
           tileidx = numpy.argmin(tiledist)
 
@@ -1049,10 +1050,11 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False,maps=False):
 
     c1 = a*t_mat_i
     
-    c_out = c
-    c_out[1] = imsz[0] -c_out[1]
+    c_out = c.copy()
+    c_out[1] = imsz[0] - c_out[1]
 
-    c1 = c1 + [c_out[1],c_out[0]]
+   # c1 = c1 + [c_out[0],c_out[1]]
+
 
     
     # fill navigator
@@ -1066,18 +1068,24 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False,maps=False):
         newnavitem['CoordsInMap'] = [str(c_out[0]),str(c_out[1]),curr_map['StageXYZ'][2]]
    
     else:
-        newnavitem['CoordsInAliMont'] = [str(c_out[0]),str(c_out[1]),curr_map['StageXYZ'][2]]
+      #  newnavitem['CoordsInAliMont'] = [str(c_out[0]),str(c_out[1]),curr_map['StageXYZ'][2]]
       #  convert aligned pixel coordinates into piece coordinates to ensure map has a proper bounding box
       
-      
+      tilecenters = merge['tilepx']+np.array([merge['mapheader']['xsize']/2,merge['mapheader']['ysize']/2])
+      tiledist = numpy.sum((tilecenters-c_out)**2,axis=1)
+      tileidx = numpy.argmin(tiledist)
+      c_out = c_out - merge['tilepx'][tileidx]
+      c1 = c1 + c_out
+      newnavitem['CoordsInPiece'] = [str(c_out[0]),str(c_out[1]),curr_map['StageXYZ'][2]]
+      newnavitem['PieceOn'] = [str(tileidx)]
         
     cnx = numpy.array(numpy.transpose(c1[:,1]))
     cnx = numpy.array2string(cnx,separator=' ')
     cnx = cnx[2:-2]
 
     cny = numpy.array(numpy.transpose(c1[:,0]))
-    cny = " ".join(list(map(str,cny)))
-    cny = cny[1:-2]
+    cny = numpy.array2string(cny,separator=' ')
+    cny = cny[2:-2]
 
     newnavitem['PtsX'] = cnx.split()
     newnavitem['PtsY'] = cny.split()
