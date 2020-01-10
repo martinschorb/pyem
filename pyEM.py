@@ -804,15 +804,21 @@ def map_extract(im,c,p,px_scale,t_size,mat,int8=False):
     
     # interpolate image
   im2 = tf.warp(im1,M2,output_shape=t_size,preserve_range=True)
-  rotmat=mat/numpy.linalg.det(mat)
-  limits=1-abs(numpy.mean([-rotmat[0,1],rotmat[1,0]]))
+  
+  limitsize = numpy.min([[realsize/px_scale],[t_size]],axis=0).squeeze()
   
   
-  outsize = numpy.min([[realsize/px_scale],[t_size]],axis=0).squeeze()*limits
-  im3 = imcrop(im2,[t_size[1]/2,t_size[0]/2],outsize)
-  
-  im3[im3==0]=numpy.mean(im3[:])
-  
+  if (limitsize==t_size).all():
+      im3=im2.copy()
+      
+  else:
+      rotmat=mat/numpy.linalg.det(mat)
+      limits=1-abs(numpy.mean([-rotmat[0,1],rotmat[1,0]]))
+      outsize = numpy.min([[realsize/px_scale],[t_size]],axis=0).squeeze()*limits
+      im3 = imcrop(im2,[t_size[1]/2,t_size[0]/2],outsize)
+      
+      im3[im3==0]=numpy.mean(im3[:])
+      
   if int8:
       im3=im3.astype(numpy.int8)
   else:

@@ -122,7 +122,7 @@ for idx,acq_item in enumerate(acq):
   im = numpy.array(maps[itemid]['im'])
 
   im2, p2 = em.map_extract(im,pt_px1,pt_px1,px_scale,imsz1,maptf)
-  
+  im2size = im2.shape
 
   if min(im2.shape)<200:
     print('Warning! Item ' + acq_item['# Item'] + ' is not within the map frame. Ignoring it')
@@ -187,7 +187,7 @@ for idx,acq_item in enumerate(acq):
     newnavitem['MapSection'] = ['0']
     newnavitem['SamePosId'] = acq_item['MapID']
     newnavitem['GroupID'] = [str(groupid)]
-    # newnavitem['MapWidthHeight'] = [str(im2size[0]),str(im2size[1])]
+    newnavitem['MapWidthHeight'] = [str(im2size[0]),str(im2size[1])]
     newnavitem['ImageType'] = ['0']
     newnavitem['MapMinMaxScale'] = [str(numpy.min(im2)),str(numpy.max(im2))]
     newnavitem['NumPts'] = ['5']
