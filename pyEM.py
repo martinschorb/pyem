@@ -805,19 +805,34 @@ def map_extract(im,c,p,px_scale,t_size,mat,int8=False):
     # interpolate image
   im2 = tf.warp(im1,M2,output_shape=t_size,preserve_range=True)
   
+  #check if output image size needs to be modified
+  
   limitsize = numpy.min([[realsize/px_scale],[t_size]],axis=0).squeeze()
   
   
   if (limitsize==t_size).all():
       im3=im2.copy()
-      
+      shift = [0,0]
   else:
+      # determine limitation of image by the borders of rotated crop
       rotmat=mat/numpy.linalg.det(mat)
       limits=1-abs(numpy.mean([-rotmat[0,1],rotmat[1,0]]))
       outsize = numpy.min([[realsize/px_scale],[t_size]],axis=0).squeeze()*limits
-      im3 = imcrop(im2,[t_size[1]/2,t_size[0]/2],outsize)
+      
+      
+      # make sure map size matches the original minimum camera pixel block limits (powers of 2)
+      ii=1
+      while (numpy.mod(t_size,2**ii)==0).all() and ii<4:
+          ii=ii+1
+      
+      shift =   numpy.mod(outsize,2**ii)/2
+      outsize = 2**ii*numpy.floor(outsize/(2**ii))
+      
+      im3 = imcrop(im2,[t_size[1]/2+shift[1],t_size[0]/2+shift[0]],outsize)
       
       im3[im3==0]=numpy.mean(im3[:])
+      
+  f_size = im3.shape    
       
   if int8:
       im3=im3.astype(numpy.int8)
@@ -826,8 +841,8 @@ def map_extract(im,c,p,px_scale,t_size,mat,int8=False):
   
   p4 = p1 * mat.T
 
-  p4[:,0] =  t_size[1]/2 + p4[:,0]
-  p4[:,1] =  t_size[0]/2 + p4[:,1]
+  p4[:,0] =  f_size[1]/2 + p4[:,0]
+  p4[:,1] =  f_size[0]/2 + p4[:,1]
   
   
 
