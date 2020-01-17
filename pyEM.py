@@ -400,7 +400,8 @@ def mergemap(mapitem,crop=False,black=False):
     else:        
         print('Assuming it is a single tif file or a stitched montage.' + '\n')
         mergefile = mapfile
-        mergeheader['pixelsize'] = 1./numpy.sqrt(abs(numpy.linalg.det(mat)))     
+        mergeheader['pixelsize'] = 1./numpy.sqrt(abs(numpy.linalg.det(mat))) 
+        mergeheader['stacksize'] = 0
 
     im = io.imread(mergefile)
     mappxcenter = numpy.array([im.shape[1],im.shape[0]]) / 2 
@@ -892,7 +893,8 @@ def get_pixel(navitem,mergedmap,tile=False,outline=False):
   else:
          
     tilepos = mergedmap['tilepos']
-    if (numpy.diff(tilepos,axis=0)[0].max() == 0) & (type(mergedmap['Sloppy']) == bool):
+    
+    if (numpy.diff(tilepos,axis=0)[0].max() == 0) & (type(mergedmap['Sloppy']) == bool)& (mergedmap['mapheader']['stacksize'] > 1):
       print('Montage created using image shift! Problems in identifying the positions of clicked points accurately possible!')
 	
        
