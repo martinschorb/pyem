@@ -187,7 +187,7 @@ for idx,acq_item in enumerate(acq):
     newnavitem['MapSection'] = ['0']
     newnavitem['SamePosId'] = acq_item['MapID']
     newnavitem['GroupID'] = [str(groupid)]
-    newnavitem['MapWidthHeight'] = [str(im2size[0]),str(im2size[1])]
+    newnavitem['MapWidthHeight'] = [str(im2size[1]),str(im2size[0])]
     newnavitem['ImageType'] = ['0']
     newnavitem['MapMinMaxScale'] = [str(numpy.min(im2)),str(numpy.max(im2))]
     newnavitem['NumPts'] = ['5']

@@ -138,14 +138,14 @@ def virtmapfrompoint(acq_item,idx,allitems,maps,targetitem,resultlist):
         if os.path.exists(imfile): os.remove(imfile)
     #    tiff.imsave(imfile,im2)
         
-        im2 = numpy.rot90(im2,3)
+        im3 = numpy.rot90(im2,3)
     
         with mrc.new(imfile) as mrcf:
-            mrcf.set_data(im2.T)
+            mrcf.set_data(im3.T)
             mrcf.close()#        
             
-        cx = im2.shape[0]
-        cy = im2.shape[1]
+        cx = im2.shape[1]
+        cy = im2.shape[0]
     
         a = [[0,0],[cx,0],[cx,cy],[0,cy],[0,0]]
         a = numpy.matrix(a) - [cx/2 , cy/2]
@@ -181,7 +181,7 @@ def virtmapfrompoint(acq_item,idx,allitems,maps,targetitem,resultlist):
         newnavitem['MapSection'] = ['0']
         newnavitem['SamePosId'] = acq_item['MapID']
         newnavitem['GroupID'] = groupid
-        newnavitem['MapWidthHeight'] = [str(im2size[0]),str(im2size[1])]
+        newnavitem['MapWidthHeight'] = [str(im2size[1]),str(im2size[0])]
         newnavitem['ImageType'] = ['0']
         newnavitem['MapMinMaxScale'] = [str(numpy.min(im2)),str(numpy.max(im2))]
         newnavitem['NumPts'] = ['5']
