@@ -163,7 +163,7 @@ def map_file(mapitem):
        dir1 = mapfile[:mapfile.rfind('\\')]
        dir2=dir1[dir1.rfind('\\')+1:]
 
-       print('will try ' + mapfile1 + ' in current directory or subdirectories.' + '\n')
+     #  print('will try ' + mapfile1 + ' in current directory or subdirectories.' + '\n')
 
        # check subdirectories recursively
         

@@ -55,14 +55,14 @@ import mrcfile as mrc
 import pyEM as em
 
 # loop function
-def virtmapfrompoint(acq_item,idx,allitems,maps,targetitem,resultlist):
+def virtmapfrompoint(acq_item,idx,allitems,maps,targetitem,target_merge,resultlist):
       
       newnav = list()
       #targetfile = em.map_file(targetitem)
       #target_mrc = mrc.open(targetfile, permissive = 'True')
       #targetheader = em.map_header(target_mrc)
       
-      target_merge = em.mergemap(targetitem)
+      #target_merge = em.mergemap(targetitem)
       targetheader = target_merge['mergeheader']
     
       t_mat = em.map_matrix(targetitem)
@@ -230,6 +230,8 @@ ntotal = len(acq)
 (viewitem,junk) = em.nav_item(navlines,view_map)
 (previewitem,junk) = em.nav_item(navlines,preview_map)
 
+view_merge = em.mergemap(viewitem)
+preview_merge = em.mergemap(previewitem)
 
 #-----
 #%%
@@ -238,10 +240,10 @@ ntotal = len(acq)
 
 for idx,acq_item in enumerate(acq):
   print('Processing navitem '+ str(idx+1) + '/' + str(ntotal) + ' (%2.0f%% done)' %(idx*100/ntotal))  
-  (viewnav,maps) = virtmapfrompoint(acq_item,idx,allitems,maps,viewitem,outnav1.copy())
+  (viewnav,maps) = virtmapfrompoint(acq_item,idx,allitems,maps,viewitem,view_merge,outnav1.copy())
   outnav1.append(acq_item)
   outnav1.extend(viewnav.copy())  
-  (previewnav,maps) = virtmapfrompoint(acq_item,idx,allitems,maps,previewitem,outnav1.copy())
+  (previewnav,maps) = virtmapfrompoint(acq_item,idx,allitems,maps,previewitem,preview_merge,outnav1.copy())
   outnav1.extend(previewnav)
   
 
