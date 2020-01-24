@@ -31,10 +31,10 @@ navname = sys.argv[1]
 # file name navigator
 
 
-view_map = 'viewmap'
+view_map = 'view'#map'
 # one example map at the desired settings (View) (NavLabel)
 
-preview_map = 'previewmap'
+preview_map = 'preview'#map'
 # one example map at the desired settings (Preview) (NavLabel)
 
 
@@ -47,7 +47,6 @@ preview_map = 'previewmap'
 import os
 import os.path
 import numpy
-from operator import itemgetter
 
 #import matplotlib.pyplot as plt
 
@@ -59,9 +58,12 @@ import pyEM as em
 def virtmapfrompoint(acq_item,idx,allitems,maps,targetitem,resultlist):
       
       newnav = list()
-      targetfile = em.map_file(targetitem)
-      target_mrc = mrc.open(targetfile, permissive = 'True')
-      targetheader = em.map_header(target_mrc)
+      #targetfile = em.map_file(targetitem)
+      #target_mrc = mrc.open(targetfile, permissive = 'True')
+      #targetheader = em.map_header(target_mrc)
+      
+      target_merge = em.mergemap(targetitem)
+      targetheader = target_merge['mergeheader']
     
       t_mat = em.map_matrix(targetitem)
 
@@ -125,7 +127,7 @@ def virtmapfrompoint(acq_item,idx,allitems,maps,targetitem,resultlist):
                 prefix = 'V_'
                 newnavitem['Acquire'] = ['0']
             elif targetitem['MapLDConSet'] == ['4']:
-                newnavitem['Acquire'] = ['1']
+                #newnavitem['Acquire'] = ['1']
                 prefix = 'P_'
             else:
                 prefix='m_'

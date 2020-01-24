@@ -56,9 +56,8 @@ import pyEM as em
 navlines = em.loadtext(navname)
 (targetitem,junk) = em.nav_item(navlines,target_map)
 
-targetfile = em.map_file(targetitem)
-target_mrc = mrc.open(targetfile, permissive = 'True')
-targetheader = em.map_header(target_mrc)
+target_merge = em.mergemap(targetitem)
+targetheader = target_merge['mergeheader']
 
 t_mat = em.map_matrix(targetitem)
 

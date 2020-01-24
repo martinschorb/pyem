@@ -370,7 +370,9 @@ def mergemap(mapitem,crop=False,black=False):
   # generates a dictionary with metadata for this procedure
   # if crop is selected, a 3dmod session will be opened and the user needs to draw a model of the desired region. The script continues after saving the model file and closing 3dmod.
   # black option will fill the empty spaces between tiles with 0
+  
 
+  
   m=dict()
   m['Sloppy'] = False
 
@@ -380,8 +382,10 @@ def mergemap(mapitem,crop=False,black=False):
   
   #find map file
   mapfile = map_file(mapitem)
-  
+  print('processing mapitem '+mapitem['# Item']+' - file: '+mapfile)
   mapsection = list(map(int,mapitem['MapSection']))[0]
+
+  m['frames'] = list(map(int,mapitem['MapFramesXY']))
 
   if mapfile.find('.st')<0 and mapfile.find('.map')<0 and mapfile.find('.mrc')<0:
     #not an mrc file
@@ -427,8 +431,7 @@ def mergemap(mapitem,crop=False,black=False):
 
     mappxcenter = [mapheader['xsize']/2, mapheader['ysize']/2]
 
-    mdocname = mapfile + '.mdoc'
-    m['frames'] = list(map(int,mapitem['MapFramesXY']))
+    mdocname = mapfile + '.mdoc'    
 
 
     if (m['frames'] == [0,0]):
@@ -436,7 +439,7 @@ def mergemap(mapitem,crop=False,black=False):
       if os.path.exists(mdocname):
             mdoclines = loadtext(mdocname)
             pixelsize = float(mdoc_item(mdoclines,'ZValue = '+str(mapsection))['PixelSpacing'][0])/ 10000 # in um
-  
+            
     # extract center positions of individual map tiles
     if mapheader['stacksize'] > 1:
 
@@ -493,7 +496,6 @@ def mergemap(mapitem,crop=False,black=False):
 
     mergefile = mergefile + '_merged'+ '_s' + str(mapsection)
 
-    mergeheader = mapheader
 
     if mapheader['stacksize'] < 2:
         print('Single image found. No merging needed.')
