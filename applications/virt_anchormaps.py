@@ -26,11 +26,6 @@ navname = sys.argv[1]
 # change path to working directory
 os.chdir(os.path.dirname(navname))
 
-
-navname = sys.argv[1]
-# file name navigator
-
-
 view_map = 'view'#map'
 # one example map at the desired settings (View) (NavLabel)
 
