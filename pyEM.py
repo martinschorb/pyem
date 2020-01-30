@@ -1106,11 +1106,11 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False,maps=False):
       
       tilecenters = merge['tilepx']+numpy.array([merge['mapheader']['xsize']/2,merge['mapheader']['ysize']/2])
       tiledist = numpy.sum((tilecenters-c_out)**2,axis=1)
-      tileidx = tileidx = merge['sections'][numpy.argmin(tiledist)]
+      tileidx = numpy.argmin(tiledist)
       c_out = c_out - merge['tilepx'][tileidx]
       c1 = numpy.fliplr(c1 + c_out)
       newnavitem['CoordsInPiece'] = [str(c_out[0]),str(c_out[1]),curr_map['StageXYZ'][2]]
-      newnavitem['PieceOn'] = [str(tileidx)]
+      newnavitem['PieceOn'] = [str(merge['sections'][tileidx])]
         
     cnx = numpy.array(numpy.transpose(c1[:,1]))
     cnx = numpy.array2string(cnx,separator=' ')
