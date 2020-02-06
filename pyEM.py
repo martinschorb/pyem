@@ -528,7 +528,7 @@ def mergemap(mapitem,crop=False,black=False):
             print('Merging the map montage into a single image....' + '\n')
             print('----------------------------------------------------\n')
 
-            callcmd = 'blendmont -imi ' + '\"' + mapfile + '\"' + ' -imo \"' + mergefile + '.mrc\" -pli \"' + mapfile + '.pcs\" -roo \"' + mergefile  + '.mrc\" -se ' + str(mapsection) + ' -al \"'+ mergefile + '.al\" -sloppy'    #os.system(callcmd)
+            callcmd = 'blendmont -imi ' + '\"' + mapfile + '\"' + ' -imo \"' + mergefile + '.mrc\" -pli \"' + mapfile + '.pcs\" -roo \"' + mergefile  + '.mrc\" -se ' + str(mapsection) + ' -al \"'+ mergefile + '.al\" -sloppy -nofft '    #os.system(callcmd)
             if black:
                 callcmd = callcmd + ' -fill 0'
             
