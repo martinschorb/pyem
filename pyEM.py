@@ -424,7 +424,7 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
         
         
         for i in range(0,numpy.min([montage_tiles,stacksize])):
-            mergefile = mapfile[:mapfile.find('.idoc')]+'{:04d}'.format(mapsection)+'.tif'
+            mergefile = mapfile[:mapfile.find('.idoc')]+'{:04d}'.format(mapsection + i)+'.tif'
             tile = mdoc_item(idoctxt,'Image = '+os.path.basename(mergefile))                            
             tilepos.append(tile['StagePosition'])
             tilepx1.append(tile['PieceCoordinates'])
@@ -439,6 +439,7 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
             print('Warning: Series of tif images without montage information. Assume pixel size is consistent for all sections.')
             str1=idoctxt[0]
             pixelsize = float(idoctxt[0][str1.find('=')+1:])
+            
         else:
             pixelsize = float(mdoc_item(idoctxt,'MontSection = '+str(mapsection))['PixelSpacing'][0])/ 10000 # in um
                  
@@ -449,18 +450,19 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
         mergefile = mapfile
         mergeheader['pixelsize'] = 1./numpy.sqrt(abs(numpy.linalg.det(mat))) 
         mergeheader['stacksize'] = 0
-
+        tilepos = numpy.array(list(map(float,mapitem['StageXYZ']))[0:2])    
+        tilepx = numpy.array([0,0])  
+        m['Sloppy'] = 'NoMont'
+    
+# TODO find some reasonable values in the idoc montage case...    
     im = io.imread(mergefile)
     mappxcenter = numpy.array([im.shape[1],im.shape[0]]) / 2 
     mergeheader['xsize'] = numpy.array(im.shape)[0]
-    mergeheader['ysize'] = numpy.array(im.shape)[1]    
-    mapheader = mergeheader    
-    tilepos = numpy.array(list(map(float,mapitem['StageXYZ']))[0:2])    
-    tilepx = numpy.array([0,0])
+    mergeheader['ysize'] = numpy.array(im.shape)[1]
     overlapx = 0
     overlapy = 0
     tileloc = [0,0]
-    m['Sloppy'] = 'NoMont'
+    mapheader = mergeheader    
 
   else:
    # map is mrc file
@@ -686,6 +688,7 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
   m['mapheader'] = mapheader
   m['mergeheader'] = mergeheader
   m['tilepx'] = tilepx
+  m['tilepx1'] = tilepx1
   m['overlap'] = [overlapx,overlapy]
   m['tileloc'] = tileloc
   
