@@ -408,6 +408,19 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
         tilepx=list()
         tilepx1=list()
         
+        # find the stack size from the last index of the file list (idoc)
+        
+        testlast = idoctxt.copy()
+        testlast.reverse()
+        
+        for index,item in enumerate(testlast):
+            if item.strip()=='':
+                lastitem = testlast[index-1]
+                if 'Image = ' in lastitem:
+                    break
+        prefix = mapfile[:mapfile.find('.idoc')]
+        stacksize = int(lastitem[lastitem.find(prefix)+len(prefix):-5])            
+                
         
         
         for i in range(0,numpy.min([montage_tiles,stacksize])):
@@ -558,9 +571,8 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
     
                 # merge the montage to a single file
                 callcmd = 'extractpieces ' +  '\"' + mapfile + '\" \"'  +  mapfile + '.pcs\"'
-                a=os.system(callcmd)
+                os.system(callcmd)
                 # print(callcmd)
-                #print(a)
     
                 print('----------------------------------------------------\n')
                 print('Merging the map montage into a single image....' + '\n')
