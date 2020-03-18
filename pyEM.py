@@ -274,15 +274,19 @@ def newreg(navitems):
 
 #%%
 
-def fullnav(inlines):
+def fullnav(inlines,header=False):
 # parses a full nav file and returns a list of dictionaries
+    
   navlines=inlines[:]  
   c=[]
-  for item in navlines:
+  for index,item in enumerate(navlines):
     if item.find('[')>-1:
-      (b,navlines)=nav_item(navlines,item[item.find(' = ') + 3:-1])
-      b['# Item']=item[item.find(' = ') + 3:-1]
-      c.append(b)
+        if header:
+            return inlines[:index-1]            
+            
+        (b,navlines)=nav_item(navlines,item[item.find(' = ') + 3:-1])
+        b['# Item']=item[item.find(' = ') + 3:-1]
+        c.append(b)
 
   return c
 
@@ -364,13 +368,13 @@ def map_matrix(mapitem):
 # -------------------------------
 #%%
 
-def mergemap(mapitem,crop=False,black=False):
+def mergemap(mapitem,crop=False,black=False,blendmont=True):
 
   # processes a map item and merges the mosaic using IMOD
   # generates a dictionary with metadata for this procedure
   # if crop is selected, a 3dmod session will be opened and the user needs to draw a model of the desired region. The script continues after saving the model file and closing 3dmod.
   # black option will fill the empty spaces between tiles with 0
-  
+  # blendmont will use blendmont to merge the montage. If disabled individual tile information is stored in the merge dict nevertheless.
 
   
   m=dict()
@@ -386,7 +390,8 @@ def mergemap(mapitem,crop=False,black=False):
   mapsection = list(map(int,mapitem['MapSection']))[0]
 
   m['frames'] = list(map(int,mapitem['MapFramesXY']))
-
+  montage_tiles = numpy.prod(m['frames'])
+  
   if mapfile.find('.st')<0 and mapfile.find('.map')<0 and mapfile.find('.mrc')<0:
     #not an mrc file
 
@@ -396,11 +401,36 @@ def mergemap(mapitem,crop=False,black=False):
     
     if '.idoc' in mapfile:
         # List of tif files with additional metadata
-        mergefile = mapfile[:mapfile.find('.idoc')]+'{:04d}'.format(mapsection)+'.tif'
-        idoctxt=loadtext(mapfile)
-        idoc = mdoc_item(idoctxt,'Image = '+os.path.basename(mergefile))
-        mergeheader['pixelsize'] = float(idoc['PixelSpacing'][0])/ 10000 # in um
+        
+        idoctxt=loadtext(mapfile)       
+        
+        tilepos=list()
+        tilepx=list()
+        tilepx1=list()
+        
+        
+        
+        for i in range(0,numpy.min([montage_tiles,stacksize])):
+            mergefile = mapfile[:mapfile.find('.idoc')]+'{:04d}'.format(mapsection)+'.tif'
+            tile = mdoc_item(idoctxt,'Image = '+os.path.basename(mergefile))                            
+            tilepos.append(tile['StagePosition'])
+            tilepx1.append(tile['PieceCoordinates'])
             
+            if 'AlignedPieceCoordsVS' in tile:
+                m['Sloppy'] = True
+                tilepx.append(tile['AlignedPieceCoordsVS'])
+            else:
+                tilepx.append(tile['AlignedPieceCoords'])
+                
+        if mdoc_item(idoctxt,'MontSection = 0') == []: #older mdoc file format, created before SerialEM 3.7x
+            print('Warning: Series of tif images without montage information. Assume pixel size is consistent for all sections.')
+            str1=idoctxt[0]
+            pixelsize = float(idoctxt[0][str1.find('=')+1:])
+        else:
+            pixelsize = float(mdoc_item(idoctxt,'MontSection = '+str(mapsection))['PixelSpacing'][0])/ 10000 # in um
+                 
+        mergeheader['pixelsize'] = pixelsize 
+        
     else:        
         print('Assuming it is a single tif file or a stitched montage.' + '\n')
         mergefile = mapfile
@@ -443,7 +473,6 @@ def mergemap(mapitem,crop=False,black=False):
     # extract center positions of individual map tiles
     if mapheader['stacksize'] > 1:
 
-        montage_tiles = numpy.prod(m['frames'])
         if os.path.exists(mdocname):
             mdoclines = loadtext(mdocname)
             if mapheader['stacksize'] > montage_tiles:
@@ -457,10 +486,18 @@ def mergemap(mapitem,crop=False,black=False):
                 tileidx_offset = 0
 
             tilepos=list()
+            tilepx=list()
+            tilepx1=list()
             for i in range(0,numpy.min([montage_tiles,mapheader['stacksize']])):
                 tile = mdoc_item(mdoclines,'ZValue = ' + str(tileidx_offset+i))                
                 tilepos.append(tile['StagePosition'])
-                if 'AlignedPieceCoordsVS' in tile: m['Sloppy'] = True
+                tilepx1.append(tile['PieceCoordinates'])
+                
+                if 'AlignedPieceCoordsVS' in tile:
+                    m['Sloppy'] = True
+                    tilepx.append(tile['AlignedPieceCoordsVS'])
+                else:
+                    tilepx.append(tile['AlignedPieceCoords'])
 
             tilepos = numpy.array(tilepos,float)
             if mdoc_item(mdoclines,'MontSection = 0') == []: #older mdoc file format, created before SerialEM 3.7x
@@ -516,50 +553,53 @@ def mergemap(mapitem,crop=False,black=False):
             im=imd
 
     else:
-        if not os.path.exists(mergefile+'.mrc'):
-
-            # merge the montage to a single file
-            callcmd = 'extractpieces ' +  '\"' + mapfile + '\" \"'  +  mapfile + '.pcs\"'
-            a=os.system(callcmd)
-            print(callcmd)
-            print(a)
-
-            print('----------------------------------------------------\n')
-            print('Merging the map montage into a single image....' + '\n')
-            print('----------------------------------------------------\n')
-
-            callcmd = 'blendmont -imi ' + '\"' + mapfile + '\"' + ' -imo \"' + mergefile + '.mrc\" -pli \"' + mapfile + '.pcs\" -roo \"' + mergefile  + '.mrc\" -se ' + str(mapsection) + ' -al \"'+ mergefile + '.al\" -sloppy -nofft '    #os.system(callcmd)
-            if black:
-                callcmd = callcmd + ' -fill 0'
+        if blendmont:
+            if not os.path.exists(mergefile+'.mrc'):
+    
+                # merge the montage to a single file
+                callcmd = 'extractpieces ' +  '\"' + mapfile + '\" \"'  +  mapfile + '.pcs\"'
+                a=os.system(callcmd)
+                # print(callcmd)
+                #print(a)
+    
+                print('----------------------------------------------------\n')
+                print('Merging the map montage into a single image....' + '\n')
+                print('----------------------------------------------------\n')
+    
+                callcmd = 'blendmont -imi ' + '\"' + mapfile + '\"' + ' -imo \"' + mergefile + '.mrc\" -pli \"' + mapfile + '.pcs\" -roo \"' + mergefile  + '.mrc\" -se ' + str(mapsection) + ' -al \"'+ mergefile + '.al\" -sloppy -nofft '    #os.system(callcmd)
+                if black:
+                    callcmd = callcmd + ' -fill 0'
+                
+                #print(callcmd)
+                
+                os.system(callcmd)
+                #callcmd = 'mrc2tif ' +  mergefile + '.mrc ' + mergefiletif
+                #os.system(callcmd)
+                
+            merge_mrc =  mrc.mmap(mergefile + '.mrc', permissive = 'True')
+            im = merge_mrc.data
+            mergeheader = map_header(merge_mrc)
             
-            #print(callcmd)
+    
+                # extract pixel coordinate of each tile
+            tilepx = list(loadtext(mergefile + '.al'))
             
-            os.system(callcmd)
-            #callcmd = 'mrc2tif ' +  mergefile + '.mrc ' + mergefiletif
-            #os.system(callcmd)
+            # use original tile coordinates(pixels) from SerialEM to determine tile position in montage
+            tilepx1 = loadtext(mapfile + '.pcs')
+            #tilepx = tilepx[:-1]
             
-        merge_mrc =  mrc.mmap(mergefile + '.mrc', permissive = 'True')
-        im = merge_mrc.data
-        mergeheader = map_header(merge_mrc)
+            
+            
+            
+        for j, item in enumerate(tilepx): tilepx[j] = list(re.split(' +',item))  
+
         
-
-            # extract pixel coordinate of each tile
-        tilepx = list(loadtext(mergefile + '.al'))
-
-        #tilepx = tilepx[:-1]
-        for j, item in enumerate(tilepx): tilepx[j] = list(re.split(' +',item))
-
-        tilepx = numpy.array(tilepx)
-        tilepx = tilepx[tilepx[:,2] == str(mapsection),0:2]
-        tilepx = tilepx.astype(numpy.float)
-
-
-        # use original tile coordinates(pixels) from SerialEM to determine tile position in montage
-
-        tilepx1 = loadtext(mapfile + '.pcs')
         #tilepx1 = tilepx1[:-1]
         for j, item in enumerate(tilepx1): tilepx1[j] = list(re.split(' +',item))
-
+        tilepx = numpy.array(tilepx)
+        tilepx = tilepx[tilepx[:,2] == str(mapsection),0:2]
+        tilepx = tilepx.astype(numpy.float)    
+        
         tilepx1 = numpy.array(tilepx1)
         tilepx1 = tilepx1[tilepx1[:,2] == str(mapsection),0:2]
         tilepx1 = tilepx1.astype(numpy.float)
@@ -572,7 +612,12 @@ def mergemap(mapitem,crop=False,black=False):
         if numpy.abs(tpy).max()>0: ystep = tpy[tpy>0].min()
         else: ystep = 1
 
-        tileloc = numpy.array([tpx / xstep,tpy/ystep]).T
+        tileloc = numpy.array([tpx / xstep,tpy/ystep]).T     
+    
+        if not blendmont:
+            #prepare coordinate list for Big Stitcher      
+            
+            outpx = tilepx1.copy()
 
         m['sections'] = numpy.array(list(map(int,tileloc[:,0]*m['frames'][1]+tileloc[:,1])))
 
