@@ -663,7 +663,7 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
         im_cropped = merge_mrc.data
         im_cropped = numpy.rot90(numpy.transpose(im_cropped))
         m['im_cropped'] = im_cropped        
-        
+        mergefile = mergefile+'.mrc'
     
         
     merge_mrc.close()
@@ -678,7 +678,7 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
   # generate output
   
   m['mapfile'] = mapfile
-  m['mergefile'] = mergefile+'.mrc'
+  m['mergefile'] = mergefile
   m['matrix'] = mat
   m['tilepos'] = tilepos
   m['im'] = im
