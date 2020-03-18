@@ -418,9 +418,9 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
                 lastitem = testlast[index-1]
                 if 'Image = ' in lastitem:
                     break
-        prefix = mapfile[:mapfile.find('.idoc')]
+        prefix = mapfile[mapfile.rfind('\\')+1:mapfile.find('.idoc')]
         stacksize = int(lastitem[lastitem.find(prefix)+len(prefix):-5])            
-                
+        mergeheader['stacksize'] = stacksize        
         
         
         for i in range(0,numpy.min([montage_tiles,stacksize])):
