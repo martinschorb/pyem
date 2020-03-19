@@ -554,6 +554,7 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
         #callcmd = 'mrc2tif -s -z ' + str(mapsection)+ ',' + str(mapsection) + ' ' +  mapfile + ' ' + mergefiletif
         tilepx = 0
         tilepx=numpy.array([tilepx,tilepx])
+        tilepx1=tilepx
         #os.system(callcmd)
         merge_mrc =  mf
         mergeheader = mapheader
