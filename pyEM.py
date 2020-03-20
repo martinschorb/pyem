@@ -107,24 +107,27 @@ def nav_item(inlines,label):
 # -------------------------------
 #%%
 
-def mdoc_item(lines1,label):
+def mdoc_item(lines1,label,header=False):
 
     # extracts the content block of an item of given label in a mdoc file
     # returns it as a dictionary
     if lines1[-1] != '':
         lines = lines1+['']
-
-    # search for mdoc key item with the given label
-    searchstr = '[' + label + ']'
-    if not searchstr in lines:
-        print('ERROR: Item ' + label + ' not found!')
-        result=[]
+        
+    if header:
+        item = lines[:lines.index('')]
     else:
-        itemstartline = lines.index(searchstr)+1
-        itemendline = lines[itemstartline:].index('')
-
-        item = lines[itemstartline:itemstartline+itemendline]
-        result = parse_adoc(item)
+        # search for mdoc key item with the given label
+        searchstr = '[' + label + ']'
+        if not searchstr in lines:
+            print('ERROR: Item ' + label + ' not found!')
+            item=[]
+        else:
+            itemstartline = lines.index(searchstr)+1
+            itemendline = lines[itemstartline:].index('')
+    
+            item = lines[itemstartline:itemstartline+itemendline]
+    result = parse_adoc(item)
 
     return result
 
@@ -369,7 +372,7 @@ def map_matrix(mapitem):
 #%%
 
 def mergemap(mapitem,crop=False,black=False,blendmont=True):
-
+#%%
   # processes a map item and merges the mosaic using IMOD
   # generates a dictionary with metadata for this procedure
   # if crop is selected, a 3dmod session will be opened and the user needs to draw a model of the desired region. The script continues after saving the model file and closing 3dmod.
@@ -419,9 +422,10 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
                 if 'Image = ' in lastitem:
                     break
         prefix = mapfile[mapfile.rfind('\\')+1:mapfile.find('.idoc')]
-        stacksize = int(lastitem[lastitem.find(prefix)+len(prefix):-5])            
+        stacksize = int(lastitem[lastitem.find(prefix)+len(prefix):-5])+1            
         mergeheader['stacksize'] = stacksize        
         
+        maphead0 = mdoc_item(idoctxt,[],header=True)
         
         for i in range(0,numpy.min([montage_tiles,stacksize])):
             mergefile = mapfile[:mapfile.find('.idoc')]+'{:04d}'.format(mapsection + i)+'.tif'
@@ -437,13 +441,28 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
                 
         if mdoc_item(idoctxt,'MontSection = 0') == []: #older mdoc file format, created before SerialEM 3.7x
             print('Warning - item'+mapitem['# Item']+': Series of tif images without montage information. Assume pixel size is consistent for all sections.')
-            str1=idoctxt[0]
-            pixelsize = float(idoctxt[0][str1.find('=')+1:])
+            
+            pixelsize = float(maphead0['PixelSpacing'][0])/ 10000  # in um
             
         else:
-            pixelsize = float(mdoc_item(idoctxt,'MontSection = '+str(mapsection))['PixelSpacing'][0])/ 10000 # in um
+            mont_item = mdoc_item(idoctxt,'MontSection = '+str(mapsection))
+            pixelsize = float(mont_item['PixelSpacing'][0])/ 10000 # in um
                  
-        mergeheader['pixelsize'] = pixelsize 
+        mergeheader['pixelsize'] = pixelsize
+        mapheader = mergeheader.copy()
+        mapheader['ysize'] = int(tilepx1[0][1])
+        for ix,line in enumerate(tilepx1):
+            if int(line[0])>0:break
+        mapheader['xsize'] = int(tilepx1[ix][0])
+        
+        imsz_x = int(maphead0['ImageSize'][0])        
+        imsz_y = int(maphead0['ImageSize'][1])   
+        
+        overlapx = imsz_x - mapheader['xsize']
+        overlapy = imsz_y - mapheader['ysize'] 
+        
+        mergeheader['xsize'] = int(tilepx[-1][0]) + mapheader['xsize']
+        mergeheader['ysize'] = int(tilepx[-1][1]) + mapheader['ysize']
         
     else:        
         print('Assuming it is a single tif file or a stitched montage.' + '\n')
@@ -451,18 +470,20 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
         mergeheader['pixelsize'] = 1./numpy.sqrt(abs(numpy.linalg.det(mat))) 
         mergeheader['stacksize'] = 0
         tilepos = numpy.array(list(map(float,mapitem['StageXYZ']))[0:2])    
-        tilepx = numpy.array([0,0])  
+        tilepx = '0'
+        tilepx=numpy.array([[tilepx,tilepx,tilepx],[tilepx,tilepx,tilepx]])
+        tilepx1 = tilepx
         m['Sloppy'] = 'NoMont'
+        im = io.imread(mergefile)
+        mergeheader['xsize'] = numpy.array(im.shape)[0]
+        mergeheader['ysize'] = numpy.array(im.shape)[1]
+        mapheader = mergeheader.copy()
     
-# TODO find some reasonable values in the idoc montage case...    
-    im = io.imread(mergefile)
-    mappxcenter = numpy.array([im.shape[1],im.shape[0]]) / 2 
-    mergeheader['xsize'] = numpy.array(im.shape)[0]
-    mergeheader['ysize'] = numpy.array(im.shape)[1]
-    overlapx = 0
-    overlapy = 0
-    tileloc = [0,0]
-    mapheader = mergeheader    
+    
+    mappxcenter = numpy.array([mergeheader['ysize'],mergeheader['xsize']]) / 2     
+    
+
+        
 
   else:
    # map is mrc file
@@ -471,6 +492,7 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
     
     mapheader = map_header(mf)
     pixelsize = mapheader['pixelsize']
+    mergeheader = mapheader.copy()
 
     # determine if file contains multiple montages stored in one MRC stack
 
@@ -520,7 +542,11 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
                 str1=mdoclines[0]
                 pixelsize = float(mdoclines[0][str1.find('=')+1:])
             else:
-                pixelsize = float(mdoc_item(mdoclines,'MontSection = '+str(mapsection))['PixelSpacing'][0])/ 10000 # in um
+                mont_item = mdoc_item(mdoclines,'MontSection = '+str(mapsection))
+                pixelsize = float(mont_item['PixelSpacing'][0])/ 10000 # in um
+                
+                
+                
            # rotation = float(mdoc_item(mdoclines,'ZValue = '+str(mapsection))['RotationAngle'][0])
 
 
@@ -551,13 +577,12 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
 
     if mapheader['stacksize'] < 2:
         print('Single image found. No merging needed.')
-        #callcmd = 'mrc2tif -s -z ' + str(mapsection)+ ',' + str(mapsection) + ' ' +  mapfile + ' ' + mergefiletif
-        tilepx = 0
-        tilepx=numpy.array([tilepx,tilepx])
+        tilepx = '0'
+        tilepx=numpy.array([[tilepx,tilepx,tilepx],[tilepx,tilepx,tilepx]])
         tilepx1=tilepx
         #os.system(callcmd)
         merge_mrc =  mf
-        mergeheader = mapheader
+        mergeheader = mapheader.copy()
         overlapx = 0
         overlapy = 0
         tileloc = [0,0]
@@ -604,80 +629,84 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
             tilepx1 = loadtext(mapfile + '.pcs')
 
             for j, item in enumerate(tilepx1): tilepx1[j] = list(re.split(' +',item))
+            merge_mrc.close()
             
-        
-        
-        tilepx = numpy.array(tilepx)
-        tilepx = tilepx[tilepx[:,2] == str(mapsection),0:2]
-        tilepx = tilepx.astype(numpy.float)    
-        
-        tilepx1 = numpy.array(tilepx1)
-        tilepx1 = tilepx1[tilepx1[:,2] == str(mapsection),0:2]
-        tilepx1 = tilepx1.astype(numpy.float)
-
-        tpx = tilepx1[:,0]
-        tpy = tilepx1[:,1]
-
-        if numpy.abs(tpx).max()>0: xstep = tpx[tpx>0].min()
-        else: xstep = 1
-        if numpy.abs(tpy).max()>0: ystep = tpy[tpy>0].min()
-        else: ystep = 1
-
-        tileloc = numpy.array([tpx / xstep,tpy/ystep]).T     
+            im = numpy.rot90(numpy.transpose(im))
     
-        if not blendmont:
-            #prepare coordinate list for Big Stitcher      
-            
-            outpx = tilepx1.copy()
-            stitchname = mapfile+'.stitch.csv'
-            stitchfile = open()
-            
-            #for j,item in enumerate(points):
-            #f.write(" 1  "+str(label)+"  %s %s" % (item[0],item[1])+" "+str(z)+"\n")
-
-        m['sections'] = numpy.array(list(map(int,tileloc[:,0]*m['frames'][1]+tileloc[:,1])))
-
-        overlapx = mapheader['xsize'] - xstep
-        overlapy = mapheader['ysize'] - ystep
-
-        
-    # cropping of merged file to only include areas of interest. The user needs to create an IMOD model file and close 3dmod to proceed.
-    if crop:
-        if not os.path.exists(mergefile+'_crop.mrc'):
-            loopcount = 0
-            print('waiting for crop model to be created ... Please store it under this file name: \"' + mergefile + '.mod\".')
-            callcmd = '3dmod \"' +  mergefile + '.mrc\" \"' + mergefile + '.mod\"'
-            os.system(callcmd)
-            while not os.path.exists(mergefile+'.mod'):
-                if loopcount > 20: # wait for 6.5 minutes for the model file to be created.
-                    print('Timeout - will continue without cropping!')
-                    break
-                print('waiting for crop model to be created in IMOD... Please store it under this file name: \"' + mergefile + '.mod\".')
-                time.sleep(20)
-                loopcount = loopcount + 1
-                
-            if loopcount < 21:
-                print('Model file found. Will now generate the cropped map image.')
-                callcmd = 'imodmop \"' +  mergefile + '.mod\" \"'+ mergefile + '.mrc\" \"' + mergefile + '_crop.mrc\"'
-                os.system(callcmd)
-                
-                merge_mrc.close()
-
-        merge_mrc = mrc.mmap(mergefile + '_crop.mrc', permissive = 'True')
-        im_cropped = merge_mrc.data
-        im_cropped = numpy.rot90(numpy.transpose(im_cropped))
-        m['im_cropped'] = im_cropped        
-        mergefile = mergefile+'.mrc'
-    
-        
-    merge_mrc.close()
     mf.close()    
-    im = numpy.rot90(numpy.transpose(im))
-    mergeheader['pixelsize'] = pixelsize
-    mapheader['pixelsize'] = pixelsize
-
-  # end MRC section
-
+        # end MRC section
+        
+  tilepx = numpy.array(tilepx)
+  tilepx = tilepx[tilepx[:,2] == str(mapsection),0:2]
+  tilepx = tilepx.astype(numpy.float)    
+  
+  tilepx1 = numpy.array(tilepx1)
+  tilepx1 = tilepx1[tilepx1[:,2] == str(mapsection),0:2]
+  tilepx1 = tilepx1.astype(numpy.float)
+  
+  tpx = tilepx1[:,0]
+  tpy = tilepx1[:,1]
+  
+  if numpy.abs(tpx).max()>0: xstep = tpx[tpx>0].min()
+  else: xstep = 1
+  if numpy.abs(tpy).max()>0: ystep = tpy[tpy>0].min()
+  else: ystep = 1
+  
+  tileloc = numpy.array([tpx / xstep,tpy/ystep]).T
+  
+  if not blendmont:
+      #prepare coordinate list for Big Stitcher      
+      print('preparing coordinate list for BigStitcher for map item '+mapitem['# Item']+'.')
+      outpx = tilepx.copy()           
+      im=[]              
+      stitchname = mapfile+'.stitch.csv'
+      stitchfile = open(stitchname,'w')
+      
+      stitchfile.write('dim=2\n')
+      #stitchfile.write('ViewSetupID;TimePointID;(position_x, position_y, position_z)\n')                      
+      
+      for j,item in enumerate(outpx):
+          stitchfile.write(str(j)+";;"+"(%s, %s" % (int(item[0]),-int(item[1]))+")\n")
+      
+      stitchfile.close()
+  
+  m['sections'] = numpy.array(list(map(int,tileloc[:,0]*m['frames'][1]+tileloc[:,1])))
+  
+  overlapx = mapheader['xsize'] - xstep
+  overlapy = mapheader['ysize'] - ystep
+  
+      
+  # cropping of merged file to only include areas of interest. The user needs to create an IMOD model file and close 3dmod to proceed.
+  if crop:
+      if not os.path.exists(mergefile+'_crop.mrc'):
+          loopcount = 0
+          print('waiting for crop model to be created ... Please store it under this file name: \"' + mergefile + '.mod\".')
+          callcmd = '3dmod \"' +  mergefile + '.mrc\" \"' + mergefile + '.mod\"'
+          os.system(callcmd)
+          while not os.path.exists(mergefile+'.mod'):
+              if loopcount > 20: # wait for 6.5 minutes for the model file to be created.
+                  print('Timeout - will continue without cropping!')
+                  break
+              print('waiting for crop model to be created in IMOD... Please store it under this file name: \"' + mergefile + '.mod\".')
+              time.sleep(20)
+              loopcount = loopcount + 1
+              
+          if loopcount < 21:
+              print('Model file found. Will now generate the cropped map image.')
+              callcmd = 'imodmop \"' +  mergefile + '.mod\" \"'+ mergefile + '.mrc\" \"' + mergefile + '_crop.mrc\"'
+              os.system(callcmd)
+              
+              merge_mrc.close()
+  
+      merge_mrc = mrc.mmap(mergefile + '_crop.mrc', permissive = 'True')
+      im_cropped = merge_mrc.data
+      im_cropped = numpy.rot90(numpy.transpose(im_cropped))
+      m['im_cropped'] = im_cropped        
+      mergefile = mergefile+'.mrc'  
+      
+  
+  mergeheader['pixelsize'] = pixelsize
+  mapheader['pixelsize'] = pixelsize
 
   # generate output
   
