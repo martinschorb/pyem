@@ -436,7 +436,7 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
                 tilepx.append(tile['AlignedPieceCoords'])
                 
         if mdoc_item(idoctxt,'MontSection = 0') == []: #older mdoc file format, created before SerialEM 3.7x
-            print('Warning: Series of tif images without montage information. Assume pixel size is consistent for all sections.')
+            print('Warning - item'+mapitem['# Item']+': Series of tif images without montage information. Assume pixel size is consistent for all sections.')
             str1=idoctxt[0]
             pixelsize = float(idoctxt[0][str1.find('=')+1:])
             
@@ -598,19 +598,14 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
     
                 # extract pixel coordinate of each tile
             tilepx = list(loadtext(mergefile + '.al'))
+            for j, item in enumerate(tilepx): tilepx[j] = list(re.split(' +',item))
             
             # use original tile coordinates(pixels) from SerialEM to determine tile position in montage
             tilepx1 = loadtext(mapfile + '.pcs')
-            #tilepx = tilepx[:-1]
+
+            for j, item in enumerate(tilepx1): tilepx1[j] = list(re.split(' +',item))
             
-            
-            
-#            
-#        for j, item in enumerate(tilepx): tilepx[j] = list(re.split(' +',item))  
-#
-#        
-#        #tilepx1 = tilepx1[:-1]
-#        for j, item in enumerate(tilepx1): tilepx1[j] = list(re.split(' +',item))
+        
         
         tilepx = numpy.array(tilepx)
         tilepx = tilepx[tilepx[:,2] == str(mapsection),0:2]
@@ -634,6 +629,11 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
             #prepare coordinate list for Big Stitcher      
             
             outpx = tilepx1.copy()
+            stitchname = mapfile+'.stitch.csv'
+            stitchfile = open()
+            
+            #for j,item in enumerate(points):
+            #f.write(" 1  "+str(label)+"  %s %s" % (item[0],item[1])+" "+str(z)+"\n")
 
         m['sections'] = numpy.array(list(map(int,tileloc[:,0]*m['frames'][1]+tileloc[:,1])))
 
