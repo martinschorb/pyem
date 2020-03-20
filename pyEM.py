@@ -605,12 +605,13 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
             
             
             
-            
-        for j, item in enumerate(tilepx): tilepx[j] = list(re.split(' +',item))  
-
+#            
+#        for j, item in enumerate(tilepx): tilepx[j] = list(re.split(' +',item))  
+#
+#        
+#        #tilepx1 = tilepx1[:-1]
+#        for j, item in enumerate(tilepx1): tilepx1[j] = list(re.split(' +',item))
         
-        #tilepx1 = tilepx1[:-1]
-        for j, item in enumerate(tilepx1): tilepx1[j] = list(re.split(' +',item))
         tilepx = numpy.array(tilepx)
         tilepx = tilepx[tilepx[:,2] == str(mapsection),0:2]
         tilepx = tilepx.astype(numpy.float)    
