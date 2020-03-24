@@ -467,7 +467,7 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
         mergefile = mapfile
         mergeheader['pixelsize'] = 1./numpy.sqrt(abs(numpy.linalg.det(mat))) 
         mergeheader['stacksize'] = 0
-        tilepos = numpy.array(list(map(float,mapitem['StageXYZ']))[0:2])    
+        tilepos = mapitem['StageXYZ'][0:2]   
         tilepx = '0'
         tilepx=numpy.array([[tilepx,tilepx,tilepx],[tilepx,tilepx,tilepx]])
         tilepx1 = tilepx
@@ -534,7 +534,7 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
                 else:
                     tilepx.append(tile['AlignedPieceCoords'])
 
-            tilepos = numpy.array(tilepos,float)
+            
             if mdoc_item(mdoclines,'MontSection = 0') == []: #older mdoc file format, created before SerialEM 3.7x
                 print('Warning: mrc stack without montage information. Assume pixel size is consistent for all sections.')
                 str1=mdoclines[0]
@@ -633,7 +633,9 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
     
     mf.close()    
         # end MRC section
-        
+  
+  tilepos = numpy.array(tilepos,float)
+      
   tilepx = numpy.array(tilepx)
   tilepx = tilepx[tilepx[:,2] == str(mapsection),0:2]
   tilepx = tilepx.astype(numpy.float)    
