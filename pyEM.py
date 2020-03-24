@@ -450,10 +450,8 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
                  
         mergeheader['pixelsize'] = pixelsize
         mapheader = mergeheader.copy()
-        mapheader['ysize'] = int(tilepx1[0][1])
-        for ix,line in enumerate(tilepx1):
-            if int(line[0])>0:break
-        mapheader['xsize'] = int(tilepx1[ix][0])
+        mapheader['ysize'] = int(maphead0['ImageSize'][1])
+        mapheader['xsize'] = int(maphead0['ImageSize'][0])
         
         imsz_x = int(maphead0['ImageSize'][0])        
         imsz_y = int(maphead0['ImageSize'][1])   
