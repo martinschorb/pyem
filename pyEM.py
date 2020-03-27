@@ -397,7 +397,7 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
   
   if mapfile.find('.st')<0 and mapfile.find('.map')<0 and mapfile.find('.mrc')<0:
     #not an mrc file
-
+    tileidx_offset = 0
     print('Warning: ' + mapfile + ' is not an MRC file!' + '\n')
     mergeheader = {}
     mergeheader['stacksize'] = 1
@@ -501,6 +501,7 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
 
     if (m['frames'] == [0,0]):
       mapheader['stacksize'] = 0
+      tileidx_offset = 0
       if os.path.exists(mdocname):
             mdoclines = loadtext(mdocname)
             pixelsize = float(mdoc_item(mdoclines,'ZValue = '+str(mapsection))['PixelSpacing'][0])/ 10000 # in um
@@ -722,7 +723,7 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
   m['tilepx1'] = tilepx1
   m['overlap'] = [overlapx,overlapy]
   m['tileloc'] = tileloc
-  
+  m['tileidx_offset'] = tileidx_offset
   
   return m
 
