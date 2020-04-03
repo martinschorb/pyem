@@ -633,7 +633,7 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
          
         else:
             im = mf.data
-            im = np.rot90(np.transpose(im),axes=(0,1))
+            im = np.rot90(numpy.transpose(im),axes=(0,1))
     
                          
             
