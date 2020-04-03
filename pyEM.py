@@ -632,9 +632,11 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
             im = numpy.rot90(numpy.transpose(im)) 
          
         else:
+            mergefile = mapfile
             im = mf.data
             im = numpy.rot90(numpy.transpose(im),axes=(0,1))
-    
+            mergeheader['xsize'] = int(mapitem['MapWidthHeight'][0])
+            mergeheader['ysize'] = int(mapitem['MapWidthHeight'][1])
                          
             
     mf.close()    
@@ -683,7 +685,7 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
   
       
   # cropping of merged file to only include areas of interest. The user needs to create an IMOD model file and close 3dmod to proceed.
-  if crop:
+  if crop & blendmont:
       if not os.path.exists(mergefile+'_crop.mrc'):
           loopcount = 0
           print('waiting for crop model to be created ... Please store it under this file name: \"' + mergefile + '.mod\".')
