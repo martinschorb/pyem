@@ -629,9 +629,14 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
 
             for j, item in enumerate(tilepx1): tilepx1[j] = list(re.split(' +',item))
             merge_mrc.close()
-            
-            im = numpy.rot90(numpy.transpose(im))
+            im = numpy.rot90(numpy.transpose(im)) 
+         
+        else:
+            im = mf.data
+            im = np.rot90(np.transpose(im),axes=(0,1))
     
+                         
+            
     mf.close()    
         # end MRC section
   
@@ -659,7 +664,7 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
       #prepare coordinate list for Big Stitcher      
       print('preparing coordinate list for BigStitcher for map item '+mapitem['# Item']+'.')
       outpx = tilepx.copy()           
-      im=[]              
+                  
       stitchname = mapfile+'.stitch.csv'
       stitchfile = open(stitchname,'w')
       
