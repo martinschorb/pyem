@@ -973,9 +973,8 @@ def get_pixel(navitem,mergedmap,tile=False,outline=False):
   
   pt = pt0.copy()
   # calculate the pixel coordinates
-  im = mergedmap['im'] 
   
-  imsz = im.shape
+  imsz = [mergedmap['mergeheader']['ysize'],mergedmap['mergeheader']['xsize']]
   
   
   if outline:  
