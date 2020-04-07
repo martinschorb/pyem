@@ -426,9 +426,10 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
         mergeheader['stacksize'] = stacksize        
         
         maphead0 = mdoc_item(idoctxt,[],header=True)
-        
+        im = list()
         for i in range(0,numpy.min([montage_tiles,stacksize])):
             mergefile = mapfile[:mapfile.find('.idoc')]+'{:04d}'.format(mapsection + i)+'.tif'
+            im.append(mergefile)
             tile = mdoc_item(idoctxt,'Image = '+os.path.basename(mergefile))                            
             tilepos.append(tile['StagePosition'])
             tilepx1.append(tile['PieceCoordinates'])
@@ -461,7 +462,7 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
         
         mergeheader['xsize'] = int(tilepx[-1][0]) + mapheader['xsize']
         mergeheader['ysize'] = int(tilepx[-1][1]) + mapheader['ysize']
-        
+                        
     else:        
         print('Assuming it is a single tif file or a stitched montage.' + '\n')
         mergefile = mapfile
