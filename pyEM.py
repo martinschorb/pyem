@@ -407,7 +407,7 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
   if mapfile.find('.st')<0 and mapfile.find('.map')<0 and mapfile.find('.mrc')<0:
     #not an mrc file
     tileidx_offset = 0
-    print('Warning: ' + mapfile + ' is not an MRC file!' + '\n')
+   
     mergeheader = {}
     mergeheader['stacksize'] = 1
     
@@ -430,7 +430,8 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
                 lastitem = testlast[index-1]
                 if 'Image = ' in lastitem:
                     break
-        prefix = mapfile[mapfile.rfind('\\')+1:mapfile.find('.idoc')]
+        mbase = os.path.basename(mapfile)
+        prefix = mbase[:mbase.find('.idoc')]
         stacksize = int(lastitem[lastitem.find(prefix)+len(prefix):-5])+1            
         mergeheader['stacksize'] = stacksize        
         
@@ -472,7 +473,8 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
         mergeheader['xsize'] = int(tilepx[-1][0]) + mapheader['xsize']
         mergeheader['ysize'] = int(tilepx[-1][1]) + mapheader['ysize']
                         
-    else:        
+    else:
+        print('Warning: ' + mapfile + ' is not an MRC file!' + '\n')        
         print('Assuming it is a single tif file or a stitched montage.' + '\n')
         mergefile = mapfile
         mergeheader['pixelsize'] = 1./numpy.sqrt(abs(numpy.linalg.det(mat))) 
