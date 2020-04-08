@@ -605,29 +605,7 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
     else:
         if blendmont:
             if not os.path.exists(mergefile+'.mrc'):
-                # check IMOD version
-                if imod_ver[0]<4 | imod_ver[1]<10 | imod_ver[2]<29 :
-                    print('ERROR: IMOD version needs to be > 4.10.29! Exiting' + '\n')
-                    sys.exit(1)
-    
-                # merge the montage to a single file
-                callcmd = 'extractpieces ' +  '\"' + mapfile + '\" \"'  +  mapfile + '.pcs\"'
-                os.system(callcmd)
-                # print(callcmd)
-    
-                print('----------------------------------------------------\n')
-                print('Merging the map montage into a single image....' + '\n')
-                print('----------------------------------------------------\n')
-    
-                callcmd = 'blendmont -imi ' + '\"' + mapfile + '\"' + ' -imo \"' + mergefile + '.mrc\" -pli \"' + mapfile + '.pcs\" -roo \"' + mergefile  + '.mrc\" -se ' + str(mapsection) + ' -al \"'+ mergefile + '.al\" -sloppy -nofft '    #os.system(callcmd)
-                if black:
-                    callcmd = callcmd + ' -fill 0'
-                
-                #print(callcmd)
-                
-                os.system(callcmd)
-                #callcmd = 'mrc2tif ' +  mergefile + '.mrc ' + mergefiletif
-                #os.system(callcmd)
+                call_blendmont(mapfile,mergefile,mapsection,black)
                 
             merge_mrc =  mrc.mmap(mergefile + '.mrc', permissive = 'True')
             im = merge_mrc.data
@@ -751,6 +729,33 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
 
 
 # -------------------------------
+#%%
+def call_blendmont(mapfile,mergefile,mapsection,black=False):
+    # check IMOD version
+    if imod_ver[0]<4 | imod_ver[1]<10 | imod_ver[2]<29 :
+        print('ERROR: IMOD version needs to be > 4.10.29! Please update. Exiting' + '\n')
+        sys.exit(1)
+    
+    # merge the montage to a single file
+    callcmd = 'extractpieces ' +  '\"' + mapfile + '\" \"'  +  mapfile + '.pcs\"'
+    os.system(callcmd)
+    # print(callcmd)
+    
+    print('----------------------------------------------------\n')
+    print('Merging the map montage into a single image....' + '\n')
+    print('----------------------------------------------------\n')
+    
+    callcmd = 'blendmont -imi ' + '\"' + mapfile + '\"' + ' -imo \"' + mergefile + '.mrc\" -pli \"' + mapfile + '.pcs\" -roo \"' + mergefile  + '.mrc\" -se ' + str(mapsection) + ' -al \"'+ mergefile + '.al\" -sloppy -nofft '    #os.system(callcmd)
+    if black:
+        callcmd = callcmd + ' -fill 0'
+    
+    os.system(callcmd)
+                
+                
+                
+
+# -------------------------------
+
 #%%
 
 def realign_map(item,allitems):
