@@ -45,13 +45,13 @@ from subprocess import Popen, PIPE
 # get python version
 py_ver = sys.version_info
 
-# get IMOD verion
+# get IMOD version
 p1 = Popen("imodinfo", shell=True, stdout=PIPE)
 o=list()
 for line in p1.stdout:
     o.append(line)
 o1=str(o[0]).split(' ')
-imod_ver = o1[o1.index('Version')+1]
+imod_ver = list(map(int,o1[o1.index('Version')+1].split('.')))
 
 # define functions
 
@@ -605,6 +605,10 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
     else:
         if blendmont:
             if not os.path.exists(mergefile+'.mrc'):
+                # check IMOD version
+                if imod_ver[0]<4 | imod_ver[1]<10 | imod_ver[2]<29 :
+                    print('ERROR: IMOD version needs to be > 4.10.29! Exiting' + '\n')
+                    sys.exit(1)
     
                 # merge the montage to a single file
                 callcmd = 'extractpieces ' +  '\"' + mapfile + '\" \"'  +  mapfile + '.pcs\"'
