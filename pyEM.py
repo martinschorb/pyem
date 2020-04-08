@@ -478,16 +478,17 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
             if not os.path.exists(mergefile+'.mrc'):
                 if py_vercheck:
                     call_blendmont(mapfile,mergefile,mapsection)
+                else:
+                    print('Please update IMOD to > 4.10.42 for merging idoc montages!')                   
+                    mergeheader['xsize'] = int(tilepx[-1][0]) + mapheader['xsize']
+                    mergeheader['ysize'] = int(tilepx[-1][1]) + mapheader['ysize']
+                    mergefile = mapfile
             else:
                 merge_mrc =  mrc.mmap(mergefile + '.mrc', permissive = 'True')
                 im = merge_mrc.data
                 mergeheader = map_header(merge_mrc)
                            
-            if not py_vercheck:
-                print('Please update IMOD to > 4.10.42 for merging idoc montages!')                   
-                mergeheader['xsize'] = int(tilepx[-1][0]) + mapheader['xsize']
-                mergeheader['ysize'] = int(tilepx[-1][1]) + mapheader['ysize']
-                mergefile = mapfile   
+               
             
         else:            
             mergeheader['xsize'] = int(tilepx[-1][0]) + mapheader['xsize']
