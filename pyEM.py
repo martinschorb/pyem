@@ -40,9 +40,18 @@ import mrcfile as mrc
 import time
 from operator import itemgetter
 import fnmatch
+from subprocess import Popen, PIPE
 
 # get python version
 py_ver = sys.version_info
+
+# get IMOD verion
+p1 = Popen("imodinfo", shell=True, stdout=PIPE)
+o=list()
+for line in p1.stdout:
+    o.append(line)
+o1=str(o[0]).split(' ')
+imod_ver = o1[o1.index('Version')+1]
 
 # define functions
 
