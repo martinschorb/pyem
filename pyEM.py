@@ -437,10 +437,10 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
         
         maphead0 = mdoc_item(idoctxt,[],header=True)
         im = list()
-        for i in range(0,numpy.min([montage_tiles,stacksize])):
-            mergefile = mapfile[:mapfile.find('.idoc')]+'{:04d}'.format(mapsection + i)+'.tif'
-            im.append(mergefile)
-            tile = mdoc_item(idoctxt,'Image = '+os.path.basename(mergefile))                            
+        for i in range(0,numpy.min([montage_tiles,stacksize])):            
+            tilefile = mapfile[:mapfile.find('.idoc')]+'{:04d}'.format(mapsection + i)+'.tif'
+            im.append(tilefile)
+            tile = mdoc_item(idoctxt,'Image = '+os.path.basename(tilefile))                            
             tilepos.append(tile['StagePosition'])
             tilepx1.append(tile['PieceCoordinates'])
             
@@ -448,7 +448,7 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
                 m['Sloppy'] = True
                 tilepx.append(tile['AlignedPieceCoordsVS'])
             else:
-                tilepx.append(tile['AlignedPieceCoords'])
+                tilepx.append(tile['AlignedPieceCoords'])                
                 
         if mdoc_item(idoctxt,'MontSection = 0') == []: #older mdoc file format, created before SerialEM 3.7x
             print('Warning - item'+mapitem['# Item']+': Series of tif images without montage information. Assume pixel size is consistent for all sections.')
@@ -470,9 +470,20 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
         overlapx = imsz_x - mapheader['xsize']
         overlapy = imsz_y - mapheader['ysize'] 
         
-        mergeheader['xsize'] = int(tilepx[-1][0]) + mapheader['xsize']
-        mergeheader['ysize'] = int(tilepx[-1][1]) + mapheader['ysize']
-                        
+        # check if idoc is supported in IMOD (blendmont)
+        py_vercheck = (py_ver[0]>3 & py_ver[1]>9 & py_ver[2]>41)
+        if blendmont & py_vercheck:
+            mergefile = mbase + '_merged'+ '_s' + str(mapsection)
+            call_blendmont(mapfile,mergefile,mapsection)
+            merge_mrc =  mrc.mmap(mergefile + '.mrc', permissive = 'True')
+            im = merge_mrc.data
+            mergeheader = map_header(merge_mrc)
+            
+        else:
+            if not py_vercheck: print('Please update IMOD to > 4.10.42 for merging idoc montages!')
+            mergeheader['xsize'] = int(tilepx[-1][0]) + mapheader['xsize']
+            mergeheader['ysize'] = int(tilepx[-1][1]) + mapheader['ysize']
+            mergefile = mapfile            
     else:
         print('Warning: ' + mapfile + ' is not an MRC file!' + '\n')        
         print('Assuming it is a single tif file or a stitched montage.' + '\n')
