@@ -471,13 +471,16 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
         overlapy = imsz_y - mapheader['ysize'] 
         
         # check if idoc is supported in IMOD (blendmont)
-        py_vercheck = (py_ver[0]>3 & py_ver[1]>9 & py_ver[2]>41)
-        
+        imod_vercheck = (imod_ver[0]>=4 and imod_ver[1]>=10 and imod_ver[2]>=42)
+
         if blendmont:
             mergefile = mbase + '_merged'+ '_s' + str(mapsection)
-            if not os.path.exists(mergefile+'.mrc'):
-                if py_vercheck:
+            if not os.path.exists(mergefile+'.mrc'):                
+                if imod_vercheck:
                     call_blendmont(mapfile,mergefile,mapsection)
+                    merge_mrc =  mrc.mmap(mergefile + '.mrc', permissive = 'True')
+                    im = merge_mrc.data
+                    mergeheader = map_header(merge_mrc)
                 else:
                     print('Please update IMOD to > 4.10.42 for merging idoc montages!')                   
                     mergeheader['xsize'] = int(tilepx[-1][0]) + mapheader['xsize']
@@ -1036,7 +1039,7 @@ def get_pixel(navitem,mergedmap,tile=False,outline=False):
          
     tilepos = mergedmap['tilepos']
     
-    if (numpy.diff(tilepos,axis=0)[0].max() == 0) & (type(mergedmap['Sloppy']) == bool)& (mergedmap['mapheader']['stacksize'] > 1):
+    if (numpy.diff(tilepos,axis=0)[0].max() == 0) and (type(mergedmap['Sloppy']) == bool) and (mergedmap['mapheader']['stacksize'] > 1):
       print('Montage created using image shift! Problems in identifying the positions of clicked points accurately possible!')
 	
        
