@@ -501,7 +501,7 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
         print('Warning: ' + mapfile + ' is not an MRC file!' + '\n')        
         print('Assuming it is a single tif file or a stitched montage.' + '\n')
         mergefile = mapfile
-        mergeheader['pixelsize'] = 1./numpy.sqrt(abs(numpy.linalg.det(mat))) 
+        pixelsize = 1./numpy.sqrt(abs(numpy.linalg.det(mat))) 
         mergeheader['stacksize'] = 0
         tilepos = mapitem['StageXYZ'][0:2]   
         tilepx = '0'
