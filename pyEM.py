@@ -635,8 +635,7 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
                 
             merge_mrc =  mrc.mmap(mergefile + '.mrc', permissive = 'True')
             im = merge_mrc.data
-            mergeheader = map_header(merge_mrc)
-            
+            mergeheader = map_header(merge_mrc)            
     
                 # extract pixel coordinate of each tile
             tilepx = list(loadtext(mergefile + '.al'))
@@ -646,17 +645,16 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
             tilepx1 = loadtext(mapfile + '.pcs')
 
             for j, item in enumerate(tilepx1): tilepx1[j] = list(re.split(' +',item))
-            merge_mrc.close()
-            im = numpy.rot90(numpy.transpose(im)) 
+            merge_mrc.close()            
          
         else:
             mergefile = mapfile
             im = mf.data
-            im = numpy.rot90(numpy.transpose(im),axes=(0,1))
+            
             mergeheader['xsize'] = int(mapitem['MapWidthHeight'][0])
             mergeheader['ysize'] = int(mapitem['MapWidthHeight'][1])
                          
-            
+    im = numpy.rot90(numpy.transpose(im),axes=(0,1))        
     mf.close()    
         # end MRC section
   
