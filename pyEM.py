@@ -99,7 +99,7 @@ def nav_item(inlines,label):
       newroot = ET.Element('navigator')
       newroot.append(el[0])
       
-      result = xmltonav(ET.tostringlist(newroot))
+      result = xmltonav(ET.tostringlist(newroot))[0]
       lines = ET.tostringlist(root)
       
     else:    
