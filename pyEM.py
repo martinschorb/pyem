@@ -269,26 +269,74 @@ def itemtonav(item,name):
 
 #%%
 
-def write_navfile(filename,allitems,xml=False):
+def write_navfile(filename,outitems,xml=False):
     # creates a new navigator file from a list of navItems (default is mdoc format)
+    allitems = copy.deepcopy(outitems)
     
-    if not xml:
+    if xml:
+        root = ET.Element('navigator')
+        pd = ET.SubElement(root, 'PreData')
+        adv = ET.SubElement(pd, 'AdocVersion')
+        adv.text = '2.00'
+        lsa = ET.SubElement(pd, 'LastSavedAs')
+        lsa.text = filename
+        
+        for item in allitems:
+            ci = ET.SubElement(root, 'Item')
+            ci.set('name',item['# Item'])
+            
+            for key,val in item.items():
+                if not key == '# Item':
+                    cp = ET.SubElement(ci,key)
+                    cp.text = ' '.join(val)
+        tree = ET.ElementTree(root)
+        outstr0 = ET.tostring(tree)
+        
+        tree.write(filename)
+
+        
+    else:
+        # MDOC format
         head0 = 'AdocVersion = 2.00'
         head1 = 'LastSavedAs = '+filename
     
-    nnf = open(filename,'w')
-    nnf.write("%s\n" % head0)
-    nnf.write("%s\n" % head1)
-    nnf.write("\n")
-    
-    # fill the new file   
-    for nitem in allitems: 
-        out = itemtonav(nitem,nitem['# Item'])
-        for item in out: nnf.write("%s\n" % item)
-            
-    nnf.close()
+        nnf = open(filename,'w')
+        nnf.write("%s\n" % head0)
+        nnf.write("%s\n" % head1)
+        nnf.write("\n")
+        
+        # fill the new file   
+        for nitem in allitems: 
+            out = itemtonav(nitem,nitem['# Item'])
+            for item in out: nnf.write("%s\n" % item)
+                
+        nnf.close()
+        
 
 # -------------------------------
+        
+# pretty print xml, from:
+# http://effbot.org/zone/element-lib.htm#prettyprint
+        
+def indent_xml(elem, level=0):
+    i = "\n" + level*"  "
+    if len(elem):
+        if not elem.text or not elem.text.strip():
+            elem.text = i + "  "
+        if not elem.tail or not elem.tail.strip():
+            elem.tail = i
+        for elem in elem:
+            indent_xml(elem, level+1)
+        if not elem.tail or not elem.tail.strip():
+            elem.tail = i
+    else:
+        if level and (not elem.tail or not elem.tail.strip()):
+            elem.tail = i
+        
+
+# ------------------------------
+        
+        
 #%%
 
 def newID(allitems,startid):
