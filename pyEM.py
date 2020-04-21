@@ -289,10 +289,9 @@ def write_navfile(filename,outitems,xml=False):
                 if not key == '# Item':
                     cp = ET.SubElement(ci,key)
                     cp.text = ' '.join(val)
-        tree = ET.ElementTree(root)
-        outstr0 = ET.tostring(tree)
-        
-        tree.write(filename)
+        indent_xml(root)
+        tree = ET.ElementTree(root)        
+        tree.write(filename,encoding="utf-8",xml_declaration=True)
 
         
     else:
