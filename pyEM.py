@@ -2,8 +2,8 @@
 
 # pyEM.py
 
-# Copyright (c) 2017, Martin Schorb
-# Copyright (c) 2017, European Molecular Biology Laboratory
+# Copyright (c) 2020, Martin Schorb
+# Copyright (c) 2020, European Molecular Biology Laboratory
 # Produced at the EMBL
 # All rights reserved.
 
@@ -84,7 +84,7 @@ def loadtext(fname):
 def nav_item(inlines,label):
 
     # extracts the content block of a single navItem of givel label
-    # reads and parses navigator adoc files version >2 !!
+    # reads and parses navigator adoc files version >2, also in XML format !!
     # returns the first item found as a dictionary and the remaining list with that item removed
     # this is useful when multiple items have the exact same label and the function is called from within a loop to retrieve them all.
 
