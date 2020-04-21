@@ -27,29 +27,26 @@ acq = filter(lambda item:item.get('Acquire'),allitems)
 acq = list(filter(lambda item:item['Acquire']==['1'],acq))
 
 non_acq = [x for x in allitems if x not in acq]
-newnav = non_acq
+#newnav = non_acq
 
 # create new file by copying the header of the input file
 newnavf = navfile[:-4] + '_clean.nav'
 
-
-
-
-
-nnf = open(newnavf,'w')
-nnf.write("%s\n" % navlines[0])
-nnf.write("%s\n" % navlines[1])
+outnav = list()
+#
+#nnf = open(newnavf,'w')
+#nnf.write("%s\n" % navlines[0])
+#nnf.write("%s\n" % navlines[1])
 
 # fill the new file   
 for item in acq:
     labelstr = item['# Item']
-    searchstr = labelstr[1:4]
-    include = list(filter(lambda item:item['# Item'].find(searchstr)>0,allitems))       
+    searchstr = labelstr#[1:4]
+    include = list(filter(lambda item:item['# Item'].find(searchstr)>0,non_acq))       
     for navitem in include:                                       
-        out = em.itemtonav(navitem,navitem['# Item'])
-        for s_item in out: nnf.write("%s\n" % s_item)
-            
+        outnav.extend(include)    
     
     
+em.write_navfile(newnavf,outnav,xml=False)
+
     
-nnf.close()

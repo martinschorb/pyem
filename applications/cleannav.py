@@ -34,16 +34,7 @@ newnavf = navfile#[:-4] + '_clean.nav'
 
 print('Navigator items marked with Acquire were duplicated and output is written as: ' + newnavf)
 
-nnf = open(newnavf,'w')
-nnf.write("%s\n" % navlines[0])
-nnf.write("%s\n" % navlines[1])
 
-# fill the new file   
-for nitem in newnav: 
-    out = em.itemtonav(nitem,nitem['# Item'])
-    for item in out: nnf.write("%s\n" % item)
-            
+em.write_navfile(newnavf,newnav,xml=False)
+
     
-    
-    
-nnf.close()

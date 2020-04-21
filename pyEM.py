@@ -41,6 +41,7 @@ import time
 from operator import itemgetter
 import fnmatch
 from subprocess import Popen, PIPE
+import xml.etree.ElementTree as ET
 
 # get python version
 py_ver = sys.version_info
@@ -90,25 +91,37 @@ def nav_item(inlines,label):
     
     lines=inlines[:]
     
-    if lines[-1] != '':
-         lines = lines+['']
+    if(lines[0]=='<?xml version="1.0" encoding="utf-8"?>'):
+      #load XML
+      root = ET.fromstringlist(lines)
+      el = root.findall('*[@name="%s"]' %label)
+      root.remove(el[0])
+      newroot = ET.Element('navigator')
+      newroot.append(el[0])
+      
+      result = xmltonav(ET.tostringlist(newroot))
+      lines = ET.tostringlist(root)
+      
+    else:    
+        if lines[-1] != '':
+             lines = lines+['']
+        
+        # search for a navigator item of given label
+        searchstr = '[Item = ' + label + ']'
+        if not searchstr in lines:
+            print('ERROR: Navigator Item ' + label + ' not found!')
+            result=[]
+        else:
+            itemstartline = lines.index(searchstr)+1
+            itemendline = lines[itemstartline:].index('')
     
-    # search for a navigator item of given label
-    searchstr = '[Item = ' + label + ']'
-    if not searchstr in lines:
-        print('ERROR: Navigator Item ' + label + ' not found!')
-        result=[]
-    else:
-        itemstartline = lines.index(searchstr)+1
-        itemendline = lines[itemstartline:].index('')
-
-        item = lines[itemstartline:itemstartline+itemendline]
-        result = parse_adoc(item)
-        # create a dictionary entry that contains the label. Comment # is given in case it is exported directly.
-        result['# Item']=lines[itemstartline-1][lines[itemstartline-1].find(' = ') + 3:-1]
-        
-        lines[itemstartline-1:itemstartline+itemendline+1]=[]
-        
+            item = lines[itemstartline:itemstartline+itemendline]
+            result = parse_adoc(item)
+            # create a dictionary entry that contains the label. Comment # is given in case it is exported directly.
+            result['# Item']=lines[itemstartline-1][lines[itemstartline-1].find(' = ') + 3:-1]
+            
+            lines[itemstartline-1:itemstartline+itemendline+1]=[]
+            
     return result,lines
     
 
@@ -252,6 +265,28 @@ def itemtonav(item,name):
     dlist.append('')
     return dlist
 
+# -------------------------------
+
+#%%
+
+def write_navfile(filename,allitems,xml=False):
+    # creates a new navigator file from a list of navItems (default is mdoc format)
+    
+    if not xml:
+        head0 = 'AdocVersion = 2.00'
+        head1 = 'LastSavedAs = '+filename
+    
+    nnf = open(filename,'w')
+    nnf.write("%s\n" % head0)
+    nnf.write("%s\n" % head1)
+    nnf.write("\n")
+    
+    # fill the new file   
+    for nitem in allitems: 
+        out = itemtonav(nitem,nitem['# Item'])
+        for item in out: nnf.write("%s\n" % item)
+            
+    nnf.close()
 
 # -------------------------------
 #%%
@@ -289,18 +324,43 @@ def newreg(navitems):
 def fullnav(inlines,header=False):
 # parses a full nav file and returns a list of dictionaries
     
-  navlines=inlines[:]  
-  c=[]
-  for index,item in enumerate(navlines):
-    if item.find('[')>-1:
-        if header:
-            return inlines[:index-1]            
-            
-        (b,navlines)=nav_item(navlines,item[item.find(' = ') + 3:-1])
-        b['# Item']=item[item.find(' = ') + 3:-1]
-        c.append(b)
+  navlines=inlines[:]
+  
+  if(navlines[0]=='<?xml version="1.0" encoding="utf-8"?>'):
+      #load XML
+      c = xmltonav(navlines)
+  else:
+      # mdoc format
+      c=[]
+      for index,item in enumerate(navlines):
+        if item.find('[')>-1:
+            if header:
+                return inlines[:index-1]            
+                
+            (b,navlines)=nav_item(navlines,item[item.find(' = ') + 3:-1])
+            b['# Item']=item[item.find(' = ') + 3:-1]
+            c.append(b)
 
   return c
+
+# -------------------------------
+#%%
+  
+def xmltonav(navlines):
+        
+  root = ET.fromstringlist(navlines)
+    
+  c=[];
+    
+  for child in root:
+      if child.tag == 'Item':
+          item = dict({'# Item':child.attrib['name']})
+          for prop in child:
+              item[prop.tag] = prop.text.split(' ')
+          c.append(item)    
+          
+  return c  
+
 
 
 # -------------------------------

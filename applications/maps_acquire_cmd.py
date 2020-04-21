@@ -63,9 +63,9 @@ targetheader = target_merge['mergeheader']
 t_mat = em.map_matrix(targetitem)
 
 newnavf = navname[:-4] + '_automaps.nav'
-nnf = open(newnavf,'w')
-nnf.write("%s\n" % navlines[0])
-nnf.write("%s\n" % navlines[1])
+#nnf = open(newnavf,'w')
+#nnf.write("%s\n" % navlines[0])
+#nnf.write("%s\n" % navlines[1])
 
 
 allitems = em.fullnav(navlines)
@@ -213,10 +213,5 @@ for idx,acq_item in enumerate(acq):
   
 for nitem in outnav:
     newnav.append(nitem)
-   
-for nitem in newnav: 
-  out = em.itemtonav(nitem,nitem['# Item'])
-  for item in out: nnf.write("%s\n" % item)
 
-            
-nnf.close()
+em.write_navfile(newnavf,newnav,xml=False)
