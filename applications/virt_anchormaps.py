@@ -199,9 +199,9 @@ navlines = em.loadtext(navname)
 
 
 newnavf = navname[:-4] + '_automaps.nav'
-nnf = open(newnavf,'w')
-nnf.write("%s\n" % navlines[0])
-nnf.write("%s\n\n" % navlines[1])
+#nnf = open(newnavf,'w')
+#nnf.write("%s\n" % navlines[0])
+#nnf.write("%s\n\n" % navlines[1])
 
 
 allitems = em.fullnav(navlines)
@@ -247,12 +247,8 @@ for idx,acq_item in enumerate(acq):
 on1=em.ordernav(outnav1, delim='_')
 
 finalnav = maps['mapnav'].copy()
-finalnav.extend(on1.copy())
-  
+finalnav.extend(on1.copy()) 
    
-for nitem in finalnav: 
-  out = em.itemtonav(nitem,nitem['# Item'])
-  for item in out: nnf.write("%s\n" % item)
 
-            
-nnf.close()
+em.write_navfile(newnavf,finalnav,xml=False)
+
