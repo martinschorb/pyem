@@ -69,7 +69,7 @@ generic functions to parse/manipulate navigator/adoc files
 - **nav_selection:**  extracts a selection of navigator items into a new navigator, _Acquire_ can be chosen as a default flag, - input: list of items = optional list of item labels
 - **navlabel_match:** identifies navigator items whose labels contain the given string
 - **ordernav:**  re-orders a navigator by its label. It considers the indexing after a delimiter in the string. Example: s01_cell-1,s02_cell-1,s01_cell-02, ... is sorted by cells instead of s. When no delimiter is given (''), the navigator is sorted by its label.
-- **xmltonav:** parses a navigator file stored in XML-format - input: text list
+- **xmltonav:** parses a navigator file stored in XML-format - input: text list, ouput navigator dictionary
 - **write_navfile:** writes a new Navigator file from a list of item dictionaries - input:filename(str),list of nav dicts
 
 functions to extract information from a navigator item
