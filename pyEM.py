@@ -538,6 +538,7 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
     if (m['frames'] == [0,0]):
       mapheader['stacksize'] = 0
       tileidx_offset = 0
+      tilepos = [0,0]
       if os.path.exists(mdocname):
             mdoclines = loadtext(mdocname)
             pixelsize = float(mdoc_item(mdoclines,'ZValue = '+str(mapsection))['PixelSpacing'][0])/ 10000 # in um
@@ -613,7 +614,7 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
     if mapheader['stacksize'] < 2:
         print('Single image found. No merging needed.')
         tilepx = '0'
-        tilepx=numpy.array([[tilepx,tilepx,tilepx],[tilepx,tilepx,tilepx]])
+        tilepx=numpy.array([[tilepx,tilepx,mapsection],[tilepx,tilepx,mapsection]])
         tilepx1=tilepx
         #os.system(callcmd)
         merge_mrc =  mf
