@@ -439,11 +439,19 @@ def duplicate_items(navitems,labels=[],prefix='',reg=True,maps=False):
       
       
   else:
-      dupitems = nav_selection(navitems,labels,False)     
+      dupitems = nav_selection(navitems,labels,False) 
+      
+      
+  if reg:
+      new_reg = [str(newreg(dupitems))]
+  else:
+      new_reg = dupitems[0]['Regis']
+    
 
   for item in dupitems :
       newitem = copy.deepcopy(item)
-      if reg:newitem['Regis']=[str(newreg(dupitems))]
+            
+      newitem['Regis'] = new_reg
       newitem['# Item'] = prefix + item['# Item']
       newitem['MapID'] = [str(newID(outitems,int(newitem['MapID'][0])))]
       
@@ -457,15 +465,10 @@ def duplicate_items(navitems,labels=[],prefix='',reg=True,maps=False):
               newitem['DrawnID'] = dupdrawn['MapID']                     
               
               othermaps = navlabel_match(navitems,dupdrawn['# Item'])
-              othermaps.pop(othermaps.index(nav_selection(othermaps,sel=dupdrawn['# Item'],acquire=False)[0]));              
-                                                           
-              if reg:
-                  dupdrawn['Regis']=[str(newreg(dupitems))]
-                  for mapitem in othermaps:
-                      mapitem['Regis']=[str(newreg(dupitems))]                                           
-                                                           
+              othermaps.pop(othermaps.index(nav_selection(othermaps,sel=dupdrawn['# Item'],acquire=False)[0])); 
               
-              outitems.extend(othermaps)
+              dupdrawn['Regis'] = new_reg                                           
+                                                           
               outitems.append(dupdrawn)                               
                                                            
               
