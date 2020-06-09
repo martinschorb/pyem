@@ -1427,20 +1427,23 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False,maps=False):
 
 # ------------------------------------------------------------
   
-def nav_find(allitems,key,val):
+def nav_find(allitems,key,val=[]):
 # returns the navigator/mdoc entries with the given key/value pair
 # takes an input navigator (list of dicts), a target key (item property) and the desired values to match    
 # output is the list of navigator items    
          
     filtered = list(filter(lambda item:item.get(key),allitems))
     
-    # deals with integer, string or list entries
-    if type(val)==int: val=str(val)
-    if not key == '# Item':
-        if type(val)==str: val=[val]
-    
-    found = list(filter(lambda item:item[key]==val,filtered))
-       
+    if val==[]:
+        found = filtered
+    else:
+        # deals with integer, string or list entries
+        if type(val)==int: val=str(val)
+        if not key == '# Item':
+            if type(val)==str: val=[val]
+        
+        found = list(filter(lambda item:item[key]==val,filtered))
+           
 
     if not found == []:
         newnav=found
