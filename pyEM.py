@@ -585,11 +585,12 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
         imod_vercheck = (imod_ver[0]>=4 and imod_ver[1]>=10 and imod_ver[2]>=42)
 
         if blendmont:
-            mergefile = mbase + '_merged'+ '_s' + str(mapsection)
-            if not os.path.exists(mergefile+'.mrc'):                
+            mergebase = mbase + '_merged'+ '_s' + str(mapsection)
+            mergefile = mergebase+'.mrc'
+            if not os.path.exists(mergefile):                
                 if imod_vercheck:
-                    call_blendmont(mapfile,mergefile,mapsection)
-                    merge_mrc =  mrc.mmap(mergefile + '.mrc', permissive = 'True')
+                    call_blendmont(mapfile,mergebase,mapsection)
+                    merge_mrc =  mrc.mmap(mergefile, permissive = 'True')
                     im = merge_mrc.data
                     mergeheader = map_header(merge_mrc)
                 else:
@@ -598,7 +599,7 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
                     mergeheader['ysize'] = int(tilepx[-1][1]) + mapheader['ysize']
                     mergefile = mapfile
             else:
-                merge_mrc =  mrc.mmap(mergefile + '.mrc', permissive = 'True')
+                merge_mrc =  mrc.mmap(mergefile, permissive = 'True')
                 im = merge_mrc.data
                 mergeheader = map_header(merge_mrc)
                            
@@ -716,11 +717,9 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
 
 
     # check if map is a montage or not
-    mergefile = mapfile[:mapfile.rfind('.mrc')]
-    if mergefile == []: mergefile = mapfile
 
-    mergefile = mergefile + '_merged'+ '_s' + str(mapsection)
-
+    mergebase = os.path.splitext(mapfile)[0] + '_merged'+ '_s' + str(mapsection)
+    mergefile = mergebase + '.mrc'
 
     if mapheader['stacksize'] < 2:
         print('Single image found. No merging needed.')
@@ -742,15 +741,15 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
 
     else:
         if blendmont:
-            if not os.path.exists(mergefile+'.mrc'):
-                call_blendmont(mapfile,mergefile,mapsection,black)
+            if not os.path.exists(mergefile):
+                call_blendmont(mapfile,mergebase,mapsection,black)
                 
-            merge_mrc =  mrc.mmap(mergefile + '.mrc', permissive = 'True')
+            merge_mrc =  mrc.mmap(mergefile, permissive = 'True')
             im = merge_mrc.data
             mergeheader = map_header(merge_mrc)            
     
                 # extract pixel coordinate of each tile
-            tilepx = list(loadtext(mergefile + '.al'))
+            tilepx = list(loadtext(mergebase + '.al'))
             for j, item in enumerate(tilepx): tilepx[j] = list(re.split(' +',item))
             
             # use original tile coordinates(pixels) from SerialEM to determine tile position in montage
@@ -811,34 +810,36 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
   overlapx = mapheader['xsize'] - xstep
   overlapy = mapheader['ysize'] - ystep
   
+  print(mergefile)
+  print(mergebase)
+  
       
   # cropping of merged file to only include areas of interest. The user needs to create an IMOD model file and close 3dmod to proceed.
   if crop & blendmont:
-      if not os.path.exists(mergefile+'_crop.mrc'):
+      if not os.path.exists(mergebase+'_crop.mrc'):
           loopcount = 0
-          print('waiting for crop model to be created ... Please store it under this file name: \"' + mergefile + '.mod\".')
-          callcmd = '3dmod \"' +  mergefile + '.mrc\" \"' + mergefile + '.mod\"'
+          print('waiting for crop model to be created ... Please store it under this file name: \"' + mergebase + '.mod\".')
+          callcmd = '3dmod \"' +  mergefile + '\" \"' + mergebase + '.mod\"'
           os.system(callcmd)
-          while not os.path.exists(mergefile+'.mod'):
+          while not os.path.exists(mergebase+'.mod'):
               if loopcount > 20: # wait for 6.5 minutes for the model file to be created.
                   print('Timeout - will continue without cropping!')
                   break
-              print('waiting for crop model to be created in IMOD... Please store it under this file name: \"' + mergefile + '.mod\".')
+              print('waiting for crop model to be created in IMOD... Please store it under this file name: \"' + mergebase + '.mod\".')
               time.sleep(20)
               loopcount = loopcount + 1
               
           if loopcount < 21:
               print('Model file found. Will now generate the cropped map image.')
-              callcmd = 'imodmop \"' +  mergefile + '.mod\" \"'+ mergefile + '.mrc\" \"' + mergefile + '_crop.mrc\"'
+              callcmd = 'imodmop \"' +  mergebase + '.mod\" \"'+ mergefile + '\" \"' + mergebase + '_crop.mrc\"'
               os.system(callcmd)
               
               merge_mrc.close()
   
-      merge_mrc = mrc.mmap(mergefile + '_crop.mrc', permissive = 'True')
+      merge_mrc = mrc.mmap(mergebase + '_crop.mrc', permissive = 'True')
       im_cropped = merge_mrc.data
       im_cropped = numpy.rot90(numpy.transpose(im_cropped))
-      m['im_cropped'] = im_cropped        
-      mergefile = mergefile+'.mrc'  
+      m['im_cropped'] = im_cropped       
       
   
   mergeheader['pixelsize'] = pixelsize
@@ -866,7 +867,28 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
 
 # -------------------------------
 #%%
-def call_blendmont(mapfile,mergefile,mapsection,black=False):
+def call_blendmont(mapfile,mergebase,mapsection,black=False):
+    """
+    
+
+    Parameters
+    ----------
+    mapfile : string
+        Location of the source map file.
+    mergebase : string
+        Target file name for merged map (without extension!).
+    mapsection : int
+        which slice of the stack to process.
+    black : TYPE, bool
+        whether the background of the merged map hav value 0. The default is False.
+
+    Returns
+    -------
+    None.
+
+    """
+    
+    
     # check IMOD version
     if imod_ver[0]<4 | imod_ver[1]<10 | imod_ver[2]<29 :
         print('ERROR: IMOD version needs to be > 4.10.29! Please update. Exiting' + '\n')
@@ -881,7 +903,7 @@ def call_blendmont(mapfile,mergefile,mapsection,black=False):
     print('Merging the map montage into a single image....' + '\n')
     print('----------------------------------------------------\n')
     
-    callcmd = 'blendmont -imi ' + '\"' + mapfile + '\"' + ' -imo \"' + mergefile + '.mrc\" -pli \"' + mapfile + '.pcs\" -roo \"' + mergefile  + '.mrc\" -se ' + str(mapsection) + ' -al \"'+ mergefile + '.al\" -sloppy -nofft '    #os.system(callcmd)
+    callcmd = 'blendmont -imi ' + '\"' + mapfile + '\"' + ' -imo \"' + mergebase + '.mrc\" -pli \"' + mapfile + '.pcs\" -roo \"' + mergebase  + '.mrc\" -se ' + str(mapsection) + ' -al \"'+ mergebase + '.al\" -sloppy -nofft '    #os.system(callcmd)
     if black:
         callcmd = callcmd + ' -fill 0'
     
