@@ -810,9 +810,6 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
   overlapx = mapheader['xsize'] - xstep
   overlapy = mapheader['ysize'] - ystep
   
-  print(mergefile)
-  print(mergebase)
-  
       
   # cropping of merged file to only include areas of interest. The user needs to create an IMOD model file and close 3dmod to proceed.
   if crop & blendmont:
