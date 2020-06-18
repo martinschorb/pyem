@@ -137,7 +137,7 @@ workdir = os.getcwd()
 os.chdir('C:\Software\icy')
 icycmd = 'java -jar icy.jar -x plugins.tprovoost.scripteditor.main.ScriptEditorPlugin C:\Software\opener.js'
 
-os.system(icycmd +' '+ mm_fm['mapfile'] +' '+  mm_em['mergefile'] + os.path.splitext(mm_em['mapfile'])[1])
+os.system(icycmd +' '+ mm_fm['mapfile'] +' '+  mm_em['mergefile'])
 
 os.chdir(workdir)
 
@@ -146,7 +146,7 @@ os.chdir(workdir)
 
 # import icy XMLs
 
-x_emf = mm_em['mergefile']+ os.path.splitext( mm_em['mapfile'])[1] + '_ROIsavedwhenshowonoriginaldata' + '.xml'
+x_emf = mm_em['mergefile'] + '_ROIsavedwhenshowonoriginaldata' + '.xml'
 x_trafo = mm_fm['mapfile'] + '_transfo' + '.xml'
 
 if not all([os.path.exists(x_emf),os.path.exists(x_trafo)]):  raise ValueError('Could not find the results of Icy registration. Please re-run.')
