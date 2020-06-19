@@ -515,6 +515,7 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
   montage_tiles = numpy.prod(m['frames'])
   
   tileidx_offset = 0
+  mbase = os.path.basename(mapfile)
   
   if mapfile.find('.st')<0 and mapfile.find('.map')<0 and mapfile.find('.mrc')<0:
     #not an mrc file
@@ -541,7 +542,7 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
                 lastitem = testlast[index-1]
                 if 'Image = ' in lastitem:
                     break
-        mbase = os.path.basename(mapfile)
+        
         prefix = mbase[:mbase.find('.idoc')]
         stacksize = int(lastitem[lastitem.find(prefix)+len(prefix):-5])+1            
         mergeheader['stacksize'] = stacksize        
@@ -718,8 +719,7 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
 
     # check if map is a montage or not
 
-    mergebase = os.path.splitext(mapfile)[0] + '_merged'+ '_s' + str(mapsection)
-    mergefile = mergebase + '.mrc'
+    
 
     if mapheader['stacksize'] < 2:
         print('Single image found. No merging needed.')
@@ -733,6 +733,7 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
         overlapy = 0
         tileloc = [0,0]
         imd = merge_mrc.data
+        mergefile = mapfile
         
         if len(imd.shape)==3:
             im=imd[mapsection,:,:]
@@ -741,9 +742,13 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
 
     else:
         if blendmont:
+            mergebase = mbase + '_merged'+ '_s' + str(mapsection)
+            mergefile = mergebase+'.mrc'
             if not os.path.exists(mergefile):
                 call_blendmont(mapfile,mergebase,mapsection,black)
-                
+            mergebase = os.path.splitext(mapfile)[0] + '_merged'+ '_s' + str(mapsection)
+            mergefile = mergebase + '.mrc'    
+            
             merge_mrc =  mrc.mmap(mergefile, permissive = 'True')
             im = merge_mrc.data
             mergeheader = map_header(merge_mrc)            
