@@ -515,7 +515,7 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
   montage_tiles = numpy.prod(m['frames'])
   
   tileidx_offset = 0
-  mbase = os.path.basename(mapfile)
+  mbase = os.path.splitext(os.path.basename(mapfile))[0]
   
   if mapfile.find('.st')<0 and mapfile.find('.map')<0 and mapfile.find('.mrc')<0:
     #not an mrc file
