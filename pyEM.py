@@ -498,7 +498,7 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
   # black option will fill the empty spaces between tiles with 0
   # blendmont will use blendmont to merge the montage. If disabled individual tile information is stored in the merge dict nevertheless.
 
-  
+  blend_in = blendmont
   m=dict()
   m['Sloppy'] = False
 
@@ -774,7 +774,8 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
             
             mergeheader['xsize'] = int(mapitem['MapWidthHeight'][0])
             mergeheader['ysize'] = int(mapitem['MapWidthHeight'][1])
-                         
+    
+    if not blend_in: im = mf.data
     im = numpy.rot90(numpy.transpose(im),axes=(0,1))        
     mf.close()    
         # end MRC section
