@@ -704,12 +704,17 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
                     print('WARNING: Multiple maps stored in an MRC stack without mdoc file for metadata. I will guess the pixel size.')
             
             pixelsize = 1./numpy.sqrt(abs(numpy.linalg.det(mat)))
-            callcmd = 'extracttilts ' + mapfile + ' -stage -all > syscall.tmp'
+            callcmd = 'extracttilts ' + mapfile + ' -stage -all'
             os.system(callcmd)
-            tilepos1 = loadtext('syscall.tmp')[20:-1]
+            p2 = Popen(callcmd, shell=True, stdout=PIPE)
+            o1=list()
+            for line in p2.stdout:
+                o1.append(line)
+                
+            tilepos1 = o1[20:-1]
             tilepos = numpy.array([numpy.fromstring(tilepos1[0],dtype=float,sep=' '),numpy.fromstring(tilepos1[1],dtype=float,sep=' ')])
             for item in tilepos1[2:] : tilepos=numpy.append(tilepos,[numpy.fromstring(item,dtype=float,sep=' ')],axis=0)
-            
+            blendmont = True
            
 
     else:
