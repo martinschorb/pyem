@@ -15,7 +15,8 @@ import glob
 import numpy as np
 
 
-
+icypath = 'C:\Software\icy'
+scriptpath = '"C:\Software\opener.js"'
 
 
 
@@ -134,10 +135,10 @@ print(' Please run ec-CLEM and when done click SHOW ROIs ON ORIGINAL SOURCE IMAG
 
 workdir = os.getcwd()
 
-os.chdir('C:\Software\icy')
-icycmd = 'java -jar icy.jar -x plugins.tprovoost.scripteditor.main.ScriptEditorPlugin C:\Software\opener.js'
+os.chdir(icypath)
+icycmd = 'java -jar icy.jar -x plugins.tprovoost.scripteditor.main.ScriptEditorPlugin '+ scriptpath
 
-os.system(icycmd +' '+ mm_fm['mapfile'] +' '+  mm_em['mergefile'])
+os.system(icycmd +' "'+ mm_fm['mapfile'] +'" "'+  mm_em['mergefile']+'"')
 
 os.chdir(workdir)
 
@@ -146,7 +147,7 @@ os.chdir(workdir)
 
 # import icy XMLs
 
-x_emf = mm_em['mergefile'] + '_ROIsavedwhenshowonoriginaldata' + '.xml'
+x_emf = mm_em['mergefile']+ '_ROIsavedwhenshowonoriginaldata' + '.xml'
 x_trafo = mm_fm['mapfile'] + '_transfo' + '.xml'
 
 if not all([os.path.exists(x_emf),os.path.exists(x_trafo)]):  raise ValueError('Could not find the results of Icy registration. Please re-run.')
@@ -190,7 +191,7 @@ for matrix in mat:
     
     M_list.append(thismat)
     
-    M = np.dot(M.T,thismat)
+    M = np.dot(thismat,M)
     
 
 
@@ -217,9 +218,38 @@ for child in root_em.iter():
     elif child.tag == 'name':
         p_idx.append(int(child.text[child.text.rfind(' '):]))
                 
-    
-### TODO ##
 
+sortidx = np.argsort(p_idx)
+
+
+for ct,p_index in enumerate(sortidx):
+    p=np.append(pts[p_index],[0,1])
+    p_fm = (np.dot(p,np.linalg.inv(M.T)))
+    
+    em_item = em.pointitem('Icy_EM'+str(ct+1),regis = m_em['Regis'])
+    em_item['RegPt'] = [str(ct+1)]
+    em_item['DrawnID'] = m_em['MapID']
+    if np.prod(mm_em['frames'])>1:
+        em_item['CoordsInAliMont '] = [str(pts[p_index][0])+' '+str(mm_em['mergeheader']['ysize']-pts[p_index][1])+ ' 0']
+        em_item['PtsX'] = [str(pts[p_index][0])]
+        em_item['PtsY'] = [str(mm_em['mergeheader']['ysize']-pts[p_index][1])]
+    else:
+        em_item['CoordsInMap '] = [str(pts[p_index][0])+' '+str(mm_em['mergeheader']['ysize']-pts[p_index][1])+ ' 0']
+        em_item['PtsX'] = [str(pts[p_index][0])]
+        em_item['PtsY'] = [str(mm_em['mergeheader']['ysize']-pts[p_index][1])]
+
+    outitems.append(em_item)   
+
+                  
+    fm_item = em.pointitem('Icy_FM'+str(ct+1),regis = m_fm['Regis'])
+    fm_item['RegPt'] = [str(ct+1)]
+    fm_item['DrawnID'] = m_fm['MapID']
+    fm_item['CoordsInMap '] = [str(p_fm[0])+' '+str(mm_fm['mergeheader']['ysize']-p_fm[1])+ ' 0']
+    fm_item['PtsX'] = [str(p_fm[0])]
+    fm_item['PtsY'] = [str(mm_fm['mergeheader']['ysize']-p_fm[1])]    
+
+
+    outitems.append(fm_item)  
 
                 
                 
@@ -229,3 +259,8 @@ newnavf = navfile[:-4] + '_icy.nav'
 
 em.write_navfile(newnavf,outitems,xml=False)
     
+print('-------------------------------------------------')
+print('        done with the registration in Icy        ')
+print('\n')
+print('    you can find ther result in '+newnavf)
+      
