@@ -137,7 +137,7 @@ workdir = os.getcwd()
 os.chdir('C:\Software\icy')
 icycmd = 'java -jar icy.jar -x plugins.tprovoost.scripteditor.main.ScriptEditorPlugin C:\Software\opener.js'
 
-os.system(icycmd +' '+ mm_fm['mapfile'] +' '+  mm_em['mergefile'] + os.path.splitext(mm_em['mapfile'])[1])
+os.system(icycmd +' '+ mm_fm['mapfile'] +' '+  mm_em['mergefile'])
 
 os.chdir(workdir)
 
