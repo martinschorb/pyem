@@ -1013,7 +1013,7 @@ def img2polygon(img, n_poly, center, radius):
   # define threshold based on image type
   if img.dtype.kind == 'b':
     thresh = 1
-elif img.dtype.kind == 'i':
+  elif img.dtype.kind == 'i':
     thresh = 2**(8*img.dtype.itemsize-1)-1
     if img.max()<thresh:
         thresh = img.max()/2
