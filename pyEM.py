@@ -682,9 +682,10 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
                 if 'AlignedPieceCoordsVS' in tile:
                     m['Sloppy'] = True
                     tilepx.append(tile['AlignedPieceCoordsVS'])
-                else:
+                elif 'AlignedPieceCoords' in tile:
                     tilepx.append(tile['AlignedPieceCoords'])
-
+                else:
+                    tilepx = tilepx1 
 
             if mdoc_item(mdoclines,'MontSection = 0') == []: #older mdoc file format, created before SerialEM 3.7x
                 print('Warning: mrc stack without montage information. Assume pixel size is consistent for all sections.')
