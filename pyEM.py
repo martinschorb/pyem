@@ -135,6 +135,8 @@ def mdoc_item(lines1,label,header=False):
     # returns it as a dictionary
     if lines1[-1] != '':
         lines = lines1+['']
+    else:
+        lines=lines1
 
     if header:
         item = lines[:lines.index('')]
@@ -543,7 +545,7 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
                 if 'Image = ' in lastitem:
                     break
 
-        prefix = mbase[:mbase.find('.idoc')]
+        prefix = mbase#[:mbase.find('.idoc')]
         stacksize = int(lastitem[lastitem.find(prefix)+len(prefix):-5])+1
         mergeheader['stacksize'] = stacksize
 
