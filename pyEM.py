@@ -43,6 +43,9 @@ import fnmatch
 from subprocess import Popen, PIPE
 import xml.etree.ElementTree as ET
 
+
+mrcext = ('.st','.mrc','.map','.rec','.ali','.preali')
+
 # get python version
 py_ver = sys.version_info
 
@@ -51,8 +54,13 @@ p1 = Popen("imodinfo", shell=True, stdout=PIPE)
 o=list()
 for line in p1.stdout:
     o.append(line)
-o1=str(o[0]).split(' ')
-imod_ver = list(map(int,o1[o1.index('Version')+1].split('.')))
+    
+if o == []:
+    print('Warning! - No IMOD installation found')
+    imod_ver = [0,0,0]
+else:
+    o1=str(o[0]).split(' ')
+    imod_ver = list(map(int,o1[o1.index('Version')+1].split('.')))
 
 # define functions
 
@@ -230,19 +238,28 @@ def findfile(searchstr, searchdir):
 # -------------------------------
 #%%
 def map_header(m):
-
-    # extracts MRC header information for a given mrc.object (legacy from reading mrc headers)
     header={}
 
-    header['xsize'] = numpy.int(m.header.nx)
-    header['ysize'] = numpy.int(m.header.ny)
-
-    header['stacksize'] = numpy.int(m.header.nz)
-
-    # determine the scale
-
-    header['pixelsize'] = m.voxel_size.x / 10000 # in um
-
+    if (type(m) is mrc.mrcfile.MrcFile) | (type(m) is mrc.mrcmemmap.MrcMemmap):
+    # extracts MRC header information for a given mrc.object (legacy from reading mrc headers)
+    
+        header['xsize'] = numpy.int(m.header.nx)
+        header['ysize'] = numpy.int(m.header.ny)
+    
+        header['stacksize'] = numpy.int(m.header.nz)
+    
+        # determine the scale
+    
+        header['pixelsize'] = m.voxel_size.x / 10000 # in um
+    elif (type(m) is dict):
+        if ("MapFile" in m.keys()):            
+            merge = mergemap(m,blendmont=False)
+            header = merge['mapheader']
+    elif(type(m) is str):
+        if os.path.exists(m):
+            if os.path.splitext(m)[1] in mrcext:
+                header = map_header(mrc.mmap(m, permissive = 'True'))
+        
     return header
 
 # -------------------------------
@@ -519,11 +536,11 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
   tileidx_offset = 0
   mbase = os.path.splitext(os.path.basename(mapfile))[0]
 
-  if mapfile.find('.st')<0 and mapfile.find('.map')<0 and mapfile.find('.mrc')<0:
+  if os.path.splitext(mapfile)[1] not in mrcext:
     #not an mrc file
 
     mergeheader = {}
-    mergeheader['stacksize'] = 1
+    # mergeheader['stacksize'] = 1
 
     if '.idoc' in mapfile:
         # List of tif files with additional metadata
@@ -551,28 +568,46 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
 
         maphead0 = mdoc_item(idoctxt,[],header=True)
         im = list()
-        for i in range(0,numpy.min([montage_tiles,stacksize])):
-            tilefile = mapfile[:mapfile.find('.idoc')]+'{:04d}'.format(mapsection + i)+'.tif'
-            im.append(tilefile)
-            tile = mdoc_item(idoctxt,'Image = '+os.path.basename(tilefile))
-            tilepos.append(tile['StagePosition'])
-            tilepx1.append(tile['PieceCoordinates'])
-
-            if 'AlignedPieceCoordsVS' in tile:
-                m['Sloppy'] = True
-                tilepx.append(tile['AlignedPieceCoordsVS'])
-            else:
-                tilepx.append(tile['AlignedPieceCoords'])
-
-        if mdoc_item(idoctxt,'MontSection = 0') == []: #older mdoc file format, created before SerialEM 3.7x
-            print('Warning - item'+mapitem['# Item']+': Series of tif images without montage information. Assume pixel size is consistent for all sections.')
-
-            pixelsize = float(maphead0['PixelSpacing'][0])/ 10000  # in um
-
+        
+        if montage_tiles == 0:
+            # stack of single images
+            mergefile = mapfile[:mapfile.find('.idoc')]+'{:04d}'.format(mapsection)+'.tif'
+            mergeheader['stacksize'] = 0            
+            tilepos = mapitem['StageXYZ'][0:2]
+            tilepx = '0'
+            tilepx=numpy.array([[tilepx,tilepx,tilepx],[tilepx,tilepx,tilepx]])
+            tilepx1 = tilepx
+            m['Sloppy'] = 'NoMont'
+            im = io.imread(mergefile)
+            mergeheader['xsize'] = numpy.array(im.shape)[0]
+            mergeheader['ysize'] = numpy.array(im.shape)[1]
+            mapheader = mergeheader.copy()
+            pixelsize = float(maphead0['PixelSpacing'][0])/ 10000
         else:
-            mont_item = mdoc_item(idoctxt,'MontSection = '+str(mapsection))
-            pixelsize = float(mont_item['PixelSpacing'][0])/ 10000 # in um
+            if mdoc_item(idoctxt,'MontSection = 0') == []: #older mdoc file format, created before SerialEM 3.7x
+                print('Warning - item'+mapitem['# Item']+': Series of tif images without montage information. Assume pixel size is consistent for all sections.')
+    
+                pixelsize = float(maphead0['PixelSpacing'][0])/ 10000  # in um
+    
+            else:
+                mont_item = mdoc_item(idoctxt,'MontSection = '+str(mapsection))
+                pixelsize = float(mont_item['PixelSpacing'][0])/ 10000 # in um
+          
+            
+            for i in range(0,numpy.min([montage_tiles,stacksize])):
+                tilefile = mapfile[:mapfile.find('.idoc')]+'{:04d}'.format(mapsection + i)+'.tif'
+                im.append(tilefile)
+                tile = mdoc_item(idoctxt,'Image = '+os.path.basename(tilefile))
+                tilepos.append(tile['StagePosition'])
+                tilepx1.append(tile['PieceCoordinates'])
+    
+                if 'AlignedPieceCoordsVS' in tile:
+                    m['Sloppy'] = True
+                    tilepx.append(tile['AlignedPieceCoordsVS'])
+                else:
+                    tilepx.append(tile['AlignedPieceCoords'])
 
+  
         mergeheader['pixelsize'] = pixelsize
         mapheader = mergeheader.copy()
         mapheader['ysize'] = int(maphead0['ImageSize'][1])
@@ -803,21 +838,21 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
 
   tileloc = numpy.array([tpx / xstep,tpy/ystep]).T
 
-  if not blendmont:
-      #prepare coordinate list for Big Stitcher
-      print('preparing coordinate list for BigStitcher for map item '+mapitem['# Item']+'.')
-      outpx = tilepx.copy()
+  # if not blendmont:
+  #     #prepare coordinate list for Big Stitcher
+  #     print('preparing coordinate list for BigStitcher for map item '+mapitem['# Item']+'.')
+  #     outpx = tilepx.copy()
 
-      stitchname = mapfile+'.stitch.csv'
-      stitchfile = open(stitchname,'w')
+  #     stitchname = mapfile+'.stitch.csv'
+  #     stitchfile = open(stitchname,'w')
 
-      stitchfile.write('dim=2\n')
-      #stitchfile.write('ViewSetupID;TimePointID;(position_x, position_y, position_z)\n')
+  #     stitchfile.write('dim=2\n')
+  #     #stitchfile.write('ViewSetupID;TimePointID;(position_x, position_y, position_z)\n')
 
-      for j,item in enumerate(outpx):
-          stitchfile.write(str(j)+";;"+"(%s, %s" % (int(item[0]),-int(item[1]))+")\n")
+  #     for j,item in enumerate(outpx):
+  #         stitchfile.write(str(j)+";;"+"(%s, %s" % (int(item[0]),-int(item[1]))+")\n")
 
-      stitchfile.close()
+  #     stitchfile.close()
 
   m['sections'] = numpy.array(list(map(int,tileloc[:,0]*m['frames'][1]+tileloc[:,1])))
 
