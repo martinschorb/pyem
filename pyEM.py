@@ -54,7 +54,7 @@ p1 = Popen("imodinfo", shell=True, stdout=PIPE)
 o=list()
 for line in p1.stdout:
     o.append(line)
-    
+
 if o == []:
     print('Warning! - No IMOD installation found')
     imod_ver = [0,0,0]
@@ -242,24 +242,24 @@ def map_header(m):
 
     if (type(m) is mrc.mrcfile.MrcFile) | (type(m) is mrc.mrcmemmap.MrcMemmap):
     # extracts MRC header information for a given mrc.object (legacy from reading mrc headers)
-    
+
         header['xsize'] = numpy.int(m.header.nx)
         header['ysize'] = numpy.int(m.header.ny)
-    
+
         header['stacksize'] = numpy.int(m.header.nz)
-    
+
         # determine the scale
-    
+
         header['pixelsize'] = m.voxel_size.x / 10000 # in um
     elif (type(m) is dict):
-        if ("MapFile" in m.keys()):            
+        if ("MapFile" in m.keys()):
             merge = mergemap(m,blendmont=False)
             header = merge['mapheader']
     elif(type(m) is str):
         if os.path.exists(m):
             if os.path.splitext(m)[1] in mrcext:
                 header = map_header(mrc.mmap(m, permissive = 'True'))
-        
+
     return header
 
 # -------------------------------
@@ -568,11 +568,11 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
 
         maphead0 = mdoc_item(idoctxt,[],header=True)
         im = list()
-        
+
         if montage_tiles == 0:
             # stack of single images
             mergefile = mapfile[:mapfile.find('.idoc')]+'{:04d}'.format(mapsection)+'.tif'
-            mergeheader['stacksize'] = 0            
+            mergeheader['stacksize'] = 0
             tilepos = mapitem['StageXYZ'][0:2]
             tilepx = '0'
             tilepx=numpy.array([[tilepx,tilepx,tilepx],[tilepx,tilepx,tilepx]])
@@ -586,42 +586,42 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
         else:
             if mdoc_item(idoctxt,'MontSection = 0') == []: #older mdoc file format, created before SerialEM 3.7x
                 print('Warning - item'+mapitem['# Item']+': Series of tif images without montage information. Assume pixel size is consistent for all sections.')
-    
+
                 pixelsize = float(maphead0['PixelSpacing'][0])/ 10000  # in um
-    
+
             else:
                 mont_item = mdoc_item(idoctxt,'MontSection = '+str(mapsection))
                 pixelsize = float(mont_item['PixelSpacing'][0])/ 10000 # in um
-          
-            
+
+
             for i in range(0,numpy.min([montage_tiles,stacksize])):
                 tilefile = mapfile[:mapfile.find('.idoc')]+'{:04d}'.format(mapsection + i)+'.tif'
                 im.append(tilefile)
                 tile = mdoc_item(idoctxt,'Image = '+os.path.basename(tilefile))
                 tilepos.append(tile['StagePosition'])
                 tilepx1.append(tile['PieceCoordinates'])
-    
+
                 if 'AlignedPieceCoordsVS' in tile:
                     m['Sloppy'] = True
                     tilepx.append(tile['AlignedPieceCoordsVS'])
                 else:
                     tilepx.append(tile['AlignedPieceCoords'])
-    
-      
+
+
             mergeheader['pixelsize'] = pixelsize
             mapheader = mergeheader.copy()
             mapheader['ysize'] = int(maphead0['ImageSize'][1])
             mapheader['xsize'] = int(maphead0['ImageSize'][0])
-    
+
             imsz_x = int(maphead0['ImageSize'][0])
             imsz_y = int(maphead0['ImageSize'][1])
-    
+
             overlapx = imsz_x - mapheader['xsize']
             overlapy = imsz_y - mapheader['ysize']
-    
+
             # check if idoc is supported in IMOD (blendmont)
             imod_vercheck = (imod_ver[0]>=4 and imod_ver[1]>=10 and imod_ver[2]>=42)
-    
+
             if blendmont:
                 mergebase = mbase + '_merged'+ '_s' + str(mapsection)
                 mergefile = mergebase+'.mrc'
@@ -640,9 +640,9 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
                     merge_mrc =  mrc.mmap(mergefile, permissive = 'True')
                     im = merge_mrc.data
                     mergeheader = map_header(merge_mrc)
-    
-    
-    
+
+
+
             else:
                 mergeheader['xsize'] = int(tilepx[-1][0]) + mapheader['xsize']
                 mergeheader['ysize'] = int(tilepx[-1][1]) + mapheader['ysize']
@@ -722,7 +722,7 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
                 elif 'AlignedPieceCoords' in tile:
                     tilepx.append(tile['AlignedPieceCoords'])
                 else:
-                    tilepx = tilepx1 
+                    tilepx = tilepx1
 
             if mdoc_item(mdoclines,'MontSection = 0') == []: #older mdoc file format, created before SerialEM 3.7x
                 print('Warning: mrc stack without montage information. Assume pixel size is consistent for all sections.')
@@ -1254,154 +1254,66 @@ def get_pixel(navitem,mergedmap,tile=False,outline=False):
 
 # ------------------------------------------------------------
 
-def ptsonmap(mapitem,pts):
-    # adds a point or polygon (pixel position) to a map and creates a navigator item from it
-    
-         
-    polynav=dict()
-    mapid = newID(nav,mapid+1)
+def ptsonmap(mapitem,pts,nav):
+    # adds a point or polygon (pixel position) to a map and creates a navigator item from
+    # p is a list of numpy
 
-    print('Processing object '+ str(idx+1) + '/' + str(ntotal) + ' (%2.0f%%)' %(idx*100/ntotal) + ' at position %5u , %5u' %(c[0],c[1]))
+    mapid = mapitem['MapID']
 
-    p = pts[idx]
+    for p,idx in enumerate(pts):
 
-    im4, p4 = map_extract(im,c,p,px_scale,imsz1,maptf)
+        p = numpy.array(p)
 
+        polynav=dict()
 
-    if min(im4.shape) < 400:
-      print('Item is too close to border of map, skipping it.')
-      ntotal = ntotal - 1
-      continue
+        mheader = map_header(mapitem)
 
-    p4[:,1] = imsz1[0] - p4[:,1]
+        imsz1 = numpy.array([mheader['xsize'],mheader['ysize']])
+        cx = imsz1[1]
+        cy = imsz1[0]
 
-    px = numpy.array(numpy.transpose(p4[:,0]))
-    px = numpy.array2string(px,separator=' ')
-    px = px[2:-2]
+        p[:,1] = imsz1[0] - p[:,1]
 
-    py = numpy.array(numpy.transpose(p4[:,1]))
-    py = numpy.array2string(py,separator=' ')
-    py = py[2:-2]
+        px = numpy.array(numpy.transpose(p[:,0]))
+        px = numpy.array2string(px,separator=' ')
+        px = px[2:-2]
 
-
-    if numpy.shape(p4)[0] == 1:
-        polynav['Type'] = ['0']
-        polynav['Color'] = ['0']
-        polynav['NumPts'] = ['1']
-
-    else:
-        polynav['Type'] = ['1']
-        polynav['Color'] = ['1']
-        polynav['NumPts'] = [str(p.shape[0])]
+        py = numpy.array(numpy.transpose(p[:,1]))
+        py = numpy.array2string(py,separator=' ')
+        py = py[2:-2]
 
 
+        if numpy.shape(p)[0] == 1:
+            polynav['Type'] = ['0']
+            polynav['Color'] = ['0']
+            polynav['NumPts'] = ['1']
 
-    label = curr_map['# Item'] + '_' + str(idx).zfill(3)
-    idx = idx + 1
-
-    imfile = 'virt_' + label + '.mrc'
-
-    if os.path.exists(imfile): os.remove(imfile)
-
-    im5 = numpy.rot90(im4,3)
-
-    with mrc.new(imfile) as mrcf:
-        mrcf.set_data(im5.T)
-        mrcf.close()#
-
-    #  map corner points
-
-
-    cx = imsz1[1]
-    cy = imsz1[0]
-
-    a = [[0,0],[cx,0],[cx,cy],[0,cy],[0,0]]
-    a = numpy.matrix(a) - [cx/2 , cy/2]
-
-    t_mat_i = numpy.linalg.inv(maptf)
-
-    c1 = a*t_mat_i
-
-    c_out = c.copy()
-    c_out[1] = imsz[0] - c_out[1]
-
-   # c1 = c1 + [c_out[0],c_out[1]]
+        else:
+            polynav['Type'] = ['1']
+            polynav['Color'] = ['1']
+            polynav['NumPts'] = [str(p.shape[0])]
 
 
 
-    # fill navigator
+        label = mapitem['# Item'] + '_' + str(idx).zfill(3)
 
-    # map for realignment
+        #  map corner points
+        # fill navigator
 
-    newnavitem['MapFile'] = [imfile]
-    newnavitem.pop('StageXYZ','')
-    newnavitem.pop('RawStageXY','')
-    if curr_map['MapFramesXY'] == ['0', '0']:
-        newnavitem['CoordsInMap'] = [str(c_out[0]),str(c_out[1]),curr_map['StageXYZ'][2]]
-
-    else:
-      #  newnavitem['CoordsInAliMont'] = [str(c_out[0]),str(c_out[1]),curr_map['StageXYZ'][2]]
-      #  convert aligned pixel coordinates into piece coordinates to ensure map has a proper bounding box
-
-      tilecenters = merge['tilepx']+numpy.array([merge['mapheader']['xsize']/2,merge['mapheader']['ysize']/2])
-      tiledist = numpy.sum((tilecenters-c_out)**2,axis=1)
-      tileidx = numpy.argmin(tiledist)
-      c_out = c_out - merge['tilepx'][tileidx]
-      c1 = numpy.fliplr(c1 + c_out)
-      newnavitem['CoordsInPiece'] = [str(c_out[0]),str(c_out[1]),curr_map['StageXYZ'][2]]
-      newnavitem['PieceOn'] = [str(merge['sections'][tileidx])]
-
-    cnx = numpy.array(numpy.transpose(c1[:,1]))
-    cnx = numpy.array2string(cnx,separator=' ')
-    cnx = cnx[2:-2]
-
-    cny = numpy.array(numpy.transpose(c1[:,0]))
-    cny = numpy.array2string(cny,separator=' ')
-    cny = cny[2:-2]
-
-    newnavitem['PtsX'] = cnx.split()
-    newnavitem['PtsY'] = cny.split()
-    newnavitem['Note'] = newnavitem['MapFile']
-    newnavitem['MapID'] = [str(mapid)]
-    newnavitem['DrawnID'] = curr_map['MapID']
-
-    if maps:
-        newnavitem['Acquire'] = ['1']
-    else:
-        newnavitem['Acquire'] = ['0']
-
-    newnavitem['MapSection'] = ['0']
-    newnavitem.pop('SamePosId','')
-    # newnavitem['MapWidthHeight'] = [str(im2size[0]),str(im2size[1])]
-    newnavitem['ImageType'] = ['0']
-    newnavitem['MapMinMaxScale'] = [str(numpy.min(im4)),str(numpy.max(im4))]
-    newnavitem['NumPts'] = ['5']
-    newnavitem['# Item'] = 'm_' + label
-    newnavitem['GroupID'] = [str(newID(nav,startid+50000))]
-    curr_map['Acquire'] = ['0']
-
-    # Polygon
-    nav_maps.append(newnavitem)
-
-    #do not export points/polygons when maps are inteded output.
-
-    if not maps:
+        # Polygon
         polynav['# Item'] = label
         polynav['Acquire'] = ['1']
 
         polynav['Draw'] = ['1']
-        polynav['Regis'] = curr_map['Regis']
+        polynav['Regis'] = mapitem['Regis']
         polynav['DrawnID'] = [str(mapid)]
         polynav['CoordsInMap'] = [str(int(cx/2)) , str(int(cy/2)),curr_map['StageXYZ'][2]]
         polynav['PtsX'] = px.split()
         polynav['PtsY'] = py.split()
-        polynav['GroupID'] = [str(newID(nav,startid+70000))]
+        polynav['GroupID'] = [str(newID(nav,mapid+70000))]
 
 
 
-        nav_pol.append(polynav)
-
-    
 
 
 def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False,maps=False):
@@ -1414,7 +1326,7 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False,maps=False):
 # - targetitem, target map
 # - nav, all navigator items (emtools dict)
 # - sloppy (optional) if merging of original map was sloppy
-# - maps (optional) if the virtual maps instead of the points/polygons should be selected for acquisition    
+# - maps (optional) if the virtual maps instead of the points/polygons should be selected for acquisition
 
 
   #parse input data
