@@ -527,7 +527,7 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
 
   #find map file
   mapfile = map_file(mapitem)
-  print('processing mapitem '+mapitem['# Item']+' - file: '+mapfile)
+  # print('processing mapitem '+mapitem['# Item']+' - file: '+mapfile)
   mapsection = list(map(int,mapitem['MapSection']))[0]
 
   m['frames'] = list(map(int,mapitem['MapFramesXY']))
@@ -575,8 +575,8 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
             mergeheader['stacksize'] = 0
             tilepos = mapitem['StageXYZ'][0:2]
             tilepx = '0'
-            tilepx=numpy.array([[tilepx,tilepx,tilepx],[tilepx,tilepx,tilepx]])
-            tilepx1 = tilepx
+            tilepx=numpy.array([[tilepx,tilepx,mapsection],[tilepx,tilepx,mapsection]])
+            tilepx1 = tilepx            
             m['Sloppy'] = 'NoMont'
             im = io.imread(mergefile)
             mergeheader['xsize'] = numpy.array(im.shape)[0]
@@ -665,8 +665,6 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
 
 
     mappxcenter = numpy.array([mergeheader['ysize'],mergeheader['xsize']]) / 2
-
-
 
 
   else:
@@ -1254,33 +1252,41 @@ def get_pixel(navitem,mergedmap,tile=False,outline=False):
 
 # ------------------------------------------------------------
 
-def ptsonmap(mapitem,pts,nav):
+def ptsonmap(mapitem,pts,nav,c=None):
     # adds a point or polygon (pixel position) to a map and creates a navigator item from
     # p is a list of numpy
-
+    
+    outnav = list()
+    
     mapid = mapitem['MapID']
 
-    for p,idx in enumerate(pts):
+    for idx,p in enumerate(pts):
 
         p = numpy.array(p)
 
         polynav=dict()
+        
+        merge = mergemap(mapitem)
 
-        mheader = map_header(mapitem)
-
-        imsz1 = numpy.array([mheader['xsize'],mheader['ysize']])
-        cx = imsz1[1]
-        cy = imsz1[0]
+        imsz1 = numpy.array([merge['mergeheader']['xsize'],merge['mergeheader']['ysize']])
+        
+        if c is None:        
+            cx = imsz1[1]/2
+            cy = imsz1[0]/2
+            c=[cx,cy]
+        else:            
+            cx = c[0]
+            cy = c[1]
 
         p[:,1] = imsz1[0] - p[:,1]
 
         px = numpy.array(numpy.transpose(p[:,0]))
-        px = numpy.array2string(px,separator=' ')
-        px = px[2:-2]
+        px = numpy.array2string(px.astype(int),separator=' ')
+        px = px.strip('"[]"')
 
         py = numpy.array(numpy.transpose(p[:,1]))
-        py = numpy.array2string(py,separator=' ')
-        py = py[2:-2]
+        py = numpy.array2string(py.astype(int),separator=' ')
+        py = py.strip('"[]"')
 
 
         if numpy.shape(p)[0] == 1:
@@ -1306,14 +1312,33 @@ def ptsonmap(mapitem,pts,nav):
 
         polynav['Draw'] = ['1']
         polynav['Regis'] = mapitem['Regis']
-        polynav['DrawnID'] = [str(mapid)]
-        polynav['CoordsInMap'] = [str(int(cx/2)) , str(int(cy/2)),curr_map['StageXYZ'][2]]
+        polynav['DrawnID'] = mapid
+        
+        if mapitem['MapFramesXY'] == ['0', '0']:
+            polynav['CoordsInMap'] = [str(int(round(cx/2))) , str(int(round(cy/2))), mapitem['StageXYZ'][2]]
+        else:             
+            tilecenters = merge['tilepx']+numpy.array([merge['mapheader']['xsize']/2,merge['mapheader']['ysize']/2])
+            c_out = c.copy()
+            c_out[1] = imsz1[0] - c_out[1]
+            tiledist = numpy.sum((tilecenters-c_out)**2,axis=1)
+            
+            tileidx = numpy.argmin(tiledist)
+            c_out = c_out - merge['tilepx'][tileidx]
+            polynav['CoordsInPiece'] = [str(c_out[0]),str(c_out[1]),mapitem['StageXYZ'][2]]
+            polynav['PieceOn'] = [str(merge['sections'][tileidx])]
+  
+        
+        polynav['CoordsInMap'] = [str(int(cx/2)) , str(int(cy/2)),mapitem['StageXYZ'][2]]
         polynav['PtsX'] = px.split()
         polynav['PtsY'] = py.split()
-        polynav['GroupID'] = [str(newID(nav,mapid+70000))]
+        polynav['GroupID'] = [str(newID(nav,int(mapid[0])+70000))]
+
+        outnav.append(polynav)
+
+    return outnav
 
 
-
+#---------------------------------------------------------------------
 
 
 def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False,maps=False):
@@ -1417,11 +1442,11 @@ def pts2nav(im,pts,cntrs,curr_map,targetitem,nav,sloppy=False,maps=False):
 
     px = numpy.array(numpy.transpose(p4[:,0]))
     px = numpy.array2string(px,separator=' ')
-    px = px[2:-2]
+    px = px.strip('"[]"')
 
     py = numpy.array(numpy.transpose(p4[:,1]))
     py = numpy.array2string(py,separator=' ')
-    py = py[2:-2]
+    py = py.strip('"[]"')
 
 
     if numpy.shape(p4)[0] == 1:
