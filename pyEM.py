@@ -1252,7 +1252,7 @@ def get_pixel(navitem,mergedmap,tile=False,outline=False):
 
 # ------------------------------------------------------------
 
-def ptsonmap(mapitem,pts,nav,c=None):
+def ptsonmap(mapitem,pts,nav):
     # adds a point or polygon (pixel position) to a map and creates a navigator item from
     # p is a list of numpy
     
@@ -1270,16 +1270,10 @@ def ptsonmap(mapitem,pts,nav,c=None):
 
         imsz1 = numpy.array([merge['mergeheader']['xsize'],merge['mergeheader']['ysize']])
         
-        if c is None:        
-            cx = imsz1[1]/2
-            cy = imsz1[0]/2
-            c=[cx,cy]
-        else:            
-            cx = c[0]
-            cy = c[1]
-
         p[:,1] = imsz1[0] - p[:,1]
-
+        
+        c = numpy.average(p, axis=0) 
+        
         px = numpy.array(numpy.transpose(p[:,0]))
         px = numpy.array2string(px.astype(int),separator=' ')
         px = px.strip('"[]"')
@@ -1315,7 +1309,7 @@ def ptsonmap(mapitem,pts,nav,c=None):
         polynav['DrawnID'] = mapid
         
         if mapitem['MapFramesXY'] == ['0', '0']:
-            polynav['CoordsInMap'] = [str(int(round(cx/2))) , str(int(round(cy/2))), mapitem['StageXYZ'][2]]
+            polynav['CoordsInMap'] = [str(int(round(c[0]))) , str(int(round(c[1]))), mapitem['StageXYZ'][2]]
         else:             
             tilecenters = merge['tilepx']+numpy.array([merge['mapheader']['xsize']/2,merge['mapheader']['ysize']/2])
             c_out = c.copy()
@@ -1327,8 +1321,6 @@ def ptsonmap(mapitem,pts,nav,c=None):
             polynav['CoordsInPiece'] = [str(c_out[0]),str(c_out[1]),mapitem['StageXYZ'][2]]
             polynav['PieceOn'] = [str(merge['sections'][tileidx])]
   
-        
-        polynav['CoordsInMap'] = [str(int(cx/2)) , str(int(cy/2)),mapitem['StageXYZ'][2]]
         polynav['PtsX'] = px.split()
         polynav['PtsY'] = py.split()
         polynav['GroupID'] = [str(newID(nav,int(mapid[0])+70000))]

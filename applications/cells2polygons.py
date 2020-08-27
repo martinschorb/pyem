@@ -75,6 +75,7 @@ for item in acq:
 
     
     pts = em.img2polygon(distim0,17, c, int(imsz.max()*relsize))
+        
     
     allitems.extend(em.ptsonmap(item,[pts],allitems))
     
