@@ -509,7 +509,7 @@ def map_matrix(mapitem):
 # -------------------------------
 #%%
 
-def mergemap(mapitem,crop=False,black=False,blendmont=True):
+def mergemap(mapitem,crop=False,black=False,blendmont=True,bigstitch=False):
 #%%
   # processes a map item and merges the mosaic using IMOD
   # generates a dictionary with metadata for this procedure
@@ -836,21 +836,21 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True):
 
   tileloc = numpy.array([tpx / xstep,tpy/ystep]).T
 
-  # if not blendmont:
-  #     #prepare coordinate list for Big Stitcher
-  #     print('preparing coordinate list for BigStitcher for map item '+mapitem['# Item']+'.')
-  #     outpx = tilepx.copy()
+  if not blendmont and bigstitch:
+       #prepare coordinate list for Big Stitcher
+       print('preparing coordinate list for BigStitcher for map item '+mapitem['# Item']+'.')
+       outpx = tilepx.copy()
 
-  #     stitchname = mapfile+'.stitch.csv'
-  #     stitchfile = open(stitchname,'w')
+       stitchname = mapfile+'.stitch.csv'
+       stitchfile = open(stitchname,'w')
 
-  #     stitchfile.write('dim=2\n')
-  #     #stitchfile.write('ViewSetupID;TimePointID;(position_x, position_y, position_z)\n')
+       stitchfile.write('dim=2\n')
+       #stitchfile.write('ViewSetupID;TimePointID;(position_x, position_y, position_z)\n')
 
-  #     for j,item in enumerate(outpx):
-  #         stitchfile.write(str(j)+";;"+"(%s, %s" % (int(item[0]),-int(item[1]))+")\n")
+       for j,item in enumerate(outpx):
+           stitchfile.write(str(j)+";;"+"(%s, %s" % (int(item[0]),-int(item[1]))+")\n")
 
-  #     stitchfile.close()
+       stitchfile.close()
 
   m['sections'] = numpy.array(list(map(int,tileloc[:,0]*m['frames'][1]+tileloc[:,1])))
 

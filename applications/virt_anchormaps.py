@@ -122,7 +122,7 @@ def virtmapfrompoint(acq_item,idx,allitems,maps,targetitem,target_merge,resultli
                 prefix = 'V_'
                 newnavitem['Acquire'] = ['0']
             elif targetitem['MapLDConSet'] == ['4']:
-                #newnavitem['Acquire'] = ['1']
+                newnavitem['Acquire'] = ['0']
                 prefix = 'P_'
             else:
                 prefix='m_'
