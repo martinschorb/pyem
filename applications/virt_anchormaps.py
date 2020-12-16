@@ -108,6 +108,7 @@ def virtmapfrompoint(acq_item,idx,allitems,maps,targetitem,target_merge,resultli
     
       if min(im2.shape)<200:
         print('Warning! Item ' + acq_item['# Item'] + ' is not within the map frame. Ignoring it')
+        return newnav.copy(),maps
       else:
     
         # pad item numbers to 4 digits    

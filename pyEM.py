@@ -1138,9 +1138,12 @@ def map_extract(im,c,p,px_scale,t_size,mat,int8=False):
       shift = [0,0]
   else:
       # determine limitation of image by the borders of rotated crop
-      rotmat=mat/numpy.linalg.det(mat)
-      limits=1-abs(numpy.mean([-rotmat[0,1],rotmat[1,0]]))
-      outsize = numpy.min([[realsize/px_scale],[t_size]],axis=0).squeeze()*limits
+      rotmat=M2[:2,:2]
+      
+      sin_angle=abs(numpy.mean([-rotmat[0,1],rotmat[1,0]]))
+      
+      
+      outsize = numpy.min([[realsize/px_scale*numpy.cos(numpy.arcsin(sin_angle))],[t_size]],axis=0).squeeze()
 
 
       # make sure map size matches the original minimum camera pixel block limits (powers of 2)
@@ -1151,7 +1154,8 @@ def map_extract(im,c,p,px_scale,t_size,mat,int8=False):
       shift =   numpy.mod(outsize,2**ii)/2
       outsize = 2**ii*numpy.floor(outsize/(2**ii))
 
-      im3 = imcrop(im2,[t_size[1]/2+shift[1],t_size[0]/2+shift[0]],outsize)
+      im3 = imcrop(im2,[t_size[1]/2+shift[1],t_size[0]/2+shift[0]],numpy.flip(outsize))
+
 
       im3[im3==0]=numpy.mean(im3[:])
 

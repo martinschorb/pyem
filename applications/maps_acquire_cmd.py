@@ -57,6 +57,10 @@ import pyEM as em
 navlines = em.loadtext(navname)
 (targetitem,junk) = em.nav_item(navlines,target_map)
 
+if targetitem == []:
+    raise Exception('ERROR!  No reference map with label "'+target_map+'" specified!')
+
+
 target_merge = em.mergemap(targetitem)
 targetheader = target_merge['mergeheader']
 
