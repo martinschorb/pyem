@@ -103,12 +103,16 @@ def nav_item(inlines,label):
       #load XML
       root = ET.fromstringlist(lines)
       el = root.findall('*[@name="%s"]' %label)
-      root.remove(el[0])
-      newroot = ET.Element('navigator')
-      newroot.append(el[0])
-
-      result = xmltonav(ET.tostringlist(newroot))[0]
-      lines = ET.tostringlist(root)
+      if el==[]:
+          print('ERROR: Navigator Item ' + label + ' not found!')
+          result=[]
+      else:    
+          root.remove(el[0])
+          newroot = ET.Element('navigator')
+          newroot.append(el[0])
+    
+          result = xmltonav(ET.tostringlist(newroot))[0]
+          lines = ET.tostringlist(root)
 
     else:
         if lines[-1] != '':
@@ -1107,13 +1111,15 @@ def map_extract(im,c,p,px_scale,t_size,mat,int8=False):
 
   # create homogenous matrices
   mat_i = numpy.linalg.inv(mat)
-
+    
+  o_size=numpy.array(numpy.abs(realsize * mat).astype(numpy.int)).squeeze()
+  
   M = numpy.concatenate((mat_i,numpy.array([[0],[0]])),axis=1)
   M = numpy.concatenate((M,[[0,0,1]]),axis=0)
 
   mat1 = numpy.eye(3)
-  mat1[0,2] = -(t_size[1]-1)/2
-  mat1[1,2] = -(t_size[0]-1)/2
+  mat1[0,2] = -(o_size[1]-1)/2
+  mat1[1,2] = -(o_size[0]-1)/2
 
   mat2 = numpy.eye(3)
   mat2[0,2] = (realsize[1]-1)/2
@@ -1121,16 +1127,19 @@ def map_extract(im,c,p,px_scale,t_size,mat,int8=False):
 
   M1 = numpy.dot(mat2,M)
   M2 = numpy.dot(M1,mat1)
+  
 
   if int8:
      im1 = numpy.round(255.0 * (im1 - im1.min()) / (im1.max() - im1.min() - 1.0)).astype(numpy.uint8)
-
+   
+  
+ 
     # interpolate image
-  im2 = tf.warp(im1,M2,output_shape=t_size,preserve_range=True)
+  im2 = tf.warp(im1,M2,output_shape=o_size,preserve_range=True)
 
   #check if output image size needs to be modified
 
-  limitsize = numpy.min([[realsize/px_scale],[t_size]],axis=0).squeeze()
+  limitsize = numpy.min([o_size,t_size],axis=0).squeeze()
 
 
   if (limitsize==t_size).all():
@@ -1138,13 +1147,17 @@ def map_extract(im,c,p,px_scale,t_size,mat,int8=False):
       shift = [0,0]
   else:
       # determine limitation of image by the borders of rotated crop
-      rotmat=M2[:2,:2]
       
-      sin_angle=abs(numpy.mean([-rotmat[0,1],rotmat[1,0]]))
+      rotmat=mat/numpy.sqrt(numpy.linalg.det(mat))
       
+      corr_angle=4*numpy.arccos(numpy.mean(abs(numpy.diag(rotmat))))
       
-      outsize = numpy.min([[realsize/px_scale*numpy.cos(numpy.arcsin(sin_angle))],[t_size]],axis=0).squeeze()
-
+      sq2=numpy.sqrt(2)/4
+      
+      factor=sq2*5/2+sq2*numpy.cos(corr_angle)
+      
+      outsize = numpy.min([o_size*factor,t_size],axis=0).squeeze()
+   
 
       # make sure map size matches the original minimum camera pixel block limits (powers of 2)
       ii=1
@@ -1152,9 +1165,9 @@ def map_extract(im,c,p,px_scale,t_size,mat,int8=False):
           ii=ii+1
 
       shift =   numpy.mod(outsize,2**ii)/2
-      outsize = 2**ii*numpy.floor(outsize/(2**ii))
+      outsize = 2**ii*numpy.floor(outsize/(2**ii))   
 
-      im3 = imcrop(im2,[t_size[1]/2+shift[1],t_size[0]/2+shift[0]],numpy.flip(outsize))
+      im3 = imcrop(im2,[o_size[1]/2+shift[1],o_size[0]/2+shift[0]],outsize)
 
 
       im3[im3==0]=numpy.mean(im3[:])
@@ -1755,3 +1768,243 @@ def pointitem(label,regis=1):
     point['Type'] = ['0']
 
     return point
+
+
+# ------------------------------------------------------------
+
+
+
+def virt_map_at_point(item,idx,maps,allitems,targetitem,targetheader,outnav,numtiles=1,outformat='mrc'):
+# creates a virtual map at a point item 
+    """
+    
+
+    Parameters
+    ----------
+    item : navitem dict
+        The target point item.
+    p_map : merged map dict
+        The source map.
+    newmapid : nav item ID (int)
+        a new Nav ID for the virtual map.
+    groupid : nav item ID (int)
+        group ID for the virtual map.
+    targetitem : navitem dict
+        target/reference map.
+    targetheader : mapheader dict
+        header of the target/ref map.
+    numtiles : int, optional
+        Number of montage tiles for virtual map (squared) The default is 1.
+    outformat : 'tif' or 'mrc', optional
+        Output format of the virtual map. The default is 'mrc'.
+
+    Returns
+    -------
+    newnavitem : navitem dict
+        the navitem of the new virtual map.
+    item : navitem dict
+        the original navitem (with some modifications).
+
+    """
+    
+    
+    
+    if numtiles>1:
+        # montages can only be created in TIF/idoc
+        outformat = 'tif'       
+                
+    mapitem = realign_map(item,allitems)      
+    itemid = mapitem['# Item']
+    delim = 100000
+    checkitems=allitems.copy()
+    
+    checkitems.extend(outnav)
+    
+    newmapid = newID(checkitems,divmod(int(targetitem['MapID'][0]),delim)[0]*delim+idx)
+
+    
+    if not itemid in maps.keys():
+        maps[itemid] = mergemap(mapitem)
+        groupid = [str(newID(allitems,999000000+int(mapitem['MapID'][0][-6:])))]
+        print('add original map to navigator')
+        # NoRealign
+        mapitem['Color'] = '5'            
+        maps['mapnav'].append(mapitem)
+     
+    else:
+        groupid = outnav[-1]['GroupID']    
+    
+    map_mat = maps[itemid]['matrix'] 
+    
+    t_mat = map_matrix(targetitem)
+    
+    maptf = (numpy.linalg.inv(map_mat) * t_mat).T  
+    
+    xval = float(item['StageXYZ'][0]) #(float(item['PtsX'][0]))
+    yval = float(item['StageXYZ'][1]) #(float(item['PtsY'][0]))
+    
+    pt = numpy.array([xval,yval])
+    
+    # calculate the pixel coordinates
+    
+    pt_px1 = get_pixel(item,maps[itemid])
+    
+    px_scale = targetheader['pixelsize'] /(maps[itemid]['mapheader']['pixelsize'] )
+    
+    imsz1 = numpy.array([targetheader['ysize'],targetheader['xsize']])
+    
+    im = numpy.array(maps[itemid]['im'])
+    im2, p2 = map_extract(im,pt_px1,pt_px1,px_scale,numtiles*imsz1,maptf)
+    im2size = im2.shape
+      
+    if min(im2.shape)<200:
+      print('Warning! Item ' + item['# Item'] + ' is not within the map frame. Ignoring it')
+      newnavitem=None
+    else:
+      
+      # pad item numbers to 4 digits    
+      if item['# Item'].isdigit(): item['# Item'] = item['# Item'].zfill(4)
+      
+      newnavitem = dict(targetitem)
+      
+           
+      if 'MapLDConSet' in targetitem.keys():
+            newnavitem['MapLDConSet'] = targetitem['MapLDConSet']
+            newmapid = newmapid + int(targetitem['MapLDConSet'][0])
+            if targetitem['MapLDConSet'] == ['0']:
+                prefix = 'V_'
+                newnavitem['Acquire'] = ['0']
+            elif targetitem['MapLDConSet'] == ['4']:
+                newnavitem['Acquire'] = ['0']
+                prefix = 'P_'
+            else:
+                prefix='m_'
+                newnavitem['Acquire'] = ['1']
+      else:
+            prefix=''
+      
+      
+      if numtiles <2 :          
+          
+          if outformat=='tif':
+              newnavitem['ImageType'] = ['2']
+              imfile = prefix + item['# Item'] + ".tif" # '.mrc'
+              
+              if os.path.exists(imfile): os.remove(imfile)
+              io.imsave(imfile,im2.astype('uint16'), check_contrast=False)
+          
+          elif outformat=='mrc':
+                im4 = numpy.rot90(im2,3)
+                imfile = prefix + item['# Item'] + '.mrc'
+                if os.path.exists(imfile): os.remove(imfile)
+                with mrc.new(imfile) as mrcf:
+                    mrcf.set_data(im4.T)
+                    mrcf.close()                 
+      
+      else:
+          # generate virtual montage
+          imfile = prefix + item['# Item'] +".idoc"
+          
+          newnavitem['ImageType'] = ['3']
+          newnavitem['MapFramesXY'] = [str(numtiles),str(numtiles)]
+          newnavitem['MontBinning'] = '1'
+          newnavitem[' MapMontage'] = '1'
+          MinMaxMean=' '.join(map(str,[im2.min(),im2.max(),int(round(im2.mean()))]))
+          
+          idocout = ['ImageSeries = 1']
+          psstr = 'PixelSpacing = '+ ' %0.2f' % (targetheader['pixelsize']*10000)
+          idocout.append(psstr)
+          
+          
+          tilesz = (numpy.array(im2size)/numtiles).astype(int)
+          # tilesz=numpy.flip(tilesz)
+          
+          idocout.append('ImageSize = '+str(tilesz[1])+' '+str(tilesz[0]))
+          idocout.append('Montage = 1')
+          idocout.append('DataMode = 6')
+          idocout.append('')        
+          
+          for tile in range(numtiles**2):
+              tilepos = list(numpy.divmod(tile,numtiles))
+              tilepos0= tilepos.copy()
+              tilepos[0]=numtiles-tilepos[0]-1
+              
+              
+              
+              imrange = [[(tilepos[ix]*tilesz[ix]),((tilepos[ix]+1)*tilesz[ix])] for ix in range(2)]
+              im3 = im2[imrange[0][0]:imrange[0][1],imrange[1][0]:imrange[1][1]]
+              
+              tilefile = prefix + item['# Item'] + '_' + str(tile)+".tif"
+              
+              if os.path.exists(imfile): os.remove(imfile)          
+              io.imsave(tilefile,im3.astype('uint16'), check_contrast=False)
+                              
+              idocout.append('[Image = '+tilefile+']')
+              idocout.append('PieceCoordinates = '+str(tilepos0[1]*tilesz[1])+' '+str(tilepos0[0]*tilesz[0])+' 0')
+              idocout.append('MinMaxMean = '+MinMaxMean)
+              idocout.append('')
+          
+          
+          with open(imfile,'w') as imf:
+              imf.writelines("%s\n" % line for line in idocout)
+      
+      
+      
+      cx = im2.shape[1]
+      cy = im2.shape[0]
+      
+      a = [[0,0],[cx,0],[cx,cy],[0,cy],[0,0]]
+      a = numpy.matrix(a) - [cx/2 , cy/2]
+      
+      t_mat_i = numpy.linalg.inv(t_mat)
+      
+      c1 = a*t_mat_i.T + pt
+      
+      cnx = numpy.array(numpy.transpose(c1[:,1]))
+      cnx = numpy.array2string(cnx,separator=' ')
+      cnx = cnx[2:-2]
+      
+      cny = numpy.array(numpy.transpose(c1[:,0]))
+      cny = " ".join(list(map(str,cny)))
+      cny = cny[1:-2]
+      
+      
+      # fill navigator
+      
+      item['Acquire'] = '0'
+      
+      # NoRealign
+      # item['Color'] = '5'  
+
+      
+      
+      
+      
+      
+      
+      newnavitem['MapFile'] = [imfile]
+      newnavitem['StageXYZ'] = item['StageXYZ']
+      newnavitem['RawStageXY'] = item['StageXYZ'][0:2]
+      newnavitem['PtsY'] = cnx.split()
+      newnavitem['PtsX'] = cny.split()
+      newnavitem['NumPts'] = ['1']
+      newnavitem['Note'] = newnavitem['MapFile']
+      newnavitem['MapID'] = [str(newmapid)]
+      newnavitem['Acquire'] = ['1']
+      newnavitem['MapSection'] = ['0']
+      newnavitem['SamePosId'] = item['MapID']
+      newnavitem['GroupID'] = groupid
+      newnavitem['MapWidthHeight'] = [str(im2size[1]),str(im2size[0])]
+      
+      newnavitem['MapMinMaxScale'] = [str(numpy.min(im2)),str(numpy.max(im2))]
+      newnavitem['NumPts'] = ['5']
+      newnavitem['# Item'] = prefix + item['# Item']    
+      
+      
+      
+    return newnavitem, maps, item
+      
+    
+    
+    
+    
