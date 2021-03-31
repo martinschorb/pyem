@@ -999,49 +999,30 @@ def imcrop(im1,c,sz):
   # crops an image of a given size (2 element numpy array) around a pixel coordinate (2 element numpy array)
   # in case the coordinate is close to an edge, the cropped image will have the maximum possible width/height
   # and centering of the image
-    """
-    
-    
-    Parameters
-    ----------
-    im1 : np.array (2D)
-        input image.
-    c : np.array (2x1)
-        center around which to crop.
-    sz : np.array (2x1)
-        size of the crop region. (maximum, depending on image boundaries)
-    
-    Returns
-    -------
-    im2 : np.array (2D)
-        output cropped image.
-    
-    """
 
-    
-    sz_x = sz[0]
-    sz_y = sz[1]
-    
-    ximsz = im1.shape[0]
-    yimsz = im1.shape[1]
-    
-    xllim = max([0,c[1]-sz_x/2])
-    xulim = min([ximsz,c[1]+sz_x/2])
-    
-    x_range = min([c[1]-xllim,xulim-c[1]])
-    xel = range(int(c[1] - x_range), int(c[1] + x_range))
-    
-    yllim = max([0,c[0]-sz_y/2])
-    yulim = min([yimsz,c[0]+sz_y/2])
-    
-    y_range = min([c[0]-yllim,yulim-c[0]])
-    
-    yel = range(int(c[0] - y_range), int(c[0] + y_range))
-    
-    im2 = im1[xel,:]
-    im2 = im2[:,yel]
-    
-    return im2
+  sz_x = sz[0]
+  sz_y = sz[1]
+
+  ximsz = im1.shape[0]
+  yimsz = im1.shape[1]
+
+  xllim = max([0,c[1]-sz_x/2])
+  xulim = min([ximsz,c[1]+sz_x/2])
+
+  x_range = min([c[1]-xllim,xulim-c[1]])
+  xel = range(int(c[1] - x_range), int(c[1] + x_range))
+
+  yllim = max([0,c[0]-sz_y/2])
+  yulim = min([yimsz,c[0]+sz_y/2])
+
+  y_range = min([c[0]-yllim,yulim-c[0]])
+
+  yel = range(int(c[0] - y_range), int(c[0] + y_range))
+
+  im2 = im1[xel,:]
+  im2 = im2[:,yel]
+
+  return im2
 
 
 # --------------------------------------
@@ -1114,129 +1095,98 @@ def img2polygon(img, n_poly, center, radius):
 
 def map_extract(im,c,p,px_scale,t_size,mat,int8=False):
 # extracts an image from a given position in an existing map and links positions inside
+  imsz1 = t_size * px_scale
 
-    """
-    
+  # extract image (1.42x to enable rotation)
+  cropsize1 = imsz1 * 1.42
 
-    Parameters
-    ----------
-    im : np.array
-        inut image.
-    c : np.array (2x1)
-        center of target region.
-    p : list of np.arrays (2xn)
-        points in the image that are transformed.
-    px_scale : float
-        relative scale of input and output image
-    t_size : np.array (2x1)
-        target size of output image (maximum, limited by original region boundaries).
-    mat : np.mat/np.array (2x2)
-        transformation matrix.
-    int8 : bool, optional
-        if conversion of the outoput image to 8bit is desired. The default is False.
+  cropsize = numpy.array([cropsize1.max(),cropsize1.max()])
 
-    Returns
-    -------
-    im3 : np.array (2D)
-        output extracted image.
-    
-    p4 : list of np.arrays (2xn)
-        output pixel coordinates of input points 
+  im1 = imcrop(im,c,cropsize)
 
-    """
+  realsize = numpy.array(im1.shape)
+
+  # center to origin
+  p1 = p - c
+
+  # create homogenous matrices
+  mat_i = numpy.linalg.inv(mat)
     
-    imsz1 = t_size * px_scale
-    
-    # extract image (1.42x to enable rotation)
-    cropsize1 = imsz1 * 1.42
-    
-    cropsize = numpy.array([cropsize1.max(),cropsize1.max()])
-    
-    im1 = imcrop(im,c,cropsize)
-    
-    realsize = numpy.array(im1.shape)
-    
-    # center to origin
-    p1 = p - c
-    
-    # create homogenous matrices
-    mat_i = numpy.linalg.inv(mat)
+  o_size=numpy.array(numpy.abs(realsize * mat).astype(numpy.int)).squeeze()
+  
+  M = numpy.concatenate((mat_i,numpy.array([[0],[0]])),axis=1)
+  M = numpy.concatenate((M,[[0,0,1]]),axis=0)
+
+  mat1 = numpy.eye(3)
+  mat1[0,2] = -(o_size[1]-1)/2
+  mat1[1,2] = -(o_size[0]-1)/2
+
+  mat2 = numpy.eye(3)
+  mat2[0,2] = (realsize[1]-1)/2
+  mat2[1,2] = (realsize[0]-1)/2
+
+  M1 = numpy.dot(mat2,M)
+  M2 = numpy.dot(M1,mat1)
+  
+
+  if int8:
+     im1 = numpy.round(255.0 * (im1 - im1.min()) / (im1.max() - im1.min() - 1.0)).astype(numpy.uint8)
+   
+  
+ 
+    # interpolate image
+  im2 = tf.warp(im1,M2,output_shape=o_size,preserve_range=True)
+
+  #check if output image size needs to be modified
+
+  limitsize = numpy.min([o_size,t_size],axis=0).squeeze()
+
+
+  if (limitsize==t_size).all():
+      im3=im2.copy()
+      shift = [0,0]
+  else:
+      # determine limitation of image by the borders of rotated crop
       
-    o_size=numpy.array(numpy.abs(realsize * mat).astype(numpy.int)).squeeze()
-    
-    M = numpy.concatenate((mat_i,numpy.array([[0],[0]])),axis=1)
-    M = numpy.concatenate((M,[[0,0,1]]),axis=0)
-    
-    mat1 = numpy.eye(3)
-    mat1[0,2] = -(o_size[1]-1)/2
-    mat1[1,2] = -(o_size[0]-1)/2
-    
-    mat2 = numpy.eye(3)
-    mat2[0,2] = (realsize[1]-1)/2
-    mat2[1,2] = (realsize[0]-1)/2
-    
-    M1 = numpy.dot(mat2,M)
-    M2 = numpy.dot(M1,mat1)
-    
-    
-    if int8:
-       im1 = numpy.round(255.0 * (im1 - im1.min()) / (im1.max() - im1.min() - 1.0)).astype(numpy.uint8)
-     
-    
-     
-      # interpolate image
-    im2 = tf.warp(im1,M2,output_shape=o_size,preserve_range=True)
-    
-    #check if output image size needs to be modified
-    
-    limitsize = numpy.min([o_size,t_size],axis=0).squeeze()
-    
-    
-    if (limitsize==t_size).all():
-        im3=im2.copy()
-        shift = [0,0]
-    else:
-        # determine limitation of image by the borders of rotated crop
-        
-        rotmat=mat/numpy.sqrt(numpy.linalg.det(mat))
-        
-        corr_angle=4*numpy.arccos(numpy.mean(abs(numpy.diag(rotmat))))
-        
-        sq2=numpy.sqrt(2)/4
-        
-        factor=sq2*5/2+sq2*numpy.cos(corr_angle)
-        
-        outsize = numpy.min([o_size*factor,t_size],axis=0).squeeze()
-     
-    
-        # make sure map size matches the original minimum camera pixel block limits (powers of 2)
-        ii=1
-        while (numpy.mod(t_size,2**ii)==0).all() and ii<4:
-            ii=ii+1
-    
-        shift =   numpy.mod(outsize,2**ii)/2
-        outsize = 2**ii*numpy.floor(outsize/(2**ii))   
-    
-        im3 = imcrop(im2,[o_size[1]/2+shift[1],o_size[0]/2+shift[0]],outsize)
-    
-    
-        im3[im3==0]=numpy.mean(im3[:])
-    
-    f_size = im3.shape
-    
-    if int8:
-        im3=im3.astype(numpy.int8)
-    else:
-        im3=im3.astype(numpy.int16)
-    
-    p4 = p1 * mat.T
-    
-    p4[:,0] =  f_size[1]/2 + p4[:,0]
-    p4[:,1] =  f_size[0]/2 + p4[:,1]
-    
-    
-    
-    return im3, p4
+      rotmat=mat/numpy.sqrt(numpy.linalg.det(mat))
+      
+      corr_angle=4*numpy.arccos(numpy.mean(abs(numpy.diag(rotmat))))
+      
+      sq2=numpy.sqrt(2)/4
+      
+      factor=sq2*5/2+sq2*numpy.cos(corr_angle)
+      
+      outsize = numpy.min([o_size*factor,t_size],axis=0).squeeze()
+   
+
+      # make sure map size matches the original minimum camera pixel block limits (powers of 2)
+      ii=1
+      while (numpy.mod(t_size,2**ii)==0).all() and ii<4:
+          ii=ii+1
+
+      shift =   numpy.mod(outsize,2**ii)/2
+      outsize = 2**ii*numpy.floor(outsize/(2**ii))   
+
+      im3 = imcrop(im2,[o_size[1]/2+shift[1],o_size[0]/2+shift[0]],outsize)
+
+
+      im3[im3==0]=numpy.mean(im3[:])
+
+  f_size = im3.shape
+
+  if int8:
+      im3=im3.astype(numpy.int8)
+  else:
+      im3=im3.astype(numpy.int16)
+
+  p4 = p1 * mat.T
+
+  p4[:,0] =  f_size[1]/2 + p4[:,0]
+  p4[:,1] =  f_size[0]/2 + p4[:,1]
+
+
+
+  return im3, p4
 
 
 
@@ -1833,16 +1783,16 @@ def virt_map_at_point(item,idx,maps,allitems,targetitem,targetheader,outnav,numt
     ----------
     item : navitem dict
         The target point item.
-    idx : int
-        acquisition index.
-    allitems : list of nav items 
-        full navigator.    
+    p_map : merged map dict
+        The source map.
+    newmapid : nav item ID (int)
+        a new Nav ID for the virtual map.
+    groupid : nav item ID (int)
+        group ID for the virtual map.
     targetitem : navitem dict
         target/reference map.
     targetheader : mapheader dict
         header of the target/ref map.
-    outnav : list
-        already generated virtual maps (nav items) to check for ID duplicates
     numtiles : int, optional
         Number of montage tiles for virtual map (squared) The default is 1.
     outformat : 'tif' or 'mrc', optional
