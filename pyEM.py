@@ -1162,7 +1162,7 @@ def map_extract(im,c,p,px_scale,t_size,mat,int8=False):
     # create homogenous matrices
     mat_i = numpy.linalg.inv(mat)
       
-    o_size=numpy.array(numpy.abs(realsize * mat).astype(numpy.int)).squeeze()
+    o_size=numpy.max(numpy.abs([[0,realsize[1]] *mat,[realsize[0],0] *mat]),axis=0).astype(numpy.int).squeeze()
     
     M = numpy.concatenate((mat_i,numpy.array([[0],[0]])),axis=1)
     M = numpy.concatenate((M,[[0,0,1]]),axis=0)
@@ -1185,7 +1185,7 @@ def map_extract(im,c,p,px_scale,t_size,mat,int8=False):
     
      
       # interpolate image
-    im2 = tf.warp(im1,M2,output_shape=o_size,preserve_range=True)
+    im2 = tf.warp(im1,M2,output_shape=o_size,preserve_range=True,mode='edge')#cval=numpy.median(im1[:]))
     
     #check if output image size needs to be modified
     
@@ -1193,34 +1193,36 @@ def map_extract(im,c,p,px_scale,t_size,mat,int8=False):
     
     
     if (limitsize==t_size).all():
-        im3=im2.copy()
+        # im3=im2.copy()
+        outsize = t_size
         shift = [0,0]
     else:
         # determine limitation of image by the borders of rotated crop
         
-        rotmat=mat/numpy.sqrt(numpy.linalg.det(mat))
+        rotmat=mat_i/numpy.sqrt(numpy.linalg.det(mat_i))
         
-        corr_angle=4*numpy.arccos(numpy.mean(abs(numpy.diag(rotmat))))
+        ca = numpy.mean(abs(numpy.diag(rotmat)))
         
-        sq2=numpy.sqrt(2)/4
+        sq2 = numpy.sqrt(2)/4
         
-        factor=sq2*5/2+sq2*numpy.cos(corr_angle)
+        factor = 2*sq2 + sq2 *ca
         
-        outsize = numpy.min([o_size*factor,t_size],axis=0).squeeze()
+        outsize = numpy.min([o_size*factor,limitsize,o_size],axis=0).squeeze()
      
     
         # make sure map size matches the original minimum camera pixel block limits (powers of 2)
         ii=1
+
         while (numpy.mod(t_size,2**ii)==0).all() and ii<4:
             ii=ii+1
     
         shift =   numpy.mod(outsize,2**ii)/2
         outsize = 2**ii*numpy.floor(outsize/(2**ii))   
     
-        im3 = imcrop(im2,[o_size[1]/2+shift[1],o_size[0]/2+shift[0]],outsize)
+    im3 = imcrop(im2,[o_size[1]/2+shift[1],o_size[0]/2+shift[0]],outsize)
     
     
-        im3[im3==0]=numpy.mean(im3[:])
+    # im3[im3==0]=numpy.median(im3[:])
     
     f_size = im3.shape
     
@@ -1899,7 +1901,7 @@ def virt_map_at_point(item,idx,maps,allitems,targetitem,targetheader,outnav,numt
     
     pt_px1 = get_pixel(item,maps[itemid])
     
-    px_scale = targetheader['pixelsize'] /(maps[itemid]['mapheader']['pixelsize'] )
+    px_scale = targetheader['pixelsize'] / (maps[itemid]['mapheader']['pixelsize']) 
     
     imsz1 = numpy.array([targetheader['ysize'],targetheader['xsize']])
     
