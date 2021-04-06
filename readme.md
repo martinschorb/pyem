@@ -84,7 +84,7 @@ functions to extract information from a navigator item
 
 main functions that provide key actions
 
-- **virt_map_at_point** creates a virtual map at a Navigator point item
+- **virt_map_at_point:** creates a virtual map at a Navigator point item
 - **mergemap:**  processes a map item and merges the mosaic using IMOD tools, generates a dictionary with metadata for this procedure
 - **img2polygon:**  converts a binary image into a polygon (list of points) describing its outline
 - **map_extract:**  extracts an image from a given position in an existing map and links positions inside
