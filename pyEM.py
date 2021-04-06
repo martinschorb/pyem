@@ -103,12 +103,16 @@ def nav_item(inlines,label):
       #load XML
       root = ET.fromstringlist(lines)
       el = root.findall('*[@name="%s"]' %label)
-      root.remove(el[0])
-      newroot = ET.Element('navigator')
-      newroot.append(el[0])
-
-      result = xmltonav(ET.tostringlist(newroot))[0]
-      lines = ET.tostringlist(root)
+      if el==[]:
+          print('ERROR: Navigator Item ' + label + ' not found!')
+          result=[]
+      else:    
+          root.remove(el[0])
+          newroot = ET.Element('navigator')
+          newroot.append(el[0])
+    
+          result = xmltonav(ET.tostringlist(newroot))[0]
+          lines = ET.tostringlist(root)
 
     else:
         if lines[-1] != '':
@@ -995,30 +999,49 @@ def imcrop(im1,c,sz):
   # crops an image of a given size (2 element numpy array) around a pixel coordinate (2 element numpy array)
   # in case the coordinate is close to an edge, the cropped image will have the maximum possible width/height
   # and centering of the image
+    """
+    
+    
+    Parameters
+    ----------
+    im1 : np.array (2D)
+        input image.
+    c : np.array (2x1)
+        center around which to crop.
+    sz : np.array (2x1)
+        size of the crop region. (maximum, depending on image boundaries)
+    
+    Returns
+    -------
+    im2 : np.array (2D)
+        output cropped image.
+    
+    """
 
-  sz_x = sz[0]
-  sz_y = sz[1]
-
-  ximsz = im1.shape[0]
-  yimsz = im1.shape[1]
-
-  xllim = max([0,c[1]-sz_x/2])
-  xulim = min([ximsz,c[1]+sz_x/2])
-
-  x_range = min([c[1]-xllim,xulim-c[1]])
-  xel = range(int(c[1] - x_range), int(c[1] + x_range))
-
-  yllim = max([0,c[0]-sz_y/2])
-  yulim = min([yimsz,c[0]+sz_y/2])
-
-  y_range = min([c[0]-yllim,yulim-c[0]])
-
-  yel = range(int(c[0] - y_range), int(c[0] + y_range))
-
-  im2 = im1[xel,:]
-  im2 = im2[:,yel]
-
-  return im2
+    
+    sz_x = sz[0]
+    sz_y = sz[1]
+    
+    ximsz = im1.shape[0]
+    yimsz = im1.shape[1]
+    
+    xllim = max([0,c[1]-sz_x/2])
+    xulim = min([ximsz,c[1]+sz_x/2])
+    
+    x_range = min([c[1]-xllim,xulim-c[1]])
+    xel = range(int(c[1] - x_range), int(c[1] + x_range))
+    
+    yllim = max([0,c[0]-sz_y/2])
+    yulim = min([yimsz,c[0]+sz_y/2])
+    
+    y_range = min([c[0]-yllim,yulim-c[0]])
+    
+    yel = range(int(c[0] - y_range), int(c[0] + y_range))
+    
+    im2 = im1[xel,:]
+    im2 = im2[:,yel]
+    
+    return im2
 
 
 # --------------------------------------
@@ -1091,54 +1114,53 @@ def img2polygon(img, n_poly, center, radius):
 
 def map_extract(im,c,p,px_scale,t_size,mat,int8=False):
 # extracts an image from a given position in an existing map and links positions inside
-  imsz1 = t_size * px_scale
 
-  # extract image (1.42x to enable rotation)
-  cropsize1 = imsz1 * 1.42
+    """
+    
 
-  cropsize = numpy.array([cropsize1.max(),cropsize1.max()])
+    Parameters
+    ----------
+    im : np.array
+        inut image.
+    c : np.array (2x1)
+        center of target region.
+    p : list of np.arrays (2xn)
+        points in the image that are transformed.
+    px_scale : float
+        relative scale of input and output image
+    t_size : np.array (2x1)
+        target size of output image (maximum, limited by original region boundaries).
+    mat : np.mat/np.array (2x2)
+        transformation matrix.
+    int8 : bool, optional
+        if conversion of the outoput image to 8bit is desired. The default is False.
 
-  im1 = imcrop(im,c,cropsize)
+    Returns
+    -------
+    im3 : np.array (2D)
+        output extracted image.
+    
+    p4 : list of np.arrays (2xn)
+        output pixel coordinates of input points 
 
-  realsize = numpy.array(im1.shape)
-
-  # center to origin
-  p1 = p - c
-
-  # create homogenous matrices
-  mat_i = numpy.linalg.inv(mat)
-
-  M = numpy.concatenate((mat_i,numpy.array([[0],[0]])),axis=1)
-  M = numpy.concatenate((M,[[0,0,1]]),axis=0)
-
-  mat1 = numpy.eye(3)
-  mat1[0,2] = -(t_size[1]-1)/2
-  mat1[1,2] = -(t_size[0]-1)/2
-
-  mat2 = numpy.eye(3)
-  mat2[0,2] = (realsize[1]-1)/2
-  mat2[1,2] = (realsize[0]-1)/2
-
-  M1 = numpy.dot(mat2,M)
-  M2 = numpy.dot(M1,mat1)
-
-  if int8:
-     im1 = numpy.round(255.0 * (im1 - im1.min()) / (im1.max() - im1.min() - 1.0)).astype(numpy.uint8)
-
-    # interpolate image
-  im2 = tf.warp(im1,M2,output_shape=t_size,preserve_range=True)
-
-  #check if output image size needs to be modified
-
-  limitsize = numpy.min([[realsize/px_scale],[t_size]],axis=0).squeeze()
-
-
-  if (limitsize==t_size).all():
-    im3=im2.copy()
-    shift = [0,0]
-  else:      
-      # determine limitation of image by the borders of rotated crop
-    rotmat=M2[:2,:2]
+    """
+    
+    imsz1 = t_size * px_scale
+    
+    # extract image (1.42x to enable rotation)
+    cropsize1 = imsz1 * 1.42
+    
+    cropsize = numpy.array([cropsize1.max(),cropsize1.max()])
+    
+    im1 = imcrop(im,c,cropsize)
+    
+    realsize = numpy.array(im1.shape)
+    
+    # center to origin
+    p1 = p - c
+    
+    # create homogenous matrices
+    mat_i = numpy.linalg.inv(mat)
       
     o_size=numpy.max(numpy.abs([[0,realsize[1]] *mat,[realsize[0],0] *mat]),axis=0).astype(numpy.int).squeeze()
     
@@ -1168,7 +1190,7 @@ def map_extract(im,c,p,px_scale,t_size,mat,int8=False):
     #check if output image size needs to be modified
     
     limitsize = numpy.min([o_size,t_size],axis=0).squeeze()
-
+    
     
     if (limitsize==t_size).all():
         # im3=im2.copy()
@@ -1217,7 +1239,6 @@ def map_extract(im,c,p,px_scale,t_size,mat,int8=False):
     
     
     return im3, p4
-
 
 
 
@@ -1801,7 +1822,6 @@ def pointitem(label,regis=1):
     return point
 
 
-
 # ------------------------------------------------------------
 
 
@@ -2036,4 +2056,7 @@ def virt_map_at_point(item,idx,maps,allitems,targetitem,targetheader,outnav,numt
       
     return newnavitem, maps, item
       
-
+    
+    
+    
+    
