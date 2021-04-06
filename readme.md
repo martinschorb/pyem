@@ -14,10 +14,11 @@
 
 4. [Set up integration in SerialEM GUI](https://git.embl.de/schorb/pyem/blob/master/doc/serialemtools.md)
 
-5. [Set up KNIME](https://git.embl.de/schorb/pyem/blob/master/doc/knime.md) 
+5. [Set up KNIME](https://git.embl.de/schorb/pyem/blob/master/doc/knime.md)
 
-6. [Function List](#Functions)
+6. [Test the virtual map functionality](#Test)
 
+7. [Function List](#Functions)
 
 
 ## Installation instructions<a name="installation"></a>
@@ -50,7 +51,9 @@ Find out how to make py-EM and other external tools available through SerialEM's
 
 Find out how to link py-EM and other external tools using KNIME [here](https://git.embl.de/schorb/pyem/blob/master/doc/knime.md)
 
+## Test virtual map functionality:<a name="Tests"></a>
 
+To test the virtual map functionality, run `test.py`. This will automatically fetch the two relevant application scripts as well as two sets of test data into the current working directory. It will then perform the virtual map extraction on the test data and you can compare the results with the templates provided in the `results` folder.
 
 ## Function list:<a name="Functions"></a>
 
@@ -63,7 +66,7 @@ generic functions to parse/manipulate navigator/adoc files
 - **fullnav:**  parses a full nav file (text list) and returns a list of dictionaries
 - **itemtonav:**  converts a dictionary autodoc item variable into text list suitable for export into navigator format
 - **newID:**  checks if the provided item ID already exists in a navigator and gives the next unique ID - input:list of dict, integer ID
-- **newreg:** gives the next available registration for the input set of navigator items 
+- **newreg:** gives the next available registration for the input set of navigator items
 - **duplicate_items:** duplicates items from a list, optional second parameter is a list of labels of the items to duplicate. Default is to use the _Acquire_ flag. Optionally dupicates associated maps as well.
 - **nav_find:** finds navigator items with a given key/value pair.
 - **nav_selection:**  extracts a selection of navigator items into a new navigator, _Acquire_ can be chosen as a default flag, - input: list of items = optional list of item labels
@@ -77,10 +80,11 @@ functions to extract information from a navigator item
 - **map_file:**  extracts the file name of a map item. Looks for the image file in absolute and relative path.
 - **map_header:**  extracts parts of an MRC header. input: memory-mapped mrc object (see _mrcfile_ package)
 - **realign_map:**  determines which map to align to for given navigator item
-- **get_pixel** determines the pixel coordinates of a navigator item in its associated map (either merged or on the tile) 
+- **get_pixel** determines the pixel coordinates of a navigator item in its associated map (either merged or on the tile)
 
 main functions that provide key actions
 
+- **virt_map_at_point** creates a virtual map at a Navigator point item
 - **mergemap:**  processes a map item and merges the mosaic using IMOD tools, generates a dictionary with metadata for this procedure
 - **img2polygon:**  converts a binary image into a polygon (list of points) describing its outline
 - **map_extract:**  extracts an image from a given position in an existing map and links positions inside
@@ -94,5 +98,3 @@ accessory functions;
 - **cart2pol, pol2cart:** coordinate conversions
 - **imcrop:**  crops an image of a given size (2 element numpy array) around a pixel coordinate (2 element numpy array)
 - **findfile** will find files that match a search string in subfolders of the provided search directory
-    
-   
