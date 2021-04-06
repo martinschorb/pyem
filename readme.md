@@ -51,7 +51,7 @@ Find out how to make py-EM and other external tools available through SerialEM's
 
 Find out how to link py-EM and other external tools using KNIME [here](https://git.embl.de/schorb/pyem/blob/master/doc/knime.md)
 
-## Test virtual map functionality:<a name="Tests"></a>
+## Test virtual map functionality:<a name="Test"></a>
 
 To test the virtual map functionality, run `test.py`. This will automatically fetch the two relevant application scripts as well as two sets of test data into the current working directory. It will then perform the virtual map extraction on the test data and you can compare the results with the templates provided in the `results` folder.
 
