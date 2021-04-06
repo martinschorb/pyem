@@ -726,10 +726,10 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True,bigstitch=False):
                 else:
                     tilepx = tilepx1
 
-            if mdoc_item(mdoclines,'MontSection = 0') == []: #older mdoc file format, created before SerialEM 3.7x
+            if not '[MontSection = 0]' in mdoclines: #older mdoc file format, created before SerialEM 3.7x
                 print('Warning: mrc stack without montage information. Assume pixel size is consistent for all sections.')
                 str1=mdoclines[0]
-                pixelsize = float(mdoclines[0][str1.find('=')+1:])
+                pixelsize = float(mdoclines[0][str1.find('=')+1:])/ 10000 # in um
             else:
                 mont_item = mdoc_item(mdoclines,'MontSection = '+str(mapsection))
                 pixelsize = float(mont_item['PixelSpacing'][0])/ 10000 # in um
