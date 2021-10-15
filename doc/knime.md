@@ -8,7 +8,7 @@ Open KNIME Preferences. ("File > Preferences")
 ![KNIME preferences](https://git.embl.de/schorb/pyem/raw/master/doc/images/knime_pref.png)
 
 
-In "Install/Update > Available Software Sites", select "Stable Community Contributions" and check that "Community Contributions" is also active. 
+In "Install/Update > Available Software Sites", select "Stable Community Contributions" and check that "Community Contributions (Experimental)" is also active. 
 
 ![KNIME updates](https://git.embl.de/schorb/pyem/raw/master/doc/images/knime_updates.png)
 
