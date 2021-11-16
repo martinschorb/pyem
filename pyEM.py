@@ -42,6 +42,8 @@ from operator import itemgetter
 import fnmatch
 from subprocess import Popen, PIPE
 import xml.etree.ElementTree as ET
+import fnmatch
+
 
 
 mrcext = ('.st','.mrc','.map','.rec','.ali','.preali')
@@ -137,6 +139,48 @@ def nav_item(inlines,label):
     return result,lines
 
 
+
+# -------------------------------
+#%%
+
+def adoc_items(lines1,search,header=False):
+
+    # extracts the content block of an item of given label in a mdoc file
+    # returns it as a dictionary
+    
+    result = []
+    
+    if lines1[-1] != '':
+        lines = lines1+['']
+    else:
+        lines=lines1
+
+    if header:
+        item = lines[:lines.index('')]
+        result.append(parse_adoc(item))
+    else:
+        pattern = '*'+search+'*'
+        matching = fnmatch.filter(lines, pattern)
+        
+        
+        
+        
+        # search for mdoc key item with the given label
+        for searchstr in matching:
+            if not searchstr in lines:
+                print('ERROR: String ' + search + ' not found!')
+                itemdict={}
+            else:
+                itemstartline = lines.index(searchstr)+1
+                itemendline = lines[itemstartline:].index('')
+    
+                item = lines[itemstartline:itemstartline+itemendline]
+                
+                itemdict = parse_adoc(item)
+                itemdict['# '+search]=lines[itemstartline-1][lines[itemstartline-1].find(' = ') + 3:-1]
+            result.append(itemdict)
+
+    return result
 
 # -------------------------------
 #%%
@@ -513,7 +557,8 @@ def map_matrix(mapitem):
 # -------------------------------
 #%%
 
-def mergemap(mapitem,crop=False,black=False,blendmont=True,bigstitch=False):
+def mergemap(mapitem,crop=False,black=False,
+             blendmont=True,bigstitch=False,mapfile=None,mapsection=0):
 #%%
   # processes a map item and merges the mosaic using IMOD
   # generates a dictionary with metadata for this procedure
@@ -524,17 +569,37 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True,bigstitch=False):
   blend_in = blendmont
   m=dict()
   m['Sloppy'] = False
-
-  # extract map properties
-
-  mat = map_matrix(mapitem)
-
-  #find map file
-  mapfile = map_file(mapitem)
-  # print('processing mapitem '+mapitem['# Item']+' - file: '+mapfile)
-  mapsection = list(map(int,mapitem['MapSection']))[0]
-
-  m['frames'] = list(map(int,mapitem['MapFramesXY']))
+  
+  
+  
+  
+  # check if function is called with only a map file without navigator 
+  
+  if mapfile is None:
+      
+      # extract map properties
+    
+      mat = map_matrix(mapitem)
+    
+      #find map file
+      mapfile = map_file(mapitem)
+      # print('processing mapitem '+mapitem['# Item']+' - file: '+mapfile)
+      mapsection = list(map(int,mapitem['MapSection']))[0]
+    
+      m['frames'] = list(map(int,mapitem['MapFramesXY']))
+      
+  else:
+      
+      mat = numpy.eye(2)
+     
+      callcmd='extractpieces '+mapfile+' -ou '+mapfile+'.pcs'
+      os.system(callcmd)
+      pxpos = loadtext(mapfile+'.pcs')     
+      tilepx = numpy.array([re.split(' +',line) for line in pxpos])
+      frames = numpy.unique(tilepx[:,0:2],axis=0)
+      m['frames'] = [frames.shape[0],1]
+      
+      
   montage_tiles = numpy.prod(m['frames'])
 
   tileidx_offset = 0
@@ -745,7 +810,7 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True,bigstitch=False):
 
             pixelsize = 1./numpy.sqrt(abs(numpy.linalg.det(mat)))
             callcmd = 'extracttilts ' + mapfile + ' -stage -all'
-            os.system(callcmd)
+            # os.system(callcmd)
             p2 = Popen(callcmd, shell=True, stdout=PIPE)
             o1=list()
             for line in p2.stdout:
@@ -811,9 +876,15 @@ def mergemap(mapitem,crop=False,black=False,blendmont=True,bigstitch=False):
         else:
             mergefile = mapfile
             im = mf.data
-
-            mergeheader['xsize'] = int(mapitem['MapWidthHeight'][0])
-            mergeheader['ysize'] = int(mapitem['MapWidthHeight'][1])
+            if not os.path.exists(mdocname):
+                callcmd='extractpieces '+mapfile+' -ou '+mapfile+'.pcs'
+                os.system(callcmd)
+                pxpos = loadtext(mapfile+'.pcs')
+                tilepx=[re.split(' +',line) for line in pxpos]
+                tilepx1 = tilepx
+            
+            mergeheader['xsize'] = int(tilepx[-1][0]) + im.shape[0]#int(mapitem['MapWidthHeight'][0])
+            mergeheader['ysize'] = int(tilepx[-1][1]) + im.shape[1]#int(mapitem['MapWidthHeight'][1])
 
     if not blend_in: im = mf.data
     im = numpy.rot90(numpy.transpose(im),axes=(0,1))
