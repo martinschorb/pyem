@@ -689,7 +689,7 @@ def mergemap(mapitem,crop=False,black=False,
             overlapy = imsz_y - mapheader['ysize']
 
             # check if idoc is supported in IMOD (blendmont)
-            imod_vercheck = (imod_ver[0]>=4 and imod_ver[1]>=10 and imod_ver[2]>=42)
+            imod_vercheck = (imod_ver[0]>=4 or (imod_ver[0]==4 and imod_ver[1]>=10))
 
             if blendmont:
                 mergebase = mbase + '_merged'+ '_s' + str(mapsection)
@@ -1009,8 +1009,8 @@ def call_blendmont(mapfile,mergebase,mapsection,black=False):
 
 
     # check IMOD version
-    if imod_ver[0]<4 | imod_ver[1]<10 | imod_ver[2]<29 :
-        print('ERROR: IMOD version needs to be > 4.10.29! Please update. Exiting' + '\n')
+    if imod_ver[0]<4 | (imod_ver==4 & imod_ver[1]<10) :
+        print('ERROR: IMOD version needs to be at least 4.11 ! Please update. Exiting' + '\n')
         sys.exit(1)
 
     # merge the montage to a single file
