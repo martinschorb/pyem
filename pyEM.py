@@ -447,7 +447,7 @@ def fullnav(inlines,header=False):
       # mdoc format
       c=[]
       for index,item in enumerate(navlines):
-        if item.find('[')>-1:
+        if item.find('[Item')>-1:
             if header:
                 return inlines[:index-1]
 
