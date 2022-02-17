@@ -147,6 +147,10 @@ def connectregions(inarr,cluster):
 
     return np.array(fullroute)
 
+
+# ===================================================================
+
+
 # load the navigator file
 navlines = em.loadtext(navfile)
 allitems = em.fullnav(navlines)
@@ -188,7 +192,7 @@ for sm in np.unique(supermont):
     poly = em.pointitem('SM_'+str(sm)+'_start')
     poly['Type'] = '1' #polygon
     poly['StageXYZ'] = sm_items[route_idx[0]]['StageXYZ']
-    poly['NumPts'] = [len(fullroute)]
+    poly['NumPts'] = [str(len(fullroute))]
     poly['PtsX'] = route_polyX
     poly['PtsY'] = route_polyY
 
@@ -210,7 +214,7 @@ outnav = list()
 outnav.extend(non_sm)
 outnav.extend(out_sm)
 
-print('----------------------------------------\n Done.\n Writing output Supermontage as '+newnavf
+print('----------------------------------------\n Done.\n Writing output Supermontage as '+newnavf+'.')
     
 em.write_navfile(newnavf,outnav,xml=False)
 
