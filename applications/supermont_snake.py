@@ -44,8 +44,10 @@ for sm in np.unique(supermont):
 
     thiscoos = smcoos[np.where(np.array(supermont)==sm)]
     thisitems = smitems[np.where(np.array(supermont)==sm)]
-    # sm_range = np.max(thiscoos, 0) - np.min(thiscoos, 0)
-    # snakedim = np.argmin(sm_range)
+    sm_range = np.max(thiscoos, 0) - np.min(thiscoos, 0)
+
+
+    snakedim = np.argmin(sm_range)
 
     templist = []
 
