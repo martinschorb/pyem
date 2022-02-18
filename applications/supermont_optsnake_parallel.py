@@ -218,7 +218,7 @@ def run(navfile):
     #newnav = non_acq
 
     # create new file by copying the header of the input file
-    newnavf = navfile[:-4] + '_snake.nav'
+    newnavf = navfile[:-4] + '_optimalsnake.nav'
 
     outnav = list()
     #

@@ -55,7 +55,7 @@ for sm in np.unique(supermont):
     templist=[]
 
     for idx,leg in enumerate(thiscoos):
-        print('checking line '+str(idx+1)+'...')
+        print('checking tile '+str(idx+1)+'...')
         if np.divmod(leg[1],2)[1]>0:
             templist.reverse()
             out_sm0.extend(templist)
