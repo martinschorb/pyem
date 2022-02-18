@@ -3,13 +3,9 @@
 import pyEM as em
 import numpy as np
 from scipy.cluster.vq import kmeans, whiten
-import os
 import sys
 from functools import partial
-if os.name == 'nt':
-    from multiprocessing.pool import ThreadPool as Pool
-else:
-    from multiprocessing import Pool
+from multiprocessing import Pool
 import tqdm
 # parse command line parameters
 
@@ -84,7 +80,7 @@ def par_randomtour(pidx0,inarr,start,maxdist,nb=True):
         return (d,route)
 
 
-def splitcoos(inarr,size=50):
+def splitcoos(inarr,size=60):
     n,rem=np.divmod(len(inarr),size)
     n+=1
 
@@ -139,7 +135,7 @@ def connectregions(inarr,cluster):
         routes[rt_ix] = np.flipud(rt)
 
     fullroute.extend(routes[np.argmin(dists)][:-1])
-    numtrials = 200
+    numtrials = 400
 
     for r_idx in range(len(regions)-1):
         pool = Pool()
