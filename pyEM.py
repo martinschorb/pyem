@@ -177,7 +177,7 @@ def adoc_items(lines1,search,header=False):
                 item = lines[itemstartline:itemstartline+itemendline]
                 
                 itemdict = parse_adoc(item)
-                itemdict['# '+item]=lines[itemstartline-1][lines[itemstartline-1].find(' = ') + 3:-1]
+                itemdict['# '+searchstr]=lines[itemstartline-1][lines[itemstartline-1].find(' = ') + 3:-1]
             result.append(itemdict)
 
     return result
