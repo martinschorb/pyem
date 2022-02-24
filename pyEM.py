@@ -177,7 +177,7 @@ def adoc_items(lines1,search,header=False):
                 item = lines[itemstartline:itemstartline+itemendline]
                 
                 itemdict = parse_adoc(item)
-                itemdict['# '+search]=lines[itemstartline-1][lines[itemstartline-1].find(' = ') + 3:-1]
+                itemdict['# '+item]=lines[itemstartline-1][lines[itemstartline-1].find(' = ') + 3:-1]
             result.append(itemdict)
 
     return result
@@ -2097,13 +2097,8 @@ def virt_map_at_point(item,idx,maps,allitems,targetitem,targetheader,outnav,numt
       item['Acquire'] = '0'
       
       # NoRealign
-      # item['Color'] = '5'  
+      # item['Color'] = '5'
 
-      
-      
-      
-      
-      
       
       newnavitem['MapFile'] = [imfile]
       newnavitem['StageXYZ'] = item['StageXYZ']
