@@ -849,8 +849,10 @@ def mergemap(mapitem,crop=False,black=False,
             im=imd
 
     else:
+
+        mergebase = mbase + '_merged'+ '_s' + str(mapsection)
+
         if blendmont:
-            mergebase = mbase + '_merged'+ '_s' + str(mapsection)
             mergefile = mergebase+'.mrc'
             if not os.path.exists(mergefile):
                 call_blendmont(mapfile,mergebase,mapsection,black)
@@ -880,7 +882,7 @@ def mergemap(mapitem,crop=False,black=False,
                 pxpos = loadtext(mapfile+'.pcs')
                 tilepx=[re.split(' +',line) for line in pxpos]
                 tilepx1 = tilepx
-            
+
             mergeheader['xsize'] = int(tilepx[-1][0]) + im.shape[0]#int(mapitem['MapWidthHeight'][0])
             mergeheader['ysize'] = int(tilepx[-1][1]) + im.shape[1]#int(mapitem['MapWidthHeight'][1])
 
