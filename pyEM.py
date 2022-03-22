@@ -603,7 +603,9 @@ def mergemap(mapitem,crop=False,black=False,
   tileidx_offset = 0
   mbase = os.path.splitext(os.path.basename(mapfile))[0]
 
-  if os.path.splitext(mapfile)[1] not in mrcext:
+  mergebase = mbase + '_merged' + '_s' + str(mapsection)
+
+if os.path.splitext(mapfile)[1] not in mrcext:
     #not an mrc file
 
     mergeheader = {}
@@ -849,8 +851,6 @@ def mergemap(mapitem,crop=False,black=False,
             im=imd
 
     else:
-
-        mergebase = mbase + '_merged'+ '_s' + str(mapsection)
 
         if blendmont:
             mergefile = mergebase+'.mrc'
