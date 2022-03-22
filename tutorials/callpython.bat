@@ -10,6 +10,6 @@ call python %1 %2 %3 %4
 
 echo Execution ended, will close this prompt in 10 seconds...
 
-timeout /T 10
+C:\Windows\System32\timeout.exe /T 10
 
 exit
