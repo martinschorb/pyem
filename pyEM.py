@@ -108,11 +108,11 @@ def nav_item(inlines,label):
       if el==[]:
           print('ERROR: Navigator Item ' + label + ' not found!')
           result=[]
-      else:    
+      else:
           root.remove(el[0])
           newroot = ET.Element('navigator')
           newroot.append(el[0])
-    
+
           result = xmltonav(ET.tostringlist(newroot))[0]
           lines = ET.tostringlist(root)
 
@@ -147,9 +147,9 @@ def adoc_items(lines1,search,header=False):
 
     # extracts the content block of an item of given label in a mdoc file
     # returns it as a dictionary
-    
+
     result = []
-    
+
     if lines1[-1] != '':
         lines = lines1+['']
     else:
@@ -161,8 +161,8 @@ def adoc_items(lines1,search,header=False):
     else:
         pattern = '*'+search+'*'
         matching = fnmatch.filter(lines, pattern)
-        
-        
+
+
         # search for mdoc key item with the given label
         for searchstr in matching:
             if not searchstr in lines:
@@ -171,9 +171,9 @@ def adoc_items(lines1,search,header=False):
             else:
                 itemstartline = lines.index(searchstr)+1
                 itemendline = lines[itemstartline:].index('')
-    
+
                 item = lines[itemstartline:itemstartline+itemendline]
-                
+
                 itemdict = parse_adoc(item)
                 itemdict['# '+searchstr]=lines[itemstartline-1][lines[itemstartline-1].find(' = ') + 2:-1].lstrip(' ')
             result.append(itemdict)
@@ -564,354 +564,352 @@ def mergemap(mapitem,crop=False,black=False,
   # black option will fill the empty spaces between tiles with 0
   # blendmont will use blendmont to merge the montage. If disabled individual tile information is stored in the merge dict nevertheless.
 
-  blend_in = blendmont
-  m=dict()
-  m['Sloppy'] = False
-  
-  
-  
-  
-  # check if function is called with only a map file without navigator 
-  
-  if mapfile is None:
-      
+    blend_in = blendmont
+    m=dict()
+    m['Sloppy'] = False
+
+
+
+
+    # check if function is called with only a map file without navigator
+
+    if mapfile is None:
+
       # extract map properties
-    
+
       mat = map_matrix(mapitem)
-    
+
       #find map file
       mapfile = map_file(mapitem)
       # print('processing mapitem '+mapitem['# Item']+' - file: '+mapfile)
       mapsection = list(map(int,mapitem['MapSection']))[0]
-    
+
       m['frames'] = list(map(int,mapitem['MapFramesXY']))
-      
-  else:
-      
+
+    else:
+
       mat = numpy.eye(2)
-     
+
       callcmd='extractpieces '+mapfile+' -ou '+mapfile+'.pcs'
       os.system(callcmd)
-      pxpos = loadtext(mapfile+'.pcs')     
+      pxpos = loadtext(mapfile+'.pcs')
       tilepx = numpy.array([re.split(' +',line) for line in pxpos])
       frames = numpy.unique(tilepx[:,0:2],axis=0)
       m['frames'] = [frames.shape[0],1]
-      
-      
-  montage_tiles = numpy.prod(m['frames'])
 
-  tileidx_offset = 0
-  mbase = os.path.splitext(os.path.basename(mapfile))[0]
 
-  mergebase = mbase + '_merged' + '_s' + str(mapsection)
+    montage_tiles = numpy.prod(m['frames'])
 
-if os.path.splitext(mapfile)[1] not in mrcext:
-    #not an mrc file
+    tileidx_offset = 0
+    mbase = os.path.splitext(os.path.basename(mapfile))[0]
+    mergebase = mbase + '_merged' + '_s' + str(mapsection)
 
-    mergeheader = {}
-    # mergeheader['stacksize'] = 1
+    if os.path.splitext(mapfile)[1] not in mrcext:
+        #not an mrc file
 
-    if '.idoc' in mapfile:
-        # List of tif files with additional metadata
+        mergeheader = {}
+        # mergeheader['stacksize'] = 1
 
-        idoctxt=loadtext(mapfile)
+        if '.idoc' in mapfile:
+            # List of tif files with additional metadata
 
-        tilepos=list()
-        tilepx=list()
-        tilepx1=list()
+            idoctxt=loadtext(mapfile)
 
-        # find the stack size from the last index of the file list (idoc)
+            tilepos=list()
+            tilepx=list()
+            tilepx1=list()
 
-        testlast = idoctxt.copy()
-        testlast.reverse()
+            # find the stack size from the last index of the file list (idoc)
 
-        for index,item in enumerate(testlast):
-            if item.strip()=='':
-                lastitem = testlast[index-1]
-                if 'Image = ' in lastitem:
-                    break
+            testlast = idoctxt.copy()
+            testlast.reverse()
 
-        prefix = mbase#[:mbase.find('.idoc')]
-        stacksize = int(lastitem[lastitem.find(prefix)+len(prefix):-5])+1
-        mergeheader['stacksize'] = stacksize
+            for index,item in enumerate(testlast):
+                if item.strip()=='':
+                    lastitem = testlast[index-1]
+                    if 'Image = ' in lastitem:
+                        break
 
-        maphead0 = mdoc_item(idoctxt,[],header=True)
-        im = list()
+            prefix = mbase#[:mbase.find('.idoc')]
+            stacksize = int(lastitem[lastitem.find(prefix)+len(prefix):-5])+1
+            mergeheader['stacksize'] = stacksize
 
-        if montage_tiles == 0:
-            # stack of single images
-            mergefile = mapfile[:mapfile.find('.idoc')]+'{:04d}'.format(mapsection)+'.tif'
+            maphead0 = mdoc_item(idoctxt,[],header=True)
+            im = list()
+
+            if montage_tiles == 0:
+                # stack of single images
+                mergefile = mapfile[:mapfile.find('.idoc')]+'{:04d}'.format(mapsection)+'.tif'
+                mergeheader['stacksize'] = 0
+                tilepos = mapitem['StageXYZ'][0:2]
+                tilepx = '0'
+                tilepx=numpy.array([[tilepx,tilepx,mapsection],[tilepx,tilepx,mapsection]])
+                tilepx1 = tilepx
+                m['Sloppy'] = 'NoMont'
+                im = io.imread(mergefile)
+                mergeheader['xsize'] = numpy.array(im.shape)[0]
+                mergeheader['ysize'] = numpy.array(im.shape)[1]
+                mapheader = mergeheader.copy()
+                pixelsize = float(maphead0['PixelSpacing'][0])/ 10000
+            else:
+                if mdoc_item(idoctxt,'MontSection = 0') == []: #older mdoc file format, created before SerialEM 3.7x
+                    print('Warning - item'+mapitem['# Item']+': Series of tif images without montage information. Assume pixel size is consistent for all sections.')
+
+                    pixelsize = float(maphead0['PixelSpacing'][0])/ 10000  # in um
+
+                else:
+                    mont_item = mdoc_item(idoctxt,'MontSection = '+str(mapsection))
+                    pixelsize = float(mont_item['PixelSpacing'][0])/ 10000 # in um
+
+
+                for i in range(0,numpy.min([montage_tiles,stacksize])):
+                    tilefile = mapfile[:mapfile.find('.idoc')]+'{:04d}'.format(mapsection + i)+'.tif'
+                    im.append(tilefile)
+                    tile = mdoc_item(idoctxt,'Image = '+os.path.basename(tilefile))
+                    tilepos.append(tile['StagePosition'])
+                    tilepx1.append(tile['PieceCoordinates'])
+
+                    if 'AlignedPieceCoordsVS' in tile:
+                        m['Sloppy'] = True
+                        tilepx.append(tile['AlignedPieceCoordsVS'])
+                    else:
+                        tilepx.append(tile['AlignedPieceCoords'])
+
+
+                mergeheader['pixelsize'] = pixelsize
+                mapheader = mergeheader.copy()
+                mapheader['ysize'] = int(maphead0['ImageSize'][1])
+                mapheader['xsize'] = int(maphead0['ImageSize'][0])
+
+                imsz_x = int(maphead0['ImageSize'][0])
+                imsz_y = int(maphead0['ImageSize'][1])
+
+                overlapx = imsz_x - mapheader['xsize']
+                overlapy = imsz_y - mapheader['ysize']
+
+                # check if idoc is supported in IMOD (blendmont)
+                imod_vercheck = (imod_ver[0]>=4 or (imod_ver[0]==4 and imod_ver[1]>=10))
+
+                if blendmont:
+                    mergebase = mbase + '_merged'+ '_s' + str(mapsection)
+                    mergefile = mergebase+'.mrc'
+                    if not os.path.exists(mergefile):
+                        if imod_vercheck:
+                            call_blendmont(mapfile,mergebase,mapsection)
+                            merge_mrc =  mrc.mmap(mergefile, permissive = 'True')
+                            im = merge_mrc.data
+                            mergeheader = map_header(merge_mrc)
+                        else:
+                            print('Please update IMOD to > 4.10.42 for merging idoc montages!')
+                            mergeheader['xsize'] = int(tilepx[-1][0]) + mapheader['xsize']
+                            mergeheader['ysize'] = int(tilepx[-1][1]) + mapheader['ysize']
+                            mergefile = mapfile
+                    else:
+                        merge_mrc =  mrc.mmap(mergefile, permissive = 'True')
+                        im = merge_mrc.data
+                        mergeheader = map_header(merge_mrc)
+
+
+
+                else:
+                    mergeheader['xsize'] = int(tilepx[-1][0]) + mapheader['xsize']
+                    mergeheader['ysize'] = int(tilepx[-1][1]) + mapheader['ysize']
+                    mergefile = mapfile
+        else:
+            print('Warning: ' + mapfile + ' is not an MRC file!' + '\n')
+            print('Assuming it is a single tif file or a stitched montage.' + '\n')
+            mergefile = mapfile
+            pixelsize = 1./numpy.sqrt(abs(numpy.linalg.det(mat)))
             mergeheader['stacksize'] = 0
             tilepos = mapitem['StageXYZ'][0:2]
             tilepx = '0'
-            tilepx=numpy.array([[tilepx,tilepx,mapsection],[tilepx,tilepx,mapsection]])
-            tilepx1 = tilepx            
+            tilepx=numpy.array([[tilepx,tilepx,tilepx],[tilepx,tilepx,tilepx]])
+            tilepx1 = tilepx
             m['Sloppy'] = 'NoMont'
             im = io.imread(mergefile)
             mergeheader['xsize'] = numpy.array(im.shape)[0]
             mergeheader['ysize'] = numpy.array(im.shape)[1]
             mapheader = mergeheader.copy()
-            pixelsize = float(maphead0['PixelSpacing'][0])/ 10000
-        else:
-            if mdoc_item(idoctxt,'MontSection = 0') == []: #older mdoc file format, created before SerialEM 3.7x
-                print('Warning - item'+mapitem['# Item']+': Series of tif images without montage information. Assume pixel size is consistent for all sections.')
 
-                pixelsize = float(maphead0['PixelSpacing'][0])/ 10000  # in um
+
+        mappxcenter = numpy.array([mergeheader['ysize'],mergeheader['xsize']]) / 2
+
+    else:
+        # map is mrc file
+
+        mf = mrc.mmap(mapfile, permissive = 'True')
+
+        mapheader = map_header(mf)
+        pixelsize = mapheader['pixelsize']
+        mergeheader = mapheader.copy()
+
+        # determine if file contains multiple montages stored in one MRC stack
+
+        mappxcenter = [mapheader['xsize']/2, mapheader['ysize']/2]
+
+        mdocname = mapfile + '.mdoc'
+
+
+        if (m['frames'] == [0,0]):
+          mapheader['stacksize'] = 0
+          tileidx_offset = 0
+          tilepos = [0,0]
+          if os.path.exists(mdocname):
+                mdoclines = loadtext(mdocname)
+                pixelsize = float(mdoc_item(mdoclines,'ZValue = '+str(mapsection))['PixelSpacing'][0])/ 10000 # in um
+
+        # extract center positions of individual map tiles
+        if mapheader['stacksize'] > 1:
+
+            if os.path.exists(mdocname):
+                mdoclines = loadtext(mdocname)
+                if mapheader['stacksize'] > montage_tiles:
+                # multiple same-dimension montages in one MRC stack
+                    tileidx_offset = mapsection * montage_tiles
+                elif mapheader['stacksize'] == montage_tiles:
+                # single montage without empty tiles (polygon)
+                    tileidx_offset = 0
+                elif  mapheader['stacksize'] < montage_tiles:
+                # polygon fit montage with empty tiles
+                    tileidx_offset = 0
+
+                tilepos=list()
+                tilepx=list()
+                tilepx1=list()
+                for i in range(0,numpy.min([montage_tiles,mapheader['stacksize']])):
+                    tile = mdoc_item(mdoclines,'ZValue = ' + str(tileidx_offset+i))
+                    tilepos.append(tile['StagePosition'])
+                    tilepx1.append(tile['PieceCoordinates'])
+
+                    if 'AlignedPieceCoordsVS' in tile:
+                        m['Sloppy'] = True
+                        tilepx.append(tile['AlignedPieceCoordsVS'])
+                    elif 'AlignedPieceCoords' in tile:
+                        tilepx.append(tile['AlignedPieceCoords'])
+                    else:
+                        tilepx = tilepx1
+
+                if not '[MontSection = 0]' in mdoclines: #older mdoc file format, created before SerialEM 3.7x
+                    print('Warning: mrc stack without montage information. Assume pixel size is consistent for all sections.')
+                    str1=mdoclines[0]
+                    pixelsize = float(mdoclines[0][str1.find('=')+1:])/ 10000 # in um
+                else:
+                    mont_item = mdoc_item(mdoclines,'MontSection = '+str(mapsection))
+                    pixelsize = float(mont_item['PixelSpacing'][0])/ 10000 # in um
+
+
+
+               # rotation = float(mdoc_item(mdoclines,'ZValue = '+str(mapsection))['RotationAngle'][0])
+
 
             else:
-                mont_item = mdoc_item(idoctxt,'MontSection = '+str(mapsection))
-                pixelsize = float(mont_item['PixelSpacing'][0])/ 10000 # in um
+                if mapheader['stacksize'] > montage_tiles:
+                        print('WARNING: Multiple maps stored in an MRC stack without mdoc file for metadata. I will guess the pixel size.')
+
+                pixelsize = 1./numpy.sqrt(abs(numpy.linalg.det(mat)))
+                callcmd = 'extracttilts ' + mapfile + ' -stage -all'
+                # os.system(callcmd)
+                p2 = Popen(callcmd, shell=True, stdout=PIPE)
+                o1=list()
+                for line in p2.stdout:
+                    o1.append(line)
+
+                tilepos1 = o1[20:-1]
+                tilepos = numpy.array([numpy.fromstring(tilepos1[0],dtype=float,sep=' '),numpy.fromstring(tilepos1[1],dtype=float,sep=' ')])
+                for item in tilepos1[2:] : tilepos=numpy.append(tilepos,[numpy.fromstring(item,dtype=float,sep=' ')],axis=0)
+                blendmont = True
 
 
-            for i in range(0,numpy.min([montage_tiles,stacksize])):
-                tilefile = mapfile[:mapfile.find('.idoc')]+'{:04d}'.format(mapsection + i)+'.tif'
-                im.append(tilefile)
-                tile = mdoc_item(idoctxt,'Image = '+os.path.basename(tilefile))
-                tilepos.append(tile['StagePosition'])
-                tilepx1.append(tile['PieceCoordinates'])
-
-                if 'AlignedPieceCoordsVS' in tile:
-                    m['Sloppy'] = True
-                    tilepx.append(tile['AlignedPieceCoordsVS'])
-                else:
-                    tilepx.append(tile['AlignedPieceCoords'])
+        else:
+            tilepos1 = list(map(float,mapitem['StageXYZ'][0:2]))
+            tilepos = numpy.array([tilepos1,tilepos1])
 
 
-            mergeheader['pixelsize'] = pixelsize
-            mapheader = mergeheader.copy()
-            mapheader['ysize'] = int(maphead0['ImageSize'][1])
-            mapheader['xsize'] = int(maphead0['ImageSize'][0])
+        # check if map is a montage or not
 
-            imsz_x = int(maphead0['ImageSize'][0])
-            imsz_y = int(maphead0['ImageSize'][1])
 
-            overlapx = imsz_x - mapheader['xsize']
-            overlapy = imsz_y - mapheader['ysize']
 
-            # check if idoc is supported in IMOD (blendmont)
-            imod_vercheck = (imod_ver[0]>=4 or (imod_ver[0]==4 and imod_ver[1]>=10))
+        if mapheader['stacksize'] < 2:
+            print('Single image found. No merging needed.')
+            tilepx = '0'
+            tilepx=numpy.array([[tilepx,tilepx,mapsection],[tilepx,tilepx,mapsection]])
+            tilepx1=tilepx
+            #os.system(callcmd)
+            merge_mrc =  mf
+            mergeheader = mapheader.copy()
+            overlapx = 0
+            overlapy = 0
+            tileloc = [0,0]
+            imd = merge_mrc.data
+            mergefile = mapfile
+
+            if len(imd.shape)==3:
+                im=imd[mapsection,:,:]
+            elif len(imd.shape)==2:
+                im=imd
+
+        else:
 
             if blendmont:
-                mergebase = mbase + '_merged'+ '_s' + str(mapsection)
                 mergefile = mergebase+'.mrc'
                 if not os.path.exists(mergefile):
-                    if imod_vercheck:
-                        call_blendmont(mapfile,mergebase,mapsection)
-                        merge_mrc =  mrc.mmap(mergefile, permissive = 'True')
-                        im = merge_mrc.data
-                        mergeheader = map_header(merge_mrc)
-                    else:
-                        print('Please update IMOD to > 4.10.42 for merging idoc montages!')
-                        mergeheader['xsize'] = int(tilepx[-1][0]) + mapheader['xsize']
-                        mergeheader['ysize'] = int(tilepx[-1][1]) + mapheader['ysize']
-                        mergefile = mapfile
-                else:
-                    merge_mrc =  mrc.mmap(mergefile, permissive = 'True')
-                    im = merge_mrc.data
-                    mergeheader = map_header(merge_mrc)
+                    call_blendmont(mapfile,mergebase,mapsection,black)
+                mergebase = os.path.splitext(mapfile)[0] + '_merged'+ '_s' + str(mapsection)
+                mergefile = mergebase + '.mrc'
 
+                merge_mrc =  mrc.mmap(mergefile, permissive = 'True')
+                im = merge_mrc.data
+                mergeheader = map_header(merge_mrc)
 
+                    # extract pixel coordinate of each tile
+                tilepx = list(loadtext(mergebase + '.al'))
+                for j, item in enumerate(tilepx): tilepx[j] = list(re.split(' +',item))
+
+                # use original tile coordinates(pixels) from SerialEM to determine tile position in montage
+                tilepx1 = loadtext(mapfile + '.pcs')
+
+                for j, item in enumerate(tilepx1): tilepx1[j] = list(re.split(' +',item))
+                merge_mrc.close()
 
             else:
-                mergeheader['xsize'] = int(tilepx[-1][0]) + mapheader['xsize']
-                mergeheader['ysize'] = int(tilepx[-1][1]) + mapheader['ysize']
                 mergefile = mapfile
-    else:
-        print('Warning: ' + mapfile + ' is not an MRC file!' + '\n')
-        print('Assuming it is a single tif file or a stitched montage.' + '\n')
-        mergefile = mapfile
-        pixelsize = 1./numpy.sqrt(abs(numpy.linalg.det(mat)))
-        mergeheader['stacksize'] = 0
-        tilepos = mapitem['StageXYZ'][0:2]
-        tilepx = '0'
-        tilepx=numpy.array([[tilepx,tilepx,tilepx],[tilepx,tilepx,tilepx]])
-        tilepx1 = tilepx
-        m['Sloppy'] = 'NoMont'
-        im = io.imread(mergefile)
-        mergeheader['xsize'] = numpy.array(im.shape)[0]
-        mergeheader['ysize'] = numpy.array(im.shape)[1]
-        mapheader = mergeheader.copy()
+                im = mf.data
+                if not os.path.exists(mdocname):
+                    callcmd='extractpieces '+mapfile+' -ou '+mapfile+'.pcs'
+                    os.system(callcmd)
+                    pxpos = loadtext(mapfile+'.pcs')
+                    tilepx=[re.split(' +',line) for line in pxpos]
+                    tilepx1 = tilepx
 
+                mergeheader['xsize'] = int(tilepx[-1][0]) + im.shape[0]#int(mapitem['MapWidthHeight'][0])
+                mergeheader['ysize'] = int(tilepx[-1][1]) + im.shape[1]#int(mapitem['MapWidthHeight'][1])
 
-    mappxcenter = numpy.array([mergeheader['ysize'],mergeheader['xsize']]) / 2
-
-
-  else:
-   # map is mrc file
-
-    mf = mrc.mmap(mapfile, permissive = 'True')
-
-    mapheader = map_header(mf)
-    pixelsize = mapheader['pixelsize']
-    mergeheader = mapheader.copy()
-
-    # determine if file contains multiple montages stored in one MRC stack
-
-    mappxcenter = [mapheader['xsize']/2, mapheader['ysize']/2]
-
-    mdocname = mapfile + '.mdoc'
-
-
-    if (m['frames'] == [0,0]):
-      mapheader['stacksize'] = 0
-      tileidx_offset = 0
-      tilepos = [0,0]
-      if os.path.exists(mdocname):
-            mdoclines = loadtext(mdocname)
-            pixelsize = float(mdoc_item(mdoclines,'ZValue = '+str(mapsection))['PixelSpacing'][0])/ 10000 # in um
-
-    # extract center positions of individual map tiles
-    if mapheader['stacksize'] > 1:
-
-        if os.path.exists(mdocname):
-            mdoclines = loadtext(mdocname)
-            if mapheader['stacksize'] > montage_tiles:
-            # multiple same-dimension montages in one MRC stack
-                tileidx_offset = mapsection * montage_tiles
-            elif mapheader['stacksize'] == montage_tiles:
-            # single montage without empty tiles (polygon)
-                tileidx_offset = 0
-            elif  mapheader['stacksize'] < montage_tiles:
-            # polygon fit montage with empty tiles
-                tileidx_offset = 0
-
-            tilepos=list()
-            tilepx=list()
-            tilepx1=list()
-            for i in range(0,numpy.min([montage_tiles,mapheader['stacksize']])):
-                tile = mdoc_item(mdoclines,'ZValue = ' + str(tileidx_offset+i))
-                tilepos.append(tile['StagePosition'])
-                tilepx1.append(tile['PieceCoordinates'])
-
-                if 'AlignedPieceCoordsVS' in tile:
-                    m['Sloppy'] = True
-                    tilepx.append(tile['AlignedPieceCoordsVS'])
-                elif 'AlignedPieceCoords' in tile:
-                    tilepx.append(tile['AlignedPieceCoords'])
-                else:
-                    tilepx = tilepx1
-
-            if not '[MontSection = 0]' in mdoclines: #older mdoc file format, created before SerialEM 3.7x
-                print('Warning: mrc stack without montage information. Assume pixel size is consistent for all sections.')
-                str1=mdoclines[0]
-                pixelsize = float(mdoclines[0][str1.find('=')+1:])/ 10000 # in um
-            else:
-                mont_item = mdoc_item(mdoclines,'MontSection = '+str(mapsection))
-                pixelsize = float(mont_item['PixelSpacing'][0])/ 10000 # in um
-
-
-
-           # rotation = float(mdoc_item(mdoclines,'ZValue = '+str(mapsection))['RotationAngle'][0])
-
-
-        else:
-            if mapheader['stacksize'] > montage_tiles:
-                    print('WARNING: Multiple maps stored in an MRC stack without mdoc file for metadata. I will guess the pixel size.')
-
-            pixelsize = 1./numpy.sqrt(abs(numpy.linalg.det(mat)))
-            callcmd = 'extracttilts ' + mapfile + ' -stage -all'
-            # os.system(callcmd)
-            p2 = Popen(callcmd, shell=True, stdout=PIPE)
-            o1=list()
-            for line in p2.stdout:
-                o1.append(line)
-
-            tilepos1 = o1[20:-1]
-            tilepos = numpy.array([numpy.fromstring(tilepos1[0],dtype=float,sep=' '),numpy.fromstring(tilepos1[1],dtype=float,sep=' ')])
-            for item in tilepos1[2:] : tilepos=numpy.append(tilepos,[numpy.fromstring(item,dtype=float,sep=' ')],axis=0)
-            blendmont = True
-
-
-    else:
-        tilepos1 = list(map(float,mapitem['StageXYZ'][0:2]))
-        tilepos = numpy.array([tilepos1,tilepos1])
-
-
-    # check if map is a montage or not
-
-
-
-    if mapheader['stacksize'] < 2:
-        print('Single image found. No merging needed.')
-        tilepx = '0'
-        tilepx=numpy.array([[tilepx,tilepx,mapsection],[tilepx,tilepx,mapsection]])
-        tilepx1=tilepx
-        #os.system(callcmd)
-        merge_mrc =  mf
-        mergeheader = mapheader.copy()
-        overlapx = 0
-        overlapy = 0
-        tileloc = [0,0]
-        imd = merge_mrc.data
-        mergefile = mapfile
-
-        if len(imd.shape)==3:
-            im=imd[mapsection,:,:]
-        elif len(imd.shape)==2:
-            im=imd
-
-    else:
-
-        if blendmont:
-            mergefile = mergebase+'.mrc'
-            if not os.path.exists(mergefile):
-                call_blendmont(mapfile,mergebase,mapsection,black)
-            mergebase = os.path.splitext(mapfile)[0] + '_merged'+ '_s' + str(mapsection)
-            mergefile = mergebase + '.mrc'
-
-            merge_mrc =  mrc.mmap(mergefile, permissive = 'True')
-            im = merge_mrc.data
-            mergeheader = map_header(merge_mrc)
-
-                # extract pixel coordinate of each tile
-            tilepx = list(loadtext(mergebase + '.al'))
-            for j, item in enumerate(tilepx): tilepx[j] = list(re.split(' +',item))
-
-            # use original tile coordinates(pixels) from SerialEM to determine tile position in montage
-            tilepx1 = loadtext(mapfile + '.pcs')
-
-            for j, item in enumerate(tilepx1): tilepx1[j] = list(re.split(' +',item))
-            merge_mrc.close()
-
-        else:
-            mergefile = mapfile
-            im = mf.data
-            if not os.path.exists(mdocname):
-                callcmd='extractpieces '+mapfile+' -ou '+mapfile+'.pcs'
-                os.system(callcmd)
-                pxpos = loadtext(mapfile+'.pcs')
-                tilepx=[re.split(' +',line) for line in pxpos]
-                tilepx1 = tilepx
-
-            mergeheader['xsize'] = int(tilepx[-1][0]) + im.shape[0]#int(mapitem['MapWidthHeight'][0])
-            mergeheader['ysize'] = int(tilepx[-1][1]) + im.shape[1]#int(mapitem['MapWidthHeight'][1])
-
-    if not blend_in: im = mf.data
-    im = numpy.rot90(numpy.transpose(im),axes=(0,1))
-    mf.close()
+        if not blend_in: im = mf.data
+        im = numpy.rot90(numpy.transpose(im),axes=(0,1))
+        mf.close()
         # end MRC section
 
-  tilepos = numpy.array(tilepos,float)
+    tilepos = numpy.array(tilepos,float)
 
-  tilepx = numpy.array(tilepx)
-  tilepx = tilepx[tilepx[:,2] == str(mapsection),0:2]
-  tilepx = tilepx.astype(numpy.float)
+    tilepx = numpy.array(tilepx)
+    tilepx = tilepx[tilepx[:,2] == str(mapsection),0:2]
+    tilepx = tilepx.astype(numpy.float)
 
-  tilepx1 = numpy.array(tilepx1)
-  tilepx1 = tilepx1[tilepx1[:,2] == str(mapsection),0:2]
-  tilepx1 = tilepx1.astype(numpy.float)
+    tilepx1 = numpy.array(tilepx1)
+    tilepx1 = tilepx1[tilepx1[:,2] == str(mapsection),0:2]
+    tilepx1 = tilepx1.astype(numpy.float)
 
-  tpx = tilepx1[:,0]
-  tpy = tilepx1[:,1]
+    tpx = tilepx1[:,0]
+    tpy = tilepx1[:,1]
 
-  if numpy.abs(tpx).max()>0: xstep = tpx[tpx>0].min()
-  else: xstep = 1
-  if numpy.abs(tpy).max()>0: ystep = tpy[tpy>0].min()
-  else: ystep = 1
+    if numpy.abs(tpx).max()>0: xstep = tpx[tpx>0].min()
+    else: xstep = 1
+    if numpy.abs(tpy).max()>0: ystep = tpy[tpy>0].min()
+    else: ystep = 1
 
-  tileloc = numpy.array([tpx / xstep,tpy/ystep]).T
+    tileloc = numpy.array([tpx / xstep,tpy/ystep]).T
 
-  if not blendmont and bigstitch:
+    if not blendmont and bigstitch:
        #prepare coordinate list for Big Stitcher
        print('preparing coordinate list for BigStitcher for map item '+mapitem['# Item']+'.')
        outpx = tilepx.copy()
@@ -927,14 +925,14 @@ if os.path.splitext(mapfile)[1] not in mrcext:
 
        stitchfile.close()
 
-  m['sections'] = numpy.array(list(map(int,tileloc[:,0]*m['frames'][1]+tileloc[:,1])))
+    m['sections'] = numpy.array(list(map(int,tileloc[:,0]*m['frames'][1]+tileloc[:,1])))
 
-  overlapx = mapheader['xsize'] - xstep
-  overlapy = mapheader['ysize'] - ystep
+    overlapx = mapheader['xsize'] - xstep
+    overlapy = mapheader['ysize'] - ystep
 
 
-  # cropping of merged file to only include areas of interest. The user needs to create an IMOD model file and close 3dmod to proceed.
-  if crop & blendmont:
+    # cropping of merged file to only include areas of interest. The user needs to create an IMOD model file and close 3dmod to proceed.
+    if crop & blendmont:
       if not os.path.exists(mergebase+'_crop.mrc'):
           loopcount = 0
           print('waiting for crop model to be created ... Please store it under this file name: \"' + mergebase + '.mod\".')
@@ -961,26 +959,26 @@ if os.path.splitext(mapfile)[1] not in mrcext:
       m['im_cropped'] = im_cropped
 
 
-  mergeheader['pixelsize'] = pixelsize
-  mapheader['pixelsize'] = pixelsize
+    mergeheader['pixelsize'] = pixelsize
+    mapheader['pixelsize'] = pixelsize
 
-  # generate output
+    # generate output
 
-  m['mapfile'] = mapfile
-  m['mergefile'] = mergefile
-  m['matrix'] = mat
-  m['tilepos'] = tilepos
-  m['im'] = im
-  m['mappxcenter'] = mappxcenter
-  m['mapheader'] = mapheader
-  m['mergeheader'] = mergeheader
-  m['tilepx'] = tilepx
-  m['tilepx1'] = tilepx1
-  m['overlap'] = [overlapx,overlapy]
-  m['tileloc'] = tileloc
-  m['tileidx_offset'] = tileidx_offset
+    m['mapfile'] = mapfile
+    m['mergefile'] = mergefile
+    m['matrix'] = mat
+    m['tilepos'] = tilepos
+    m['im'] = im
+    m['mappxcenter'] = mappxcenter
+    m['mapheader'] = mapheader
+    m['mergeheader'] = mergeheader
+    m['tilepx'] = tilepx
+    m['tilepx1'] = tilepx1
+    m['overlap'] = [overlapx,overlapy]
+    m['tileloc'] = tileloc
+    m['tileidx_offset'] = tileidx_offset
 
-  return m
+    return m
 
 
 
@@ -1089,29 +1087,29 @@ def imcrop(im1,c,sz):
     
     """
 
-    
+
     sz_x = sz[0]
     sz_y = sz[1]
-    
+
     ximsz = im1.shape[0]
     yimsz = im1.shape[1]
-    
+
     xllim = max([0,c[1]-sz_x/2])
     xulim = min([ximsz,c[1]+sz_x/2])
-    
+
     x_range = min([c[1]-xllim,xulim-c[1]])
     xel = range(int(c[1] - x_range), int(c[1] + x_range))
-    
+
     yllim = max([0,c[0]-sz_y/2])
     yulim = min([yimsz,c[0]+sz_y/2])
-    
+
     y_range = min([c[0]-yllim,yulim-c[0]])
-    
+
     yel = range(int(c[0] - y_range), int(c[0] + y_range))
-    
+
     im2 = im1[xel,:]
     im2 = im2[:,yel]
-    
+
     return im2
 
 
@@ -1215,100 +1213,100 @@ def map_extract(im,c,p,px_scale,t_size,mat,int8=False):
         output pixel coordinates of input points 
 
     """
-    
+
     imsz1 = t_size * px_scale
-    
+
     # extract image (1.42x to enable rotation)
     cropsize1 = imsz1 * 1.42
-    
+
     cropsize = numpy.array([cropsize1.max(),cropsize1.max()])
-    
+
     im1 = imcrop(im,c,cropsize)
-    
+
     realsize = numpy.array(im1.shape)
-    
+
     # center to origin
     p1 = p - c
-    
+
     # create homogenous matrices
     mat_i = numpy.linalg.inv(mat)
-      
+
     o_size=numpy.max(numpy.abs([[0,realsize[1]] *mat,[realsize[0],0] *mat]),axis=0).astype(numpy.int).squeeze()
-    
+
     M = numpy.concatenate((mat_i,numpy.array([[0],[0]])),axis=1)
     M = numpy.concatenate((M,[[0,0,1]]),axis=0)
-    
+
     mat1 = numpy.eye(3)
     mat1[0,2] = -(o_size[1]-1)/2
     mat1[1,2] = -(o_size[0]-1)/2
-    
+
     mat2 = numpy.eye(3)
     mat2[0,2] = (realsize[1]-1)/2
     mat2[1,2] = (realsize[0]-1)/2
-    
+
     M1 = numpy.dot(mat2,M)
     M2 = numpy.dot(M1,mat1)
-    
-    
+
+
     if int8:
        im1 = numpy.round(255.0 * (im1 - im1.min()) / (im1.max() - im1.min() - 1.0)).astype(numpy.uint8)
-     
-    
-     
+
+
+
       # interpolate image
     im2 = tf.warp(im1,M2,output_shape=o_size,preserve_range=True,mode='edge')#cval=numpy.median(im1[:]))
-    
+
     #check if output image size needs to be modified
-    
+
     limitsize = numpy.min([o_size,t_size],axis=0).squeeze()
-    
-    
+
+
     if (limitsize==t_size).all():
         # im3=im2.copy()
         outsize = t_size
         shift = [0,0]
     else:
         # determine limitation of image by the borders of rotated crop
-        
+
         rotmat=mat_i/numpy.sqrt(numpy.linalg.det(mat_i))
-        
+
         ca = numpy.mean(abs(numpy.diag(rotmat)))
-        
+
         sq2 = numpy.sqrt(2)/4
-        
+
         factor = 2*sq2 + sq2 *ca
-        
+
         outsize = numpy.min([o_size*factor,limitsize,o_size],axis=0).squeeze()
-     
-    
+
+
         # make sure map size matches the original minimum camera pixel block limits (powers of 2)
         ii=1
 
         while (numpy.mod(t_size,2**ii)==0).all() and ii<4:
             ii=ii+1
-    
+
         shift =   numpy.mod(outsize,2**ii)/2
-        outsize = 2**ii*numpy.floor(outsize/(2**ii))   
-    
+        outsize = 2**ii*numpy.floor(outsize/(2**ii))
+
     im3 = imcrop(im2,[o_size[1]/2+shift[1],o_size[0]/2+shift[0]],outsize)
-    
-    
+
+
     # im3[im3==0]=numpy.median(im3[:])
-    
+
     f_size = im3.shape
-    
+
     if int8:
         im3=im3.astype(numpy.int8)
     else:
         im3=im3.astype(numpy.int16)
-    
+
     p4 = p1 * mat.T
-    
+
     p4[:,0] =  f_size[1]/2 + p4[:,0]
     p4[:,1] =  f_size[0]/2 + p4[:,1]
-    
-    
-    
+
+
+
     return im3, p4
 
 
@@ -1395,9 +1393,9 @@ def get_pixel(navitem,mergedmap,tile=False,outline=False):
 def ptsonmap(mapitem,pts,nav):
     # adds a point or polygon (pixel position) to a map and creates a navigator item from
     # p is a list of numpy
-    
+
     outnav = list()
-    
+
     mapid = mapitem['MapID']
 
     for idx,p in enumerate(pts):
@@ -1405,15 +1403,15 @@ def ptsonmap(mapitem,pts,nav):
         p = numpy.array(p)
 
         polynav=dict()
-        
+
         merge = mergemap(mapitem)
 
         imsz1 = numpy.array([merge['mergeheader']['xsize'],merge['mergeheader']['ysize']])
-        
+
         p[:,1] = imsz1[0] - p[:,1]
-        
-        c = numpy.average(p, axis=0) 
-        
+
+        c = numpy.average(p, axis=0)
+
         px = numpy.array(numpy.transpose(p[:,0]))
         px = numpy.array2string(px.astype(int),separator=' ')
         px = px.strip('"[]"')
@@ -1447,20 +1445,20 @@ def ptsonmap(mapitem,pts,nav):
         polynav['Draw'] = ['1']
         polynav['Regis'] = mapitem['Regis']
         polynav['DrawnID'] = mapid
-        
+
         if mapitem['MapFramesXY'] == ['0', '0']:
             polynav['CoordsInMap'] = [str(int(round(c[0]))) , str(int(round(c[1]))), mapitem['StageXYZ'][2]]
-        else:             
+        else:
             tilecenters = merge['tilepx']+numpy.array([merge['mapheader']['xsize']/2,merge['mapheader']['ysize']/2])
             c_out = c.copy()
             c_out[1] = imsz1[0] - c_out[1]
             tiledist = numpy.sum((tilecenters-c_out)**2,axis=1)
-            
+
             tileidx = numpy.argmin(tiledist)
             c_out = c_out - merge['tilepx'][tileidx]
             polynav['CoordsInPiece'] = [str(c_out[0]),str(c_out[1]),mapitem['StageXYZ'][2]]
             polynav['PieceOn'] = [str(merge['sections'][tileidx])]
-  
+
         polynav['PtsX'] = px.split()
         polynav['PtsY'] = py.split()
         polynav['GroupID'] = [str(newID(nav,int(mapid[0])+70000))]
@@ -1898,7 +1896,7 @@ def pointitem(label,regis=1):
 
 
 def virt_map_at_point(item,idx,maps,allitems,targetitem,targetheader,outnav,numtiles=1,outformat='mrc'):
-# creates a virtual map at a point item 
+# creates a virtual map at a point item
     """
     
 
@@ -1929,68 +1927,68 @@ def virt_map_at_point(item,idx,maps,allitems,targetitem,targetheader,outnav,numt
         the original navitem (with some modifications).
 
     """
-    
-    
-    
+
+
+
     if numtiles>1:
         # montages can only be created in TIF/idoc
-        outformat = 'tif'       
-                
-    mapitem = realign_map(item,allitems)      
+        outformat = 'tif'
+
+    mapitem = realign_map(item,allitems)
     itemid = mapitem['# Item']
     delim = 100000
     checkitems=allitems.copy()
-    
+
     checkitems.extend(outnav)
-    
+
     newmapid = newID(checkitems,divmod(int(targetitem['MapID'][0]),delim)[0]*delim+idx)
 
-    
+
     if not itemid in maps.keys():
         maps[itemid] = mergemap(mapitem)
         groupid = [str(newID(allitems,999000000+int(mapitem['MapID'][0][-6:])))]
         print('add original map to navigator')
         # NoRealign
-        mapitem['Color'] = '5'            
+        mapitem['Color'] = '5'
         maps['mapnav'].append(mapitem)
-     
+
     else:
-        groupid = outnav[-1]['GroupID']    
-    
-    map_mat = maps[itemid]['matrix'] 
-    
+        groupid = outnav[-1]['GroupID']
+
+    map_mat = maps[itemid]['matrix']
+
     t_mat = map_matrix(targetitem)
-    
-    maptf = (numpy.linalg.inv(map_mat) * t_mat).T  
-    
+
+    maptf = (numpy.linalg.inv(map_mat) * t_mat).T
+
     xval = float(item['StageXYZ'][0]) #(float(item['PtsX'][0]))
     yval = float(item['StageXYZ'][1]) #(float(item['PtsY'][0]))
-    
+
     pt = numpy.array([xval,yval])
-    
+
     # calculate the pixel coordinates
-    
+
     pt_px1 = get_pixel(item,maps[itemid])
-    
-    px_scale = targetheader['pixelsize'] / (maps[itemid]['mapheader']['pixelsize']) 
-    
+
+    px_scale = targetheader['pixelsize'] / (maps[itemid]['mapheader']['pixelsize'])
+
     imsz1 = numpy.array([targetheader['ysize'],targetheader['xsize']])
-    
+
     im = numpy.array(maps[itemid]['im'])
     im2, p2 = map_extract(im,pt_px1,pt_px1,px_scale,numtiles*imsz1,maptf)
     im2size = im2.shape
-      
+
     if min(im2.shape)<200:
       print('Warning! Item ' + item['# Item'] + ' is not within the map frame. Ignoring it')
       newnavitem=None
     else:
-      
-      # pad item numbers to 4 digits    
+
+      # pad item numbers to 4 digits
       if item['# Item'].isdigit(): item['# Item'] = item['# Item'].zfill(4)
-      
+
       newnavitem = dict(targetitem)
-      
-           
+
+
       if 'MapLDConSet' in targetitem.keys():
             newnavitem['MapLDConSet'] = targetitem['MapLDConSet']
             newmapid = newmapid + int(targetitem['MapLDConSet'][0])
@@ -2005,101 +2003,101 @@ def virt_map_at_point(item,idx,maps,allitems,targetitem,targetheader,outnav,numt
                 newnavitem['Acquire'] = ['1']
       else:
             prefix=''
-      
-      
-      if numtiles <2 :          
-          
+
+
+      if numtiles <2 :
+
           if outformat=='tif':
               newnavitem['ImageType'] = ['2']
               imfile = prefix + item['# Item'] + ".tif" # '.mrc'
-              
+
               if os.path.exists(imfile): os.remove(imfile)
               io.imsave(imfile,im2.astype('uint16'), check_contrast=False)
-          
+
           elif outformat=='mrc':
                 im4 = numpy.rot90(im2,3)
                 imfile = prefix + item['# Item'] + '.mrc'
                 if os.path.exists(imfile): os.remove(imfile)
                 with mrc.new(imfile) as mrcf:
                     mrcf.set_data(im4.T)
-                    mrcf.close()                 
-      
+                    mrcf.close()
+
       else:
           # generate virtual montage
           imfile = prefix + item['# Item'] +".idoc"
-          
+
           newnavitem['ImageType'] = ['3']
           newnavitem['MapFramesXY'] = [str(numtiles),str(numtiles)]
           newnavitem['MontBinning'] = '1'
           newnavitem[' MapMontage'] = '1'
           MinMaxMean=' '.join(map(str,[im2.min(),im2.max(),int(round(im2.mean()))]))
-          
+
           idocout = ['ImageSeries = 1']
           psstr = 'PixelSpacing = '+ ' %0.2f' % (targetheader['pixelsize']*10000)
           idocout.append(psstr)
-          
-          
+
+
           tilesz = (numpy.array(im2size)/numtiles).astype(int)
           # tilesz=numpy.flip(tilesz)
-          
+
           idocout.append('ImageSize = '+str(tilesz[1])+' '+str(tilesz[0]))
           idocout.append('Montage = 1')
           idocout.append('DataMode = 6')
-          idocout.append('')        
-          
+          idocout.append('')
+
           for tile in range(numtiles**2):
               tilepos = list(numpy.divmod(tile,numtiles))
               tilepos0= tilepos.copy()
               tilepos[0]=numtiles-tilepos[0]-1
-              
-              
-              
+
+
+
               imrange = [[(tilepos[ix]*tilesz[ix]),((tilepos[ix]+1)*tilesz[ix])] for ix in range(2)]
               im3 = im2[imrange[0][0]:imrange[0][1],imrange[1][0]:imrange[1][1]]
-              
+
               tilefile = prefix + item['# Item'] + '_' + str(tile)+".tif"
-              
-              if os.path.exists(imfile): os.remove(imfile)          
+
+              if os.path.exists(imfile): os.remove(imfile)
               io.imsave(tilefile,im3.astype('uint16'), check_contrast=False)
-                              
+
               idocout.append('[Image = '+tilefile+']')
               idocout.append('PieceCoordinates = '+str(tilepos0[1]*tilesz[1])+' '+str(tilepos0[0]*tilesz[0])+' 0')
               idocout.append('MinMaxMean = '+MinMaxMean)
               idocout.append('')
-          
-          
+
+
           with open(imfile,'w') as imf:
               imf.writelines("%s\n" % line for line in idocout)
-      
-      
-      
+
+
+
       cx = im2.shape[1]
       cy = im2.shape[0]
-      
+
       a = [[0,0],[cx,0],[cx,cy],[0,cy],[0,0]]
       a = numpy.matrix(a) - [cx/2 , cy/2]
-      
+
       t_mat_i = numpy.linalg.inv(t_mat)
-      
+
       c1 = a*t_mat_i.T + pt
-      
+
       cnx = numpy.array(numpy.transpose(c1[:,1]))
       cnx = numpy.array2string(cnx,separator=' ')
       cnx = cnx[2:-2]
-      
+
       cny = numpy.array(numpy.transpose(c1[:,0]))
       cny = " ".join(list(map(str,cny)))
       cny = cny[1:-2]
-      
-      
+
+
       # fill navigator
-      
+
       item['Acquire'] = '0'
-      
+
       # NoRealign
       # item['Color'] = '5'
 
-      
+
       newnavitem['MapFile'] = [imfile]
       newnavitem['StageXYZ'] = item['StageXYZ']
       newnavitem['RawStageXY'] = item['StageXYZ'][0:2]
@@ -2113,13 +2111,13 @@ def virt_map_at_point(item,idx,maps,allitems,targetitem,targetheader,outnav,numt
       newnavitem['SamePosId'] = item['MapID']
       newnavitem['GroupID'] = groupid
       newnavitem['MapWidthHeight'] = [str(im2size[1]),str(im2size[0])]
-      
+
       newnavitem['MapMinMaxScale'] = [str(numpy.min(im2)),str(numpy.max(im2))]
       newnavitem['NumPts'] = ['5']
-      newnavitem['# Item'] = prefix + item['# Item']    
-      
-      
-      
+      newnavitem['# Item'] = prefix + item['# Item']
+
+
+
     return newnavitem, maps, item
       
     
