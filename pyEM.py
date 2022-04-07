@@ -1020,7 +1020,7 @@ def call_blendmont(mapfile,mergebase,mapsection,black=False):
     print('Merging the map montage into a single image....' + '\n')
     print('----------------------------------------------------\n')
 
-    callcmd = 'blendmont -imi ' + '\"' + mapfile + '\"' + ' -imo \"' + mergebase + '.mrc\" -pli \"' + mapfile + '.pcs\" -roo \"' + mergebase  + '.mrc\" -se ' + str(mapsection) + ' -al \"'+ mergebase + '.al\" -sloppy -nofft '    #os.system(callcmd)
+    callcmd = 'blendmont -v -rob 1 -imi ' + '\"' + mapfile + '\"' + ' -imo \"' + mergebase + '.mrc\" -pli \"' + mapfile + '.pcs\" -roo \"' + mergebase  + '.mrc\" -se ' + str(mapsection) + ' -al \"'+ mergebase + '.al\" -sloppy -nofft '    #os.system(callcmd)
     if black:
         callcmd = callcmd + ' -fill 0'
 
