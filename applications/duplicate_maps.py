@@ -4,15 +4,6 @@ import pyEM as em
 
 # parse command line parameters
 
-#import argparse
-
-#parser = argparse.ArgumentParser(description='Sort navigator file.')
-#parser.add_argument('navfile', metavar='navfile', type=str, help='a navigator file location')
-
-#args = parser.parse_args()
-
-#navfile = args.navfile
-
 import sys
 
 navfile = sys.argv[1]
@@ -29,7 +20,6 @@ newnav = em.duplicate_items(allitems,maps=True)
 newnavf = navfile[:-4] + '_duplicated.nav'
 
 print('Navigator items marked with Acquire were duplicated and output is written as: ' + newnavf)
-
 
 
 # fill the new file   
