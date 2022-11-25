@@ -1044,6 +1044,7 @@ def realign_map(item, allitems):
                 result = realign_map(mapitem)
         else:
             mapID = item['DrawnID']
+            result = list(filter(lambda item: item['MapID'] == mapID, allitems))
 
     else:
 
