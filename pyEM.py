@@ -1910,6 +1910,8 @@ def virt_map_at_point(item, idx, maps, allitems, targetitem, targetheader, outna
     -------
     newnavitem : navitem dict
         the navitem of the new virtual map.
+    maps: dict
+        maps dictionary
     item : navitem dict
         the original navitem (with some modifications).
 
