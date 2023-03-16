@@ -41,7 +41,6 @@ from operator import itemgetter
 import fnmatch
 from subprocess import Popen, PIPE
 import xml.etree.ElementTree as ET
-import fnmatch
 
 mrcext = ('.st', '.mrc', '.map', '.rec', '.ali', '.preali')
 
@@ -51,8 +50,8 @@ py_ver = sys.version_info
 # get IMOD version
 p1 = Popen("imodinfo", shell=True, stdout=PIPE)
 o = list()
-for line in p1.stdout:
-    o.append(line)
+for imodline in p1.stdout:
+    o.append(imodline)
 
 if o == []:
     print('Warning! - No IMOD installation found')
@@ -484,13 +483,15 @@ def navlabel_match(navitems, searchstr):
 # -------------------------------
 # %%
 
-def duplicate_items(navitems, labels=[], prefix='', reg=True, maps=False):
+def duplicate_items(navitems, labels=None, prefix='', reg=True, maps=False):
     # duplicates items from a list, optional second parameter is a list of labels of the items to duplicate.
     # Default is to use the 'Acquire' flag. Third parameter defines a prefix for the created duplictes (defatul:none)
     # The fourth parameter determines whether the registration of duplicate items should be changed (default:yes)
     # if the maps flag is set, all maps that contain the label of the selected items
     # or that were used to draw these are duplicated as well.
 
+    if labels is None:
+        labels = []
     outitems = copy.deepcopy(navitems)
 
     if labels == []:
@@ -613,6 +614,7 @@ def mergemap(mapitem, crop=False, black=False,
 
             testlast = idoctxt.copy()
             testlast.reverse()
+            lastitem = testlast[0]
 
             for index, item in enumerate(testlast):
                 if item.strip() == '':
@@ -673,9 +675,9 @@ def mergemap(mapitem, crop=False, black=False,
 
                 imsz_x = int(maphead0['ImageSize'][0])
                 imsz_y = int(maphead0['ImageSize'][1])
-
-                overlapx = imsz_x - mapheader['xsize']
-                overlapy = imsz_y - mapheader['ysize']
+                #
+                # overlapx = imsz_x - mapheader['xsize']
+                # overlapy = imsz_y - mapheader['ysize']
 
                 # check if idoc is supported in IMOD (blendmont)
                 imod_vercheck = (imod_ver[0] >= 4 or (imod_ver[0] == 4 and imod_ver[1] >= 10))
@@ -739,7 +741,7 @@ def mergemap(mapitem, crop=False, black=False,
         if m['frames'] == [0, 0]:
             mapheader['stacksize'] = 0
             tileidx_offset = 0
-            tilepos = [0, 0]
+            # tilepos = [0, 0]
             if os.path.exists(mdocname):
                 mdoclines = loadtext(mdocname)
                 pixelsize = float(
@@ -808,11 +810,17 @@ def mergemap(mapitem, crop=False, black=False,
                 for item in tilepos1[2:]:
                     tilepos = numpy.append(tilepos,
                                            [numpy.fromstring(item, dtype=float, sep=' ')], axis=0)
+                tilepx = '0'
+                tilepx = numpy.array([[tilepx, tilepx, tilepx], [tilepx, tilepx, tilepx]])
+                # tilepx1 = tilepx
                 blendmont = True
 
         else:
             tilepos1 = list(map(float, mapitem['StageXYZ'][0:2]))
             tilepos = numpy.array([tilepos1, tilepos1])
+            tilepx = '0'
+            tilepx = numpy.array([[tilepx, tilepx, tilepx], [tilepx, tilepx, tilepx]])
+            # tilepx1 = tilepx
 
         # check if map is a montage or not
 
@@ -824,9 +832,9 @@ def mergemap(mapitem, crop=False, black=False,
             # os.system(callcmd)
             merge_mrc = mf
             mergeheader = mapheader.copy()
-            overlapx = 0
-            overlapy = 0
-            tileloc = [0, 0]
+            # overlapx = 0
+            # overlapy = 0
+            # tileloc = [0, 0]
             imd = merge_mrc.data
             mergefile = mapfile
 
@@ -834,6 +842,8 @@ def mergemap(mapitem, crop=False, black=False,
                 im = imd[mapsection, :, :]
             elif len(imd.shape) == 2:
                 im = imd
+
+            merge_mrc.close()
 
         else:
 
@@ -857,18 +867,22 @@ def mergemap(mapitem, crop=False, black=False,
                 tilepx1 = loadtext(mapfile + '.pcs')
 
                 for j, item in enumerate(tilepx1):
-                    tilepx1[j] = list(re.split(' +', item))
+                    tilepx1[j] = str(list(re.split(' +', item)))
                 merge_mrc.close()
 
             else:
                 mergefile = mapfile
                 im = mf.data
+                tilepx = '0'
+                tilepx = numpy.array([[tilepx, tilepx, tilepx], [tilepx, tilepx, tilepx]])
+
                 if not os.path.exists(mdocname):
                     callcmd = 'extractpieces ' + mapfile + ' -ou ' + mapfile + '.pcs'
                     os.system(callcmd)
                     pxpos = loadtext(mapfile + '.pcs')
                     tilepx = [re.split(' +', line) for line in pxpos]
-                    tilepx1 = tilepx
+
+                tilepx1 = tilepx
 
                 mergeheader['xsize'] = int(tilepx[-1][0]) + im.shape[0]  # int(mapitem['MapWidthHeight'][0])
                 mergeheader['ysize'] = int(tilepx[-1][1]) + im.shape[1]  # int(mapitem['MapWidthHeight'][1])
@@ -950,12 +964,12 @@ def mergemap(mapitem, crop=False, black=False,
                 callcmd = 'imodmop \"' + mergebase + '.mod\" \"' + mergefile + '\" \"' + mergebase + '_crop.mrc\"'
                 os.system(callcmd)
 
-                merge_mrc.close()
-
         merge_mrc = mrc.mmap(mergebase + '_crop.mrc', permissive='True')
         im_cropped = merge_mrc.data
         im_cropped = numpy.rot90(numpy.transpose(im_cropped))
         m['im_cropped'] = im_cropped
+
+        merge_mrc.close()
 
     mergeheader['pixelsize'] = pixelsize
     mapheader['pixelsize'] = pixelsize
@@ -1041,7 +1055,7 @@ def realign_map(item, allitems):
                 result = []
             else:
                 mapitem = list(filter(lambda c_item: c_item['MapID'] == item['SamePosId'], allitems))[0]
-                result = realign_map(mapitem)
+                result = realign_map(mapitem, allitems)
         else:
             mapID = item['DrawnID']
             result = list(filter(lambda item: item['MapID'] == mapID, allitems))
@@ -1116,7 +1130,7 @@ def cart2pol(c):
     # cartesian into polar coordinates (2D)
     rho = numpy.sqrt(c[:, 0] ** 2 + c[:, 1] ** 2)
     phi = numpy.arctan2(c[:, 1], c[:, 0])
-    return (numpy.transpose([phi, rho]))
+    return numpy.transpose([phi, rho])
 
 
 # --------------------------------------
@@ -1125,7 +1139,7 @@ def pol2cart(rho, phi):
     # polar into cartesian coordinates (2D)
     x = rho * numpy.cos(phi)
     y = rho * numpy.sin(phi)
-    return (numpy.transpose([x, y]))
+    return numpy.transpose([x, y])
 
 
 # --------------------------------------
@@ -1255,7 +1269,7 @@ def map_extract(im, c, p, px_scale, t_size, mat, int8=False):
 
     limitsize = numpy.min([o_size, t_size], axis=0).squeeze()
 
-    if (limitsize == t_size).all():
+    if limitsize == t_size:
         # im3=im2.copy()
         outsize = t_size
         shift = [0, 0]
@@ -1685,11 +1699,13 @@ def pts2nav(im, pts, cntrs, curr_map, targetitem, nav, sloppy=False, maps=False)
 
 # ------------------------------------------------------------
 
-def nav_find(allitems, key, val=[]):
+def nav_find(allitems, key, val=None):
     # returns the navigator/mdoc entries with the given key/value pair
     # takes an input navigator (list of dicts), a target key (item property) and the desired values to match
     # output is the list of navigator items
 
+    if val is None:
+        val = []
     filtered = list(filter(lambda item: item.get(key), allitems))
 
     if val == []:
@@ -1714,7 +1730,7 @@ def nav_find(allitems, key, val=[]):
 
 # ------------------------------------------------------------
 
-def nav_selection(allitems, sel=[], acquire=True, maps=False):
+def nav_selection(allitems, sel=None, acquire=True, maps=False):
     # extracts a selection of navigator items into a new navigator
     # takes an input navigator (list of dicts), an optional list of item labels (one line each)
     # and optional whether to include items selected for acquisition, optionally,
@@ -1722,6 +1738,8 @@ def nav_selection(allitems, sel=[], acquire=True, maps=False):
     # if only the input nav is given, it will extract all "Acquire" items
     # output is list of navigator items
 
+    if sel is None:
+        sel = []
     newnav = list()
     select = sel[:]
 
@@ -1850,7 +1868,7 @@ def pointitem(label, regis=1):
     point['Color'] = ['0']
 
     if type(regis) == list:
-        regis = ''.join(regis)
+        regis = ''.join(map(str, regis))
 
     point['Regis'] = [str(regis)]
     point['NumPts'] = ['1']
@@ -1873,6 +1891,8 @@ def virt_map_at_point(item, idx, maps, allitems, targetitem, targetheader, outna
         The target point item.
     idx : int
         acquisition index.
+    maps: dict
+        maps dictionary
     allitems : list of nav items 
         full navigator.    
     targetitem : navitem dict
