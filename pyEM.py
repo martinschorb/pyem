@@ -256,8 +256,7 @@ def map_file(mapitem):
                 mapfound = False
 
         if not mapfound:
-            print('ERROR: ' + mapfile1 + ' does not exist! Exiting' + '\n')
-            sys.exit(1)  # kills KNIME ;-)
+            raise FileNotFoundError('ERROR: ' + mapfile1 + ' does not exist! Exiting' + '\n')
 
         return mapfile2
 

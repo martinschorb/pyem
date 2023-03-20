@@ -1,6 +1,10 @@
+import os.path
 import pytest
+import shutil
+
 import pyEM as em
 
+from test_data import example_map
 
 @pytest.fixture(scope='module')
 def navlines():
@@ -13,7 +17,7 @@ def navlines_xml():
 
 @pytest.fixture(scope='module')
 def mapitem(navlines):
-    return em.nav_item(navl, '000')[0]
+    return em.nav_item(navlines, '12-A')[0]
 
 def test_loadtext():
     with pytest.raises(FileNotFoundError):
@@ -58,12 +62,12 @@ def test_mdoc_item(navlines, mapitem, capsys):
     if navlines[-1] != '':
         navlines += ['']
 
-    assert em.mdoc_item(navlines, '000') == {}
+    assert em.mdoc_item(navlines, '12-A') == {}
 
     captured = capsys.readouterr()
     assert 'ERROR: Item ' in captured.out
 
-    item0 = em.mdoc_item(navlines, 'Item = 000')
+    item0 = em.mdoc_item(navlines, 'Item = 12-A')
 
     mapitem.pop('# Item')
     assert mapitem == item0
@@ -71,3 +75,33 @@ def test_mdoc_item(navlines, mapitem, capsys):
     expectedheader = {'AdocVersion': ['2.00'], 'LastSavedAs': ['pyem\\test\\test_files\\sort.nav']}
     assert em.mdoc_item(navlines, '', header=True) == expectedheader
 
+
+def test_parse_adoc(navlines):
+    testlines = navlines[:2]
+
+    dict0 = em.parse_adoc(testlines)
+
+    assert dict0 == em.mdoc_item(navlines, '', header=True)
+
+
+def test_map_file(mapitem):
+    mapitem0 = dict(mapitem)
+
+    mapitem0['MapFile']=['Filethatclearlydoesnotexist.nonono']
+
+    with pytest.raises(FileNotFoundError):
+        em.map_file(mapitem0)
+
+    mapfile0 = em.map_file(mapitem)
+
+    assert mapfile0 == example_map
+    assert os.path.exists(mapfile0)
+    assert os.path.relpath(mapfile0,os.getcwd()) == 'test_files/MMM_01.mrc'
+
+    # test in local folder
+
+    shutil.copy(mapfile0,'.')
+    mapfile1 = em.map_file(mapitem)
+
+    assert mapfile1 == 'MMM_01.mrc'
+    os.remove(mapfile1)
