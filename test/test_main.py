@@ -1,17 +1,21 @@
 import pytest
 import pyEM as em
 
+
 @pytest.fixture(scope='module')
 def navlines():
     return em.loadtext('./test_files/sort.nav')
+
 
 @pytest.fixture(scope='module')
 def navlines_xml():
     return em.loadtext('./test_files/sort_xml.nav')
 
+@pytest.fixture(scope='module')
+def mapitem(navlines):
+    return em.nav_item(navl, '000')[0]
 
 def test_loadtext():
-
     with pytest.raises(FileNotFoundError):
         em.loadtext('./thisfiledoesnotextist.nav')
 
@@ -24,8 +28,7 @@ def test_loadtext():
 
 
 def test_nav_item(navlines, navlines_xml, capsys):
-
-    for xml,navl in enumerate([navlines_xml, navlines]):
+    for xml, navl in enumerate([navlines_xml, navlines]):
         # check if empty line at EOF
         if navl[-1] != '':
             navl = navl + ['']
@@ -50,10 +53,21 @@ def test_nav_item(navlines, navlines_xml, capsys):
             assert 'PtsX = ' + item0['PtsX'][0] not in out0
 
 
+def test_mdoc_item(navlines, mapitem, capsys):
+    # check if empty line at EOF
+    if navlines[-1] != '':
+        navlines += ['']
 
+    assert em.mdoc_item(navlines, '000') == {}
 
+    captured = capsys.readouterr()
+    assert 'ERROR: Item ' in captured.out
 
+    item0 = em.mdoc_item(navlines, 'Item = 000')
 
+    mapitem.pop('# Item')
+    assert mapitem == item0
 
-
+    expectedheader = {'AdocVersion': ['2.00'], 'LastSavedAs': ['pyem\\test\\test_files\\sort.nav']}
+    assert em.mdoc_item(navlines, '', header=True) == expectedheader
 
