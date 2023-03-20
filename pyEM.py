@@ -41,6 +41,7 @@ from operator import itemgetter
 import fnmatch
 from subprocess import Popen, PIPE
 import xml.etree.ElementTree as ET
+import xml.dom.minidom
 
 mrcext = ('.st', '.mrc', '.map', '.rec', '.ali', '.preali')
 
@@ -71,8 +72,8 @@ def loadtext(fname):
 
     # check if file exists
     if not os.path.exists(fname):
-        print('ERROR: ' + fname + ' does not exist! Exiting' + '\n')
-        sys.exit(1)
+        raise FileNotFoundError('ERROR: ' + fname + ' does not exist! Exiting' + '\n')
+
     f = open(fname, "r")
 
     lines = list()
@@ -109,8 +110,8 @@ def nav_item(inlines, label):
             newroot.append(el[0])
 
             result = xmltonav(ET.tostringlist(newroot))[0]
-            lines = ET.tostringlist(root)
-
+            lines = ET.tostring(root)
+            lines = xml.dom.minidom.parseString(lines).toprettyxml().replace('\t', '').split('\n')
     else:
         if lines[-1] != '':
             lines = lines + ['']
@@ -137,41 +138,41 @@ def nav_item(inlines, label):
 # -------------------------------
 # %%
 
-def adoc_items(lines1, search, header=False):
-    # extracts the content block of an item of given label in a mdoc file
-    # returns it as a dictionary
-
-    result = []
-
-    if lines1[-1] != '':
-        lines = lines1 + ['']
-    else:
-        lines = lines1
-
-    if header:
-        item = lines[:lines.index('')]
-        result.append(parse_adoc(item))
-    else:
-        pattern = '*' + search + '*'
-        matching = fnmatch.filter(lines, pattern)
-
-        # search for mdoc key item with the given label
-        for searchstr in matching:
-            if searchstr not in lines:
-                print('ERROR: String ' + search + ' not found!')
-                itemdict = {}
-            else:
-                itemstartline = lines.index(searchstr) + 1
-                itemendline = lines[itemstartline:].index('')
-
-                item = lines[itemstartline:itemstartline + itemendline]
-
-                itemdict = parse_adoc(item)
-                itemdict['# ' + searchstr] = lines[itemstartline - 1][
-                                             lines[itemstartline - 1].find(' = ') + 2:-1].lstrip(' ')
-            result.append(itemdict)
-
-    return result
+# def adoc_items(lines1, search, header=False):
+#     # extracts the content block of an item of given label in an adoc file
+#     # returns it as a dictionary
+#
+#     result = []
+#
+#     if lines1[-1] != '':
+#         lines = lines1 + ['']
+#     else:
+#         lines = lines1
+#
+#     if header:
+#         item = lines[:lines.index('')]
+#         result.append(parse_adoc(item))
+#     else:
+#         pattern = '*' + search + '*'
+#         matching = fnmatch.filter(lines, pattern)
+#
+#         # search for mdoc key item with the given label
+#         for searchstr in matching:
+#             if searchstr not in lines:
+#                 print('ERROR: String ' + search + ' not found!')
+#                 itemdict = {}
+#             else:
+#                 itemstartline = lines.index(searchstr) + 1
+#                 itemendline = lines[itemstartline:].index('')
+#
+#                 item = lines[itemstartline:itemstartline + itemendline]
+#
+#                 itemdict = parse_adoc(item)
+#                 itemdict['# ' + searchstr] = lines[itemstartline - 1][
+#                                              lines[itemstartline - 1].find(' = ') + 2:-1].lstrip(' ')
+#             result.append(itemdict)
+#
+#     return result
 
 
 # -------------------------------

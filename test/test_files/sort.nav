@@ -1,5 +1,5 @@
 AdocVersion = 2.00
-LastSavedAs = B:\schorb\code\pyem\test\test_files\sort.nav
+LastSavedAs = pyem\test\test_files\sort.nav
 
 [Item = 12-A]
 Color = 2
@@ -10,7 +10,7 @@ Type = 2
 Note = Sec 0 - MMM_01.mrc -
 BklshXY = 5 -5
 RawStageXY = 75.8717 11.681
-MapFile = B:\schorb\data\serialem_montages\Martin\\MMM_01.mrc
+MapFile = MMM_01.mrc
 MapID = 1338070642
 FitToPolygonID = 0
 MapMontage = 1
