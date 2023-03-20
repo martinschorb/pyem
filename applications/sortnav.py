@@ -7,11 +7,11 @@ import pyEM as em
 
 import sys
 
-#%%
+# %%
 
 navfile = sys.argv[1]
 
-#%%
+# %%
 
 
 # load the navigator file
@@ -26,5 +26,4 @@ newnavf = navfile[:-4] + '_sorted.nav'
 
 print('Navigator file was sorted and output is written as: ' + newnavf)
 
-em.write_navfile(newnavf,newnav,xml=False)
-    
+em.write_navfile(newnavf, newnav, xml=False)

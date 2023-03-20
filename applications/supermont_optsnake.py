@@ -6,116 +6,116 @@ from scipy.cluster.vq import kmeans, whiten
 
 # parse command line parameters
 
-#import argparse
+# import argparse
 
-#parser = argparse.ArgumentParser(description='Sort navigator file.')
-#parser.add_argument('navfile', metavar='navfile', type=str, help='a navigator file location')
+# parser = argparse.ArgumentParser(description='Sort navigator file.')
+# parser.add_argument('navfile', metavar='navfile', type=str, help='a navigator file location')
 
-#args = parser.parse_args()
+# args = parser.parse_args()
 
-#navfile = args.navfile
+# navfile = args.navfile
 
 import sys
 
 navfile = sys.argv[1]
 
 
-def neighbours(inarr,pt,dist=1):
-    i_range = np.linspace(-dist,dist,2*dist+1)
-    p0 = np.repeat(pt[0]+i_range,len(i_range))
-    p1 = np.tile(pt[1]+i_range,len(i_range))
-    allnbrs = np.stack([p0,p1],axis=-1)
-    eu_dist = np.linalg.norm(allnbrs-pt,axis=1)
-    circ = allnbrs[np.argwhere(np.all(np.stack([eu_dist<=dist,eu_dist>(dist-1)],axis=1),axis=1))].squeeze()
-    out=[]
+def neighbours(inarr, pt, dist=1):
+    i_range = np.linspace(-dist, dist, 2 * dist + 1)
+    p0 = np.repeat(pt[0] + i_range, len(i_range))
+    p1 = np.tile(pt[1] + i_range, len(i_range))
+    allnbrs = np.stack([p0, p1], axis=-1)
+    eu_dist = np.linalg.norm(allnbrs - pt, axis=1)
+    circ = allnbrs[np.argwhere(np.all(np.stack([eu_dist <= dist, eu_dist > (dist - 1)], axis=1), axis=1))].squeeze()
+    out = []
     for nb in circ:
-        if any(np.all(nb-inarr==[0,0],axis=1)): out.append(nb)
-    return np.array(out,dtype=int)
+        if any(np.all(nb - inarr == [0, 0], axis=1)):
+            out.append(nb)
+    return np.array(out, dtype=int)
 
 
-def step(inarr,pt,maxdist=6,nb=True):
-    pt_index = np.argwhere(np.all(inarr-pt==[0,0],axis=1))
-    outarr = np.delete(inarr,pt_index,0)
+def step(inarr, pt, maxdist=6, nb=True):
+    pt_index = np.argwhere(np.all(inarr - pt == [0, 0], axis=1))
+    outarr = np.delete(inarr, pt_index, 0)
     nbs = []
     dist = 0
     outpt = [0, 0]
     if nb:
         while len(nbs) < 1 and dist < maxdist:
             dist += 1
-            nbs = neighbours(outarr,pt,dist=dist)
-        if len(nbs)==0:
+            nbs = neighbours(outarr, pt, dist=dist)
+        if len(nbs) == 0:
             outarr = []
         else:
             outpt = nbs[int(np.random.random() * len(nbs))]
     else:
-        if len(outarr)>0:
+        if len(outarr) > 0:
             outpt = outarr[int(np.random.random() * len(outarr))]
 
-    return outarr, outpt, np.linalg.norm(outpt-pt)
+    return outarr, outpt, np.linalg.norm(outpt - pt)
 
 
-def tour(inarr,start,maxdist=6,nb=True):
+def tour(inarr, start, maxdist=6, nb=True):
     pt = np.copy(start)
     outarr = np.copy(inarr)
-    dist=0
+    dist = 0
     route = [start]
-    for leg,tpt in enumerate(inarr):
-        outarr,pt,stepdist = step(outarr,pt,maxdist=maxdist,nb=nb)
+    for leg, tpt in enumerate(inarr):
+        outarr, pt, stepdist = step(outarr, pt, maxdist=maxdist, nb=nb)
 
-        if leg < len(inarr)-1:
+        if leg < len(inarr) - 1:
             if len(outarr) < 1:
                 return None, []
             route.append(pt)
-            dist+=stepdist
-    return dist,np.array(route)
+            dist += stepdist
+    return dist, np.array(route)
 
 
-def randomtour(inarr,start=None,maxdist=4,numtrials = 10,subregions='',nb=True):
+def randomtour(inarr, start=None, maxdist=4, numtrials=10, subregions='', nb=True):
     dists = []
     routes = []
     pidx = -1
-    if start is  None:
+    if start is None:
         start = inarr[0]
 
     for i in range(numtrials):
-        pidx0 = int(i/numtrials*100)
+        pidx0 = int(i / numtrials * 100)
         if pidx0 != pidx:
-            print('Searching '+subregions+'... - '+str(pidx0)+'% completed.')
-            pidx=pidx0
+            print('Searching ' + subregions + '... - ' + str(pidx0) + '% completed.')
+            pidx = pidx0
         d = None
         while d is None:
-            d, route = tour(inarr, start,maxdist=maxdist,nb=nb)
+            d, route = tour(inarr, start, maxdist=maxdist, nb=nb)
         routes.append(route)
         dists.append(d)
-    return dists,routes
+    return dists, routes
 
 
-
-def splitcoos(inarr,size=50):
-    n,rem=np.divmod(len(inarr),size)
-    n+=1
+def splitcoos(inarr, size=50):
+    n, rem = np.divmod(len(inarr), size)
+    n += 1
 
     whitened = whiten(inarr)
-    clusterpts,distortion = kmeans(whitened, n)
+    clusterpts, distortion = kmeans(whitened, n)
 
-    dists, routes = randomtour(clusterpts,nb=False,numtrials=100,subregions='region centers')
+    dists, routes = randomtour(clusterpts, nb=False, numtrials=100, subregions='region centers')
 
     clusterpts = routes[np.argmin(dists)]
 
     cp_dists = []
     for cp in clusterpts:
-        cp_dists.append(list(np.linalg.norm(whitened - cp,axis=1)))
+        cp_dists.append(list(np.linalg.norm(whitened - cp, axis=1)))
 
-    cluster=np.argmin(np.array(cp_dists),axis=0)
+    cluster = np.argmin(np.array(cp_dists), axis=0)
 
     return cluster
 
 
-def connectregions(inarr,cluster):
-    regions =[]
+def connectregions(inarr, cluster):
+    regions = []
 
     for region in np.unique(cluster):
-        regions.append(inarr[cluster==region])
+        regions.append(inarr[cluster == region])
 
     fullroute = []
 
@@ -124,19 +124,20 @@ def connectregions(inarr,cluster):
     startpoint = regions[r_idx + 1][nextpoint_ix]
     thisregion = np.vstack((regions[r_idx], startpoint))
     # regions[r_idx + 1] = np.delete(regions[r_idx + 1], nextpoint_ix,axis=0)
-    dists, routes = randomtour(thisregion, start=startpoint, maxdist=3, numtrials=20,subregions='subregion 1/'+str(len(regions)))
+    dists, routes = randomtour(thisregion, start=startpoint, maxdist=3, numtrials=20,
+                               subregions='subregion 1/' + str(len(regions)))
 
-    for rt_ix,rt in enumerate(routes):
+    for rt_ix, rt in enumerate(routes):
         routes[rt_ix] = np.flipud(rt)
-
 
     fullroute.extend(routes[np.argmin(dists)][:-1])
 
-    for r_idx in range(len(regions)-1):
-        dists, routes = randomtour(regions[r_idx+1], start=startpoint, maxdist=3, numtrials=200,subregions='subregion '+str(r_idx+2)+'/'+str(len(regions)))
-        stpts=[]
+    for r_idx in range(len(regions) - 1):
+        dists, routes = randomtour(regions[r_idx + 1], start=startpoint, maxdist=3, numtrials=200,
+                                   subregions='subregion ' + str(r_idx + 2) + '/' + str(len(regions)))
+        stpts = []
         if r_idx < len(regions) - 2:
-            for rt_idx,route in enumerate(routes):
+            for rt_idx, route in enumerate(routes):
                 next_dist = np.linalg.norm(regions[r_idx + 2] - route[-1], axis=1)
                 nextpoint_ix = np.argmin(next_dist)
                 dists[rt_idx] += np.min(next_dist)
@@ -155,14 +156,14 @@ def connectregions(inarr,cluster):
 navlines = em.loadtext(navfile)
 allitems = em.fullnav(navlines)
 
-sm_items = list(filter(lambda item:item.get('SuperMontXY'),allitems))
+sm_items = list(filter(lambda item: item.get('SuperMontXY'), allitems))
 
-supermont=[]
+supermont = []
 sm_coos = []
 
 for item in sm_items:
     sm_id = item['# Item'].split('-')
-    supermont.append('_'.join(sm_id[0:len(sm_id)-2]))
+    supermont.append('_'.join(sm_id[0:len(sm_id) - 2]))
     sm_coos.append([int(sm_id[-2]), int(sm_id[-1])])
 
 smcoos = np.array(sm_coos)
@@ -171,26 +172,26 @@ smitems = np.array(sm_items)
 out_sm = []
 
 for sm in np.unique(supermont):
-    thiscoos = smcoos[np.where(np.array(supermont)==sm)]
-    thisitems = smitems[np.where(np.array(supermont)==sm)]
+    thiscoos = smcoos[np.where(np.array(supermont) == sm)]
+    thisitems = smitems[np.where(np.array(supermont) == sm)]
 
     cluster = splitcoos(thiscoos)
     fullroute = connectregions(thiscoos, cluster)
 
-    route_idx=[]
+    route_idx = []
     route_polyX = []
     route_polyY = []
 
     for pt in fullroute:
-        current = int(np.argwhere(np.all(thiscoos-pt==[0,0],axis=1)))
+        current = int(np.argwhere(np.all(thiscoos - pt == [0, 0], axis=1)))
         route_idx.append(current)
 
         out_sm.append(sm_items[current])
         route_polyX.append(sm_items[current]['StageXYZ'][0])
         route_polyY.append(sm_items[current]['StageXYZ'][1])
 
-    poly = em.pointitem('SM_'+str(sm)+'_start')
-    poly['Type'] = '1' #polygon
+    poly = em.pointitem('SM_' + str(sm) + '_start')
+    poly['Type'] = '1'  # polygon
     poly['StageXYZ'] = sm_items[route_idx[0]]['StageXYZ']
     poly['NumPts'] = [str(len(fullroute))]
     poly['PtsX'] = route_polyX
@@ -199,22 +200,21 @@ for sm in np.unique(supermont):
     out_sm.append(poly)
 
 non_sm = [x for x in allitems if x not in sm_items]
-#newnav = non_acq
+# newnav = non_acq
 
 # create new file by copying the header of the input file
 newnavf = navfile[:-4] + '_snake.nav'
 
 outnav = list()
 #
-#nnf = open(newnavf,'w')
-#nnf.write("%s\n" % navlines[0])
-#nnf.write("%s\n" % navlines[1])
+# nnf = open(newnavf,'w')
+# nnf.write("%s\n" % navlines[0])
+# nnf.write("%s\n" % navlines[1])
 
 # fill the new file   
 outnav.extend(non_sm)
 outnav.extend(out_sm)
 
-print('----------------------------------------\n Done.\n Writing output Supermontage as '+newnavf+'.')
-    
-em.write_navfile(newnavf,outnav,xml=False)
+print('----------------------------------------\n Done.\n Writing output Supermontage as ' + newnavf + '.')
 
+em.write_navfile(newnavf, outnav, xml=False)

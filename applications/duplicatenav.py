@@ -4,19 +4,18 @@ import pyEM as em
 
 # parse command line parameters
 
-#import argparse
+# import argparse
 
-#parser = argparse.ArgumentParser(description='Sort navigator file.')
-#parser.add_argument('navfile', metavar='navfile', type=str, help='a navigator file location')
+# parser = argparse.ArgumentParser(description='Sort navigator file.')
+# parser.add_argument('navfile', metavar='navfile', type=str, help='a navigator file location')
 
-#args = parser.parse_args()
+# args = parser.parse_args()
 
-#navfile = args.navfile
+# navfile = args.navfile
 
 import sys
 
 navfile = sys.argv[1]
-
 
 # load the navigator file
 navlines = em.loadtext(navfile)
@@ -32,4 +31,4 @@ print('Navigator items marked with Acquire were duplicated and output is written
 
 # fill the new file   
 
-em.write_navfile(newnavf,newnav,xml=False)
+em.write_navfile(newnavf, newnav, xml=False)
