@@ -41,6 +41,7 @@ from operator import itemgetter
 import fnmatch
 from subprocess import Popen, PIPE
 import xml.etree.ElementTree as ET
+import xml.dom.minidom
 
 mrcext = ('.st', '.mrc', '.map', '.rec', '.ali', '.preali')
 
@@ -71,8 +72,8 @@ def loadtext(fname):
 
     # check if file exists
     if not os.path.exists(fname):
-        print('ERROR: ' + fname + ' does not exist! Exiting' + '\n')
-        sys.exit(1)
+        raise FileNotFoundError('ERROR: ' + fname + ' does not exist! Exiting' + '\n')
+
     f = open(fname, "r")
 
     lines = list()
@@ -109,8 +110,8 @@ def nav_item(inlines, label):
             newroot.append(el[0])
 
             result = xmltonav(ET.tostringlist(newroot))[0]
-            lines = ET.tostringlist(root)
-
+            lines = ET.tostring(root)
+            lines = xml.dom.minidom.parseString(lines).toprettyxml().replace('\t', '').split('\n')
     else:
         if lines[-1] != '':
             lines = lines + ['']

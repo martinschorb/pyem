@@ -2,7 +2,7 @@
 <navigator>
   <PreData>
     <AdocVersion>2.00</AdocVersion>
-    <LastSavedAs>B:\schorb\data\serialem_montages\Martin\nav.nav</LastSavedAs>
+    <LastSavedAs>nav.nav</LastSavedAs>
   </PreData>
   <Item name="12-A">
     <Color>2</Color>
@@ -13,7 +13,7 @@
     <Note>Sec 0 - MMM_01.mrc -</Note>
     <BklshXY>5 -5</BklshXY>
     <RawStageXY>75.8717 11.681</RawStageXY>
-    <MapFile>B:\schorb\data\serialem_montages\Martin\\MMM_01.mrc</MapFile>
+    <MapFile>MMM_01.mrc</MapFile>
     <MapID>1338070642</MapID>
     <FitToPolygonID>0</FitToPolygonID>
     <MapMontage>1</MapMontage>
