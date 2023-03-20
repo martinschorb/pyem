@@ -1,0 +1,1500 @@
+MaxMacros	60
+Macro	0
+MacroName quicktomo_master
+# EMBL Heidelberg 2019  Martin Schorb
+
+########## SETTINGS ########## 
+
+#-----------------------------------------------------------
+
+## ENTER THE TARGET DIRECTORY HERE, MAKE SURE IT EXISTS
+
+
+dir @= D:\eva\196
+# -----------------------------------------------------------
+
+## Use Target points (Acquire at items)?
+
+use_targetpoints = 1      # 0 - no move to point,   1 - RealignToNavItem ,  2 - realign to map drawn on 
+
+#-----------------------------------------------------------
+
+## DUAL AXIS TOMOGRAPHY ?
+
+
+dual = 2            # 0 - single axis,   1 - dual tomo first axis,    2 - dual tomo second axis 
+map = 0            # 1 - take additional map image for dual axis realignment
+
+
+# ------------------------------------------------------------
+
+
+## MINIMUM / MAXIMUM TILT AND TILT STEP (HM tomogram)
+
+hm_step	  := 1	# stage tilt step in degrees
+autotiltrange := 0       # determine the possible tilt range at every position automatically (1=enabled)
+hm_maxtilt  := 60	# maximum/minimum tilt
+
+# -----------------------------------------------------------
+
+
+## MAGNIFICATION AND BEAM SETTING (for HM tomo)
+
+usecurrentimagingstate = 1    #   if you want to read hm_parameters from current imaging state
+
+# else put the values manually below! If you acquire LM as well, make sure you adjust the values there.
+
+hm_mag  := 20000     # magnification
+hm_C2      :=  59.883      # Intensity C2 value in %
+hm_spot  := 2              #  
+
+# ------------------------------------------------------------
+
+
+
+## AUTOFOCUS SETTINGS
+
+focus_step := 5 # how often to focus during tilt series (default: every 5 degrees)
+
+# ------------------------------------------------------------
+
+## LOW MAGNIFICATION TOMOGRAM (taken after the HM)
+
+lowmag = 0        # 0 - no LM tomo taken, 1 - LM tomo acquired after HM, 2 - single LM image,3 - anchor map
+
+# IF LM TOMO DESIRED:
+## MINIMUM / MAXIMUM TILT AND TILT STEP (LM tomogram)
+
+lm_step	  := 10	# stage tilt step in degrees
+
+
+## FOCUS, MAGNIFICATION AND BEAM SETTING (for LM tomo)
+
+lm_focus  :=  -100               # target defocus for LM tomo (default -5)
+lm_mag    :=  4700         # magnification
+lm_C2        :=  67.0             # Intensity C2 value in %
+lm_spot     := 3
+
+# -----------------------------------------------------------------
+
+# DELAY AFTER TILTING
+# this is microscope/camera-specific. For our Tecnai-OneView, we use 150
+
+tilt_delay := 0
+
+########## END SETTINGS ########## 
+
+
+
+
+
+
+
+
+# start Script
+
+If $usecurrentimagingstate == 1
+
+   ReportMag mag1
+   ReportPercentC2 C2_1
+   ReportSpotSize spot _1 
+
+   hm_mag := $mag1
+   hm_C2 := $C2_1
+   hm_spot := $spot_1
+
+EndIf
+
+
+ReportFocus foc1
+ReportTargetDefocus def1
+spot = $hm_spot
+
+NoMessageBoxOnError 1
+
+ReportNavItem
+
+origlabel = $navLabel
+
+# generate file names
+
+If  $dual == 0 
+
+            filename @= $dir\$navLabel_hm.st
+
+ElseIf $dual == 1
+
+            filename @= $dir\$navLabel_hma.st
+
+ElseIf $dual == 2
+
+            filename @= $dir\$navLabel_hmb.st
+            lowmag = 0
+            
+Endif 
+
+# Echo $filename
+
+OpenNewFile $filename
+
+
+# Set HM microscope state
+
+SetMag $hm_mag
+SetPercentC2 $hm_C2
+SetSpotSize $spot
+
+# run high-mag quick tomo
+
+CallFunction quickHMTomo-nav_AF
+
+If $lowmag == 0
+
+     TiltTo 0
+
+ElseIf $lowmag == 1
+
+#run additional low-mag tomo right afterwards
+
+     filename @= $dir\$navLabel_lm.st
+     #Echo $filename
+
+     SetTargetDefocus $lm_focus
+
+     OpenNewFile $filename
+
+     SetMag $lm_mag     
+     SetPercentC2 $lm_C2
+
+     CallFunction quickLMafterHM-nav
+
+Else
+TiltTo 0
+
+If $lowmag == 2
+   
+# acquire additional single low-mag image
+
+
+    filename1 @= $dir\$navLabel_lm.mrc
+   
+    SetTargetDefocus $lm_focus    
+
+    OpenNewFile $filename1
+
+     SetMag $lm_mag     
+     SetPercentC2 $lm_C2
+     SetSpotSize $lm_spot
+          
+     G
+     R
+     S
+     
+     CloseFile 
+EndIf
+
+
+If $lowmag == 3
+   
+# acquire additional single low-mag anchor map
+
+   MakeAnchorMap 
+   ReportNumTableItems 
+
+   label = m_$origlabel
+
+   ChangeItemLabel $reportedValue1 $label
+
+EndIf
+
+
+
+
+SetTargetDefocus $def1
+
+
+SetDefocus foc1
+ResetImageShift 
+ResetAccumShift 
+
+
+Endif 
+
+
+SetMag $hm_mag
+SetPercentC2 $hm_C2
+SetTargetDefocus $def1
+SetEucentricFocus 
+SetSpotSize $hm_spot
+
+
+# ================================================
+# ================================================
+# ================================================
+
+
+Function quickLMafterHM-nav
+# EMBL Heidelberg 2016  Martin Schorb
+
+########## SETTINGS ########## 
+
+step	= $lm_step	# stage tilt step in degrees
+
+########## END SETTINGS ########## 
+
+
+
+tilttimes = $tiltrange / $step
+tiltangle = $mintilt
+G
+TiltTo $tiltangle
+
+T
+
+Loop $tilttimes
+              
+                 TiltTo $tiltangle
+                 tiltangle = $tiltangle + $step
+
+	# acquire tilt image
+	TiltDuringRecord $tiltangle 0 5
+                      AlignTo B
+	S
+EndLoop
+TiltTo 0
+ResetAccumShift
+NormalizeAllLenses 0
+CloseFile
+
+EndFunction 
+
+
+
+# ================================================
+# ================================================
+# ================================================
+
+Function quickHMTomo-nav_AF
+# EMBL Heidelberg 2016  Martin Schorb
+
+########## SETTINGS ########## 
+
+step	= $hm_step	# stage tilt step in degrees
+
+AF_step     = $focus_step
+
+
+########## END SETTINGS ########## 
+
+If $use_targetpoints == 1
+
+ResetAccumShift 
+ResetImageShift 
+
+RealignToNavItem 1
+
+
+ResetAccumShift
+NormalizeAllLenses 0
+ResetImageShift 
+
+T
+Copy A P
+
+EndIf
+
+
+If $use_targetpoints == 2
+
+ResetAccumShift 
+ResetImageShift 
+
+MoveToNavItem 
+
+RealignToMapDrawnOn 0 1
+
+T
+Copy A P
+
+Eucentricity 1
+UpdateItemZ
+
+
+ResetAccumShift
+NormalizeAllLenses 0
+ResetImageShift 
+
+T
+AlignTo P
+
+EndIf
+
+
+If $autotiltrange == 1
+
+   Call FindTiltRange
+
+   maxtilt := $maxposstilt
+   mintilt := $minposstilt
+
+Else
+
+   maxtilt := $hm_maxtilt
+   mintilt := -$hm_maxtilt
+   
+EndIf
+
+
+# Realign after Eucentricity for better precision
+
+
+tiltrange = $maxtilt - $mintilt  
+
+tilttimes = $tiltrange / $step + 1
+tiltangle = $maxtilt
+
+
+If $map == 1
+
+   OpenNewFile $dir\$origlabel_map.st
+   G
+   R
+   S
+   NewMap 
+   ReportNumTableItems 
+   ChangeItemLabel $ReportedValue1 $origlabel
+   CloseFile 
+EndIf
+
+# calculate where to take AF
+
+c = 0
+
+div = $tiltrange / $AF_step
+
+Loop $div
+ 
+  a = $maxtilt - $AF_step * $c
+  c = $c + 1
+  AFv$c = $a
+EndLoop 
+
+WalkUpTo $tiltangle
+
+Loop $tilttimes
+              
+           TiltTo $tiltangle  
+
+        #ReportColumnOrGunValve
+        
+#If $ReportedValue < 1
+   #Exit 
+#Endif 
+   
+        
+
+         # check if at AF tilt angle
+             c = 0
+             Loop $div
+                 c = $c + 1
+                 testvar = $AFv$c
+                 If $tiltangle == $testvar
+                     Copy A O
+                     G
+                     Copy O A
+                  Endif 
+              Endloop
+
+tiltangle = $tiltangle - $step
+
+	# acquire tilt image
+	TiltDuringRecord $tiltangle 80
+                      AlignTo B
+	S
+                     Delay $tilt_delay
+EndLoop
+
+ResetAccumShift
+NormalizeAllLenses 0
+
+CloseFile
+
+EndFunction 
+EndMacro
+Macro	1
+MacroName quickHMTomo-nav
+# EMBL Heidelberg 2016  Martin Schorb
+
+########## SETTINGS ########## 
+
+step	= 1	# stage tilt step in degrees
+maxtilt	= 60	
+
+########## END SETTINGS ########## 
+
+
+ResetAccumShift 
+ResetImageShift 
+
+tilttimes = 2 * $maxtilt / $step
+tiltangle = 1 * $maxtilt
+
+
+ RealignToNavItem 1
+
+Call  Z_byG
+UpdateItemZ
+
+
+WalkUpTo $tiltangle
+
+n = $tilttimes / 2 
+
+G
+
+Loop $n
+              
+                 TiltTo $tiltangle
+                 tiltangle = $tiltangle - $step
+
+	# acquire tilt image
+	TiltDuringRecord $tiltangle 50
+                      AlignTo B
+	S
+                     Delay 300
+EndLoop
+
+G
+
+Loop $n + 1
+              
+                 TiltTo $tiltangle
+                 tiltangle = $tiltangle + $step
+
+	# acquire tilt image
+	TiltDuringRecord $tiltangle 0 5       
+                     AlignTo B
+	S
+EndLoop
+#ResetAccumShift
+#NormalizeAllLenses 0
+#TiltTo 0
+CloseFile
+EndMacro
+Macro	2
+ScriptName Changereg
+
+# changes item registrations
+
+#=============================================
+# set new registration value here!
+
+newreg = 6
+
+# uncomment the following line if you want to update Z
+
+#UpdateItemZ 
+
+
+#=============================================
+
+# DO NOT EDIT BELOW HERE.....
+
+
+
+
+ReportNavItem 
+
+thisidx = $ReportedValue1
+ChangeItemRegistration $thisidx $newreg
+EndMacro
+Macro	3
+ScriptName FindTiltRange
+
+# EMBL Heidelberg 2018  Martin Schorb
+
+#-----------------------------------------------------------
+# Assume tilt axis is close to vertical 
+# Assume Eucentricity is set
+# 
+#
+# PARAMETERS:
+
+# tilt magnitude at which to start the search
+starttilt = 0
+
+# initial search increment
+startinc = 10
+
+# absolut maximum tilt
+tiltmax = 70
+
+
+#
+#
+#   script starts here...
+#
+
+SuppressReports
+
+echo ####################################
+echo Try to find maximum possible tilt range at current position and mag
+
+# find starting image values
+
+TiltTo 0
+T
+ImageProperties 
+xsize = $ReportedValue1
+ysize = $ReportedValue2
+
+# get mean intensity of central 20% at 0 degrees as a reference
+
+SubareaMean (0.4 * $xsize) (0.6 * $xsize) (0.4 * $ysize) (0.6 * $ysize)
+centerref  = $ReportedValue1
+
+# find maximum positive tilt
+CallFunction ExtremeTilt
+maxposstilt := $ex_tilt - 1
+
+
+#find maximum negative tilt
+starttilt = -1 * $starttilt
+startinc = -1 * $startinc
+
+CallFunction ExtremeTilt
+minposstilt := $ex_tilt + 1
+
+echo maximum positive tilt at the current posistion is $maxposstilt degrees.
+echo maximum negative tilt at the current posistion is $minposstilt degrees.
+
+TiltTo 0
+
+
+
+# -----------------------------------------------------------------------
+#
+#
+###         Supporting Functions 
+# 
+# 
+#
+
+
+# Test Corners
+
+Function TestCorners 
+   # tests the intexity of the four 10-20% corners of an image against a threshold
+   
+   dark = 0   
+   
+   SubareaMean (0.1 * $xsize) (0.2 * $xsize) (0.1 * $ysize) (0.2 * $ysize)
+   c1  = $ReportedValue1
+   SubareaMean (0.1 * $xsize) (0.2 * $xsize) (0.8 * $ysize) (0.9 * $ysize)
+   c2  = $ReportedValue1
+   SubareaMean (0.8 * $xsize) (0.9 * $xsize) (0.1 * $ysize) (0.2 * $ysize)
+   c3  = $ReportedValue1
+   SubareaMean (0.8 * $xsize) (0.9 * $xsize) (0.8 * $ysize) (0.9 * $ysize)
+   c4  = $ReportedValue1
+   
+   CallFunction Minimum $c1 $c2 $c3 $c4
+   
+   If $outmin < 0.3 * $tiltref 
+      dark = 1
+   EndIf
+   
+EndFunction 
+
+
+# -----------------------
+# Minimum of 4 arguments
+
+Function Minimum 4 0
+   array = {$argVal1 $argVal2 $argVal3 $argVal4}
+   
+   outmin = $array[1]
+   
+   Loop $#array ix
+      If $array[$ix] < $outmin
+         outmin = $array[$ix]
+      Endif 
+   EndLoop
+   
+EndFunction 
+
+# --------------------------
+
+Function ExtremeTilt
+   # iteratively determines allowed tilt range
+   
+   currtilt = $starttilt
+   currinc = $startinc
+   adjust = 0
+   
+   Loop 10
+      echo Check if acquisition possible at $currtilt degrees.
+      TiltTo $currtilt
+      tiltfac = COS $currtilt
+      tiltref =  $tiltfac * $centerref 
+      # echo allowed: $tiltref 
+      T
+      CallFunction TestCorners
+      
+      # echo measured:  $outmin     
+      # echo $dark
+      
+      If $dark > 0
+         echo No
+         
+         # decrease increment
+         newinc = $currinc / 2
+         currinc = round $newinc
+         # go back
+         currtilt = $currtilt - $currinc
+         adjust = 1
+       Else
+         echo OK
+         If $adjust > 0
+            # when coming from a "bad"  angle, decrease increment
+            newinc = $currinc / 2
+            currinc = round $newinc
+            # test further
+            currtilt = $currtilt + $currinc
+            adjust = 0
+          Else
+            # test further
+            currtilt = $currtilt + $currinc
+         Endif 
+      Endif
+
+      # finishing conditions
+      currabs = abs $currinc
+
+      If abs $currtilt > abs $tiltmax
+         ex_tilt = $currtilt - $currinc + ( $currinc / $currabs )
+         echo reached maximum of defined range         
+         break
+      Endif 
+      
+      
+      If abs $currinc < 2
+         # single degree precision is enough
+         If $adjust > 1
+            ex_tilt = $currtilt - 2 * $currinc
+          Else
+            ex_tilt = $currtilt - $currinc
+         Endif 
+         break
+      Endif     
+   EndLoop 
+   
+EndFunction 
+EndMacro
+Macro	4
+ScriptName Markcells
+
+NavIndexItemDrawnOn 0
+ReportOtherItem $ReportedValue1
+StripEndingDigits NavLabel newlabel
+cellidx = $ReportedValue1
+StripEndingDigits NavLabel newlabel
+
+CallFunction Functions::PadIndex $cellidx 3
+
+#ChangeItemLabel $NavIndex $newlabel$outidx
+#lmidx = $NavIndex - 1
+#ReportOtherItem $lmidx
+#StripEndingDigits NavLabel newlabel
+#ChangeItemLabel $NavIndex $newlabel$outidx
+
+ReportNavItem 
+ChangeItemLabel $NavIndex c$cellidx
+EndMacro
+Macro	5
+
+# EMBL Heidelberg 2016  Martin Schorb
+
+########## SETTINGS ########## 
+
+step	= 1	# stage tilt step in degrees
+maxtilt	= 60	
+AF_step     = 10
+
+
+########## END SETTINGS ########## 
+
+
+ResetAccumShift 
+ResetImageShift 
+
+tilttimes = 2 * $maxtilt / $step + 1
+tiltangle = 1 * $maxtilt
+
+MoveToNavItem 
+
+Call  Z_byG
+UpdateItemZ
+
+
+ResetAccumShift
+NormalizeAllLenses 0
+ResetImageShift 
+
+
+RealignToNavItem 1
+
+# calculate where to take AF
+
+c = 0
+
+div = $maxtilt / $AF_step * 2
+
+Loop $div
+ 
+  a = $maxtilt - $AF_step * $c
+  c = $c + 1
+  AFv$c = $a
+EndLoop 
+
+
+WalkUpTo $tiltangle
+
+
+Loop $tilttimes
+              
+           TiltTo $tiltangle                 
+
+         # check if at AF tilt angle
+             c = 0
+             Loop $div
+                 c = $c + 1
+                 testvar = $AFv$c
+                 If $tiltangle == $testvar
+                     Copy A O
+                     G
+                     Copy O A
+                  Endif 
+              Endloop
+
+tiltangle = $tiltangle - $step
+
+	# acquire tilt image
+	TiltDuringRecord $tiltangle 50
+                      AlignTo B
+	S
+                     Delay 300
+EndLoop
+
+
+
+ResetAccumShift
+NormalizeAllLenses 0
+#TiltTo 0
+CloseFile
+EndMacro
+Macro	6
+Scriptname ShiftCorrect
+ReportNavItem 
+
+thisidx = $ReportedValue1
+NavIndexItemDrawnOn 0
+mapidx = $ReportedValue1
+
+ReportOtherItem $mapidx
+
+NavIndexWithLabel l$NavLabel
+lmidx = $ReportedValue1
+
+RealignToMapDrawnOn 0 1
+
+ChangeItemRegistration $thisidx 3
+ChangeItemRegistration $mapidx 3
+ChangeItemRegistration $lmidx 3
+SetNavRegistration 3
+
+ShiftItemsByCurrentDiff 25
+
+ChangeItemRegistration $thisidx 1
+ChangeItemRegistration $mapidx 1
+ChangeItemRegistration $lmidx 1
+SetNavRegistration 1
+EndMacro
+Macro	7
+MacroName serialsection_initial map
+
+
+sectionindex = _s03
+
+
+ReportNavItem
+#ChangeItemColor $navIndex 5
+RealignToNavItem 1
+G
+R
+NewMap
+
+#StripEndingDigits navLabel newlabel
+
+ReportNumTableItems 
+
+#label = $navlabel$sectionindex
+
+ChangeItemLabel $reportedValue1 $navlabel
+EndMacro
+Macro	8
+Scriptname NamePts
+
+NavIndexItemDrawnOn 0
+ReportOtherItem $ReportedValue1
+
+StripEndingDigits NavLabel newlabel
+cellidx = $ReportedValue1
+StripEndingDigits NavLabel newlabel
+
+CallFunction Functions::PadIndex $cellidx 3
+
+ReportNavItem 
+ChangeItemLabel $NavIndex c$outidx
+EndMacro
+Macro	9
+Scriptname Add Section Index
+
+sectionindex = _s08
+
+ReportNavItem
+ChangeItemLabel $reportedValue1 $navlabel$sectionindex
+EndMacro
+Macro	10
+MacroName serialsection_pts_map
+
+sectionindex = 10
+ReportNavItem
+
+x = $ReportedValue2
+y = $ReportedValue3
+
+StripEndingDigits navLabel newlabel
+#echo $navindex
+
+thisidx = $NavIndex
+ChangeItemLabel $thisidx $newlabel$sectionindex
+
+NavIndexItemDrawnOn 0
+mapidx = $ReportedValue1
+echo $mapidx
+
+#RealignToMapDrawnOn 0 1
+RealignToNavItem 1
+ResetImageShift 
+
+ReportStageXYZ 
+
+ChangeItemRegistration $thisidx 42
+SetNavRegistration 42
+
+ShiftItemsByMicrons ($ReportedValue1 - $x) ($ReportedValue2 - $y) 42
+
+ChangeItemRegistration $thisidx 2
+SetNavRegistration 2
+
+ReportOtherItem $mapidx
+#Echo $NavIndex
+ChangeItemColor $navIndex 5
+StripEndingDigits navLabel newlabel
+
+G
+R
+S
+NewMap
+
+ReportNumTableItems 
+
+ChangeItemLabel $reportedValue1 $newlabel$sectionindex
+EndMacro
+Macro	11
+MacroName importfromotherscope
+
+sectionindex = 03
+
+ReportNavItem
+RealignToNavItem 1
+ChangeItemColor $navIndex 5
+delay 3
+R
+S
+NewMap
+
+ReportNumTableItems 
+
+label = $navLabel_s$sectionindex
+
+#echo $label
+
+ChangeItemLabel $reportedValue1 $label
+EndMacro
+Macro	12
+ScriptName anchormaps
+
+#dir @= E:\Tobias\
+
+ReportNavItem
+RealignToNavItem 1
+ChangeItemColor $navIndex 5
+#SetNewFileType 1
+#filename @= $dir\$navLabel.mrc
+
+#OpenNewFile $filename
+
+#Echo $filename
+
+G
+R
+S
+NewMap
+
+
+#CloseFile
+ReportNumTableItems 
+
+ChangeItemLabel $reportedValue1 $NavLabel
+EndMacro
+Macro	13
+ScriptName Find TomoPoints
+
+#ResetAccumShift 
+#ResetImageShift 
+
+#RealignToNavItem 1
+
+RealignToMapDrawnOn 0 1
+
+T
+#Copy A P
+
+#Eucentricity 1
+#UpdateItemZ
+
+
+#ResetAccumShift
+#NormalizeAllLenses 0
+#ResetImageShift 
+
+#T
+#AlignTo P
+EndMacro
+Macro	14
+MacroName Conttomo
+
+
+Loop 4
+
+Call  Z_byG
+
+RealignToNavItem 1
+Call  Z_byG
+G
+T
+copy A B
+TiltTo 30
+T
+AlignTo B
+TiltTo 48
+T
+AlignTo B
+TiltTo 65
+T
+AlignTo B
+SetContinuous R 1
+BackgroundTilt -56 0.03
+delay 2
+T
+AlignTo B
+UseContinuousFrames 1
+R
+delay 7
+Loop 500
+#copy A B
+WaitForNextFrame 
+S
+#AlignTo B
+
+ReportTiltAngle angle
+
+if $angle < -55
+Return
+endif
+EndLoop 
+TiltTo 0
+
+ReportFileZsize tilts
+CloseFile
+If $tilts < 5
+RemoveFile $filename
+OpenNewFile $filename
+Else
+Return
+Endif 
+EndLoop
+EndMacro
+Macro	15
+ScriptName FastRealign
+
+lm = 2300
+lc2 = 76.9
+
+
+# -------------
+
+SuppressReports
+NoMessageBoxonError
+
+ReportMag
+
+hm = $ReportedValue1
+ReportPercentC2
+hc2 = $ReportedValue1
+
+
+SetImageShift 0 0
+
+SetMag $lm
+SetPercentC2 $lc2
+
+
+LoadNavMap
+SetImageShift 0 0
+T
+
+AlignTo D
+
+SetMag $hm
+SetPercentC2 $hc2
+
+G
+EndMacro
+Macro	16
+ScriptName Functions
+
+
+Function PadIndex 2 0 idx size
+loopsize = $size - 1
+check = 10
+outidx = $idx
+Loop $loopsize
+if $idx < $check
+   outidx = 0$outidx
+endif
+check = 10 * $check
+EndLoop 
+EndFunction 
+EndMacro
+Macro	17
+MacroName ContTomo1
+
+Loop 4
+Call  Z_byG
+UpdateItemZ 
+RealignToNavItem 1
+Call  Z_byG
+G
+T
+copy A B
+TiltTo 63
+SetContinuous R 1
+UseContinuousFrames 1
+R
+WaitForNextFrame
+BackgroundTilt -60 0.04
+AlignTo B
+Loop 500
+copy A B
+WaitForNextFrame 
+S
+AlignTo B
+
+ReportTiltAngle angle
+
+if $angle < -59.5
+  StopContinuous 
+  Break 
+endif
+EndLoop 
+
+TiltTo 0
+
+ReportFileZsize tilts
+CloseFile
+If $tilts < 5
+RemoveFile $filename
+OpenNewFile $filename
+Else
+Return
+Endif 
+EndLoop
+EndMacro
+Macro	18
+MacroName quickLMafterHM-nav
+# EMBL Heidelberg 2016  Martin Schorb
+
+########## SETTINGS ########## 
+
+step	= $lm_step	# stage tilt step in degrees
+maxtilt	= $lm_maxtilt	
+
+########## END SETTINGS ########## 
+
+
+
+tilttimes = 2 * $maxtilt / $step + 1
+step = $step
+tiltangle =  $maxtilt
+G
+TiltTo $tiltangle
+
+echo $maxtilt
+return
+
+T
+
+Loop $tilttimes
+              
+                 TiltTo -$tiltangle
+                 tiltangle = $tiltangle + $step
+
+	#MoveStageTo $StageX $StageY
+
+	# acquire tilt image
+	TiltDuringRecord $tiltangle 0 5
+                      AlignTo B
+	S
+EndLoop
+TiltTo 0
+ResetAccumShift
+NormalizeAllLenses 0
+CloseFile
+EndMacro
+Macro	19
+MacroName quickHMTomo-nav_AF
+# EMBL Heidelberg 2016  Martin Schorb
+
+########## SETTINGS ########## 
+
+step	= $hm_step	# stage tilt step in degrees
+maxtilt	= $hm_maxtilt	
+AF_step     = $focus_step
+
+
+########## END SETTINGS ########## 
+
+
+ResetAccumShift 
+ResetImageShift 
+
+tilttimes = 2 * $maxtilt / $step + 1
+tiltangle = 1 * $maxtilt
+
+MoveToNavItem 
+
+
+#Call  Z_byG
+Eucentricity 1
+UpdateItemZ
+
+
+ResetAccumShift
+NormalizeAllLenses 0
+ResetImageShift 
+
+
+RealignToNavItem 1
+
+If $map == 1
+
+   OpenNewFile $dir\$navLabel_map.st
+   G
+   R
+   S
+   NewMap 
+   CloseFile 
+EndIF
+
+# calculate where to take AF
+
+c = 0
+
+div = $maxtilt / $AF_step * 2
+
+Loop $div
+ 
+  a = $maxtilt - $AF_step * $c
+  c = $c + 1
+  AFv$c = $a
+EndLoop 
+
+
+WalkUpTo $tiltangle
+
+Loop $tilttimes
+              
+           TiltTo $tiltangle                 
+
+         # check if at AF tilt angle
+             c = 0
+             Loop $div
+                 c = $c + 1
+                 testvar = $AFv$c
+                 If $tiltangle == $testvar
+                     Copy A O
+                     G
+                     Copy O A
+                  Endif 
+              Endloop
+
+tiltangle = $tiltangle - $step
+
+	# acquire tilt image
+	TiltDuringRecord $tiltangle 50
+                      AlignTo B
+	S
+                     Delay 150
+EndLoop
+
+
+
+ResetAccumShift
+NormalizeAllLenses 0
+#TiltTo 0
+CloseFile
+EndMacro
+Macro	20
+MacroName Z_byG
+##############################
+# Z_byG.txt
+# Updated @ 2014-10-21 12:22:49 
+##############################
+#
+# a macro to adjust the eccentric center using beam tilted pairs.
+# It uses Autofocus to measure the focus and adjust Z instead.
+#
+
+Echo ===> Running Z_byG ...
+
+# If in Low Dose, the area should be at Focus first
+# before defocus is zeroed, because it could come from V with 
+# large defocus offset. It could float up in that case. 
+
+SuppressReports
+ReportLowDose
+# if in LowDose and area is V
+If $reportedValue1 == 1 AND $reportedValue2 == 0
+  GoToLowDoseArea F
+Endif 
+
+#==================
+# set objective lens 
+#==================
+SetEucentricFocus
+#NormalizeLenses 2
+#Delay 1
+
+#===========
+# Adjust Z
+#===========
+Loop 2
+Autofocus -1
+ReportAutofocus 
+t = -1 * $reportedValue1
+MoveStage 0 0 $t
+echo --> Z moved $reportedValue1 micron 
+EndLoop
+
+#=== end ====
+EndMacro
+Macro	21
+ScriptName update z
+
+NavIndexItemDrawnOn 0
+mapidx = $ReportedValue1
+ReportOtherItem $mapidx
+
+echo $ReportedValue3
+EndMacro
+Macro	22
+ScriptName NamePts_deprecated
+
+NavIndexItemDrawnOn 0
+ReportOtherItem $ReportedValue1
+
+#ChangeItemLabel $NavIndex $newlabel$outidx
+#lmidx = $NavIndex - 1
+#ReportOtherItem $lmidx
+#StripEndingDigits NavLabel newlabel
+#ChangeItemLabel $NavIndex $newlabel$outidx
+
+label = $navlabel
+
+ReportNavItem 
+ChangeItemLabel $NavIndex $label
+EndMacro
+Macro	23
+ScriptName NamePtsCovid
+
+NavIndexItemDrawnOn 0
+ReportOtherItem $ReportedValue1
+
+maplabel = $NavLabel
+
+
+
+
+newlabel = $maplabel_
+
+ReportNavItem 
+
+
+prev = $NavIndex - 1
+
+ReportOtherItem $prev
+
+StripEndingDigits NavLabel prevmap
+pt_index = $ReportedValue1
+echo $prevmap
+echo $newlabel
+
+CompareStrings prevmap $newlabel
+
+prevtomo = $ReportedValue1
+
+If ($prevtomo == 0)
+   pt_index = $pt_index + 1
+Else
+   pt_index = 1
+Endif 
+
+tomlabel = t$pt_index
+ReportNavItem 
+ChangeItemLabel $NavIndex $newlabel$pt_index
+EndMacro
+Macro	24
+MacroName serialsection_pts_map
+
+sectionindex = 02
+ReportNavItem
+
+x = $ReportedValue2
+y = $ReportedValue3
+
+StripEndingDigits navLabel newlabel
+#echo $navindex
+
+thisidx = $NavIndex
+ChangeItemLabel $thisidx $newlabel$sectionindex
+
+NavIndexItemDrawnOn 0
+mapidx = $ReportedValue1
+echo $mapidx
+
+#RealignToMapDrawnOn 0 1
+RealignToNavItem 1
+ResetImageShift 
+
+ReportOtherItem $mapidx
+#Echo $NavIndex
+ChangeItemColor $navIndex 5
+StripEndingDigits navLabel newlabel
+
+G
+R
+S
+NewMap
+
+ReportNumTableItems 
+
+ChangeItemLabel $reportedValue1 $newlabel$sectionindex
+
+ReportStageXYZ 
+
+ChangeItemRegistration $thisidx 42
+SetNavRegistration 42
+
+ShiftItemsByMicrons ($ReportedValue1 - $x) ($ReportedValue2 - $y) 42
+
+UpdateItemZ
+
+ChangeItemRegistration $thisidx 2
+SetNavRegistration 2
+EndMacro
+Macro	25
+MacroName Covidmaps
+
+ReportNavItem
+#ChangeItemColor $navIndex 5
+RealignToNavItem 1
+G
+R
+NewMap
+
+#StripEndingDigits navLabel newlabel
+
+ReportNumTableItems 
+
+label = $navlabel
+
+ChangeItemLabel $reportedValue1 $label
+EndMacro
+Macro	26
+ScriptName serialsections
+
+# EMBL Heidelberg 2018  Martin Schorb
+
+# use this script when transferring a large number of Navigator items from one section to another.
+# duplicate the items and move them to the next section using the registration and transformation tools.
+# Run the script on the duplicated items.  If you duplicated maps, select Realign to Item as well.
+# It will acquire an anchor map at each position and name it with the original Label adding the new section index.
+
+
+########## SETTINGS ########## 
+
+# index of the next section 
+
+
+
+########## END SETTINGS ########## 
+
+Eucentricity 1
+UpdateItemZ 
+ReportNavItem
+RealignToNavItem 1
+ChangeItemColor $navIndex 5
+
+G
+R
+S
+NewMap
+#MakeAnchorMap 
+
+ReportNumTableItems 
+
+label = $navLabel
+
+#hmlabel = $reportedValue1 - 1
+
+#ChangeItemLabel $hmlabel $label
+ChangeItemLabel $reportedValue1 $label
+EndMacro
+Macro	27
+ReportColumnOrGunValve 
+Echo $ReportedValue1
+EndMacro
+Macro	60
+NavIndexItemDrawnOn 4747
+EndMacro
+Macro	61
+CloseFile
+EndMacro
+Macro	62
+RealignToMapDrawnOn  0 1
+EndMacro
+Macro	63
+RealignToNavItem 0
+EndMacro
