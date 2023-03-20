@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigator>
+  <PreData>
+    <AdocVersion>2.00</AdocVersion>
+    <LastSavedAs>B:\schorb\data\serialem_montages\Martin\nav.nav</LastSavedAs>
+  </PreData>
+  <Item name="12-A">
+    <Color>2</Color>
+    <StageXYZ>75.8717 11.681 -39.8515</StageXYZ>
+    <NumPts>5</NumPts>
+    <Regis>1</Regis>
+    <Type>2</Type>
+    <Note>Sec 0 - MMM_01.mrc -</Note>
+    <BklshXY>5 -5</BklshXY>
+    <RawStageXY>75.8717 11.681</RawStageXY>
+    <MapFile>B:\schorb\data\serialem_montages\Martin\\MMM_01.mrc</MapFile>
+    <MapID>1338070642</MapID>
+    <FitToPolygonID>0</FitToPolygonID>
+    <MapMontage>1</MapMontage>
+    <MapSection>0</MapSection>
+    <MapBinning>16</MapBinning>
+    <MapMagInd>17</MapMagInd>
+    <MapCamera>0</MapCamera>
+    <MapScaleMat>20.2959 2.12593 2.3697 -19.6898</MapScaleMat>
+    <MapWidthHeight>880 910</MapWidthHeight>
+    <MapMinMaxScale>28 19143</MapMinMaxScale>
+    <MapFramesXY>2 2</MapFramesXY>
+    <MontBinning>4</MontBinning>
+    <MapExposure>0.8</MapExposure>
+    <MapSettling>0</MapSettling>
+    <ShutterMode>0</ShutterMode>
+    <MapSpotSize>5</MapSpotSize>
+    <MapIntensity>0.684686</MapIntensity>
+    <MapSlitIn>0</MapSlitIn>
+    <MapSlitWidth>20</MapSlitWidth>
+    <ImageType>0</ImageType>
+    <MontUseStage>1</MontUseStage>
+    <MapProbeMode>1</MapProbeMode>
+    <MapLDConSet>-1</MapLDConSet>
+    <MapTiltAngle>-0.000499939</MapTiltAngle>
+    <PtsX>52.0719 94.8906 99.6714 56.8527 52.0719</PtsX>
+    <PtsY>31.925 37.0783 -8.56303 -13.7163 31.925</PtsY>
+  </Item>
+  <Item name="206">
+    <Color>1</Color>
+    <StageXYZ>68.0465 11.717 -39.8515</StageXYZ>
+    <NumPts>4</NumPts>
+    <Regis>1</Regis>
+    <Type>1</Type>
+    <DrawnID>1338070642</DrawnID>
+    <BklshXY>5 -5</BklshXY>
+    <MapID>1011879641</MapID>
+    <PtsX>69.8916 66.4016 67.8462 69.8916</PtsX>
+    <PtsY>11.2136 15.2656 8.67161 11.2136</PtsY>
+  </Item>
+  <Item name="refmap">
+    <Color>2</Color>
+    <StageXYZ>89.9923 16.1717 -39.8481</StageXYZ>
+    <NumPts>5</NumPts>
+    <Regis>1</Regis>
+    <Type>2</Type>
+    <Note>Sec 0 - examplemap.mrc</Note>
+    <BklshXY>-5 -5</BklshXY>
+    <SamePosId>737091163</SamePosId>
+    <RawStageXY>89.9923 16.1717</RawStageXY>
+    <MapFile>B:\schorb\data\serialem_montages\Martin\\examplemap.mrc</MapFile>
+    <MapID>737091163</MapID>
+    <FitToPolygonID>0</FitToPolygonID>
+    <MapMontage>0</MapMontage>
+    <MapSection>0</MapSection>
+    <MapBinning>8</MapBinning>
+    <MapMagInd>23</MapMagInd>
+    <MapCamera>0</MapCamera>
+    <MapScaleMat>253.855 22.2464 25.1571 -246.237</MapScaleMat>
+    <MapWidthHeight>924 958</MapWidthHeight>
+    <MapMinMaxScale>-8 35</MapMinMaxScale>
+    <MapFramesXY>0 0</MapFramesXY>
+    <MontBinning>8</MontBinning>
+    <MapExposure>0.5</MapExposure>
+    <MapSettling>0</MapSettling>
+    <ShutterMode>0</ShutterMode>
+    <MapSpotSize>9</MapSpotSize>
+    <MapIntensity>0.239197</MapIntensity>
+    <MapSlitIn>1</MapSlitIn>
+    <MapSlitWidth>30</MapSlitWidth>
+    <ImageType>0</ImageType>
+    <MontUseStage>-1</MontUseStage>
+    <DefocusOffset>-100</DefocusOffset>
+    <K2ReadMode>1</K2ReadMode>
+    <NetViewShiftXY>-0.0304603 -0.0125083</NetViewShiftXY>
+    <MapProbeMode>0</MapProbeMode>
+    <MapLDConSet>0</MapLDConSet>
+    <MapTiltAngle>-0.000499939</MapTiltAngle>
+    <PtsX>88.0196 91.6271 91.965 88.3575 88.0196</PtsX>
+    <PtsY>17.9154 18.284 14.428 14.0594 17.9154</PtsY>
+  </Item>
+  <Item name="176">
+    <Color>0</Color>
+    <StageXYZ>63.1081 26.1926 -39.8515</StageXYZ>
+    <NumPts>1</NumPts>
+    <Regis>1</Regis>
+    <Type>0</Type>
+    <GroupID>1074138545</GroupID>
+    <DrawnID>1338070642</DrawnID>
+    <BklshXY>5 -5</BklshXY>
+    <Acquire>1</Acquire>
+    <PieceOn>1</PieceOn>
+    <XYinPc>845.285 1361.29</XYinPc>
+    <MapID>192163443</MapID>
+    <PtsX>63.1081</PtsX>
+    <PtsY>26.1926</PtsY>
+  </Item>
+  <Item name="000">
+    <Color>0</Color>
+    <StageXYZ>55.1593 24.0615 -39.8515</StageXYZ>
+    <NumPts>1</NumPts>
+    <Regis>1</Regis>
+    <Type>0</Type>
+    <GroupID>1074138545</GroupID>
+    <DrawnID>1338070642</DrawnID>
+    <BklshXY>5 -5</BklshXY>
+    <Acquire>1</Acquire>
+    <PieceOn>1</PieceOn>
+    <XYinPc>183.355 1268.69</XYinPc>
+    <MapID>1403410987</MapID>
+    <PtsX>55.1593</PtsX>
+    <PtsY>24.0615</PtsY>
+  </Item>
+  <Item name="175">
+    <Color>0</Color>
+    <StageXYZ>80.1057 29.3364 -39.8515</StageXYZ>
+    <NumPts>1</NumPts>
+    <Regis>1</Regis>
+    <Type>0</Type>
+    <GroupID>1074138545</GroupID>
+    <DrawnID>1338070642</DrawnID>
+    <BklshXY>5 -5</BklshXY>
+    <Acquire>1</Acquire>
+    <PieceOn>3</PieceOn>
+    <XYinPc>588.746 1447.88</XYinPc>
+    <MapID>1087073502</MapID>
+    <PtsX>80.1057</PtsX>
+    <PtsY>29.3364</PtsY>
+  </Item>
+</navigator>
