@@ -263,14 +263,14 @@ def map_file(mapitem):
 
 # -------------------------------
 # %%
-def findfile(searchstr, searchdir):
-    # will find files that match a search string in subfolders of the provided search directory
-    output = list()
-    for rootdir, dirs, files in os.walk(searchdir):
-        for file in files:
-            if fnmatch.fnmatch(file, searchstr):
-                output.append(os.path.join(rootdir, file))
-    return output
+# def findfile(searchstr, searchdir):
+#     # will find files that match a search string in subfolders of the provided search directory
+#     output = list()
+#     for rootdir, dirs, files in os.walk(searchdir):
+#         for file in files:
+#             if fnmatch.fnmatch(file, searchstr):
+#                 output.append(os.path.join(rootdir, file))
+#     return output
 
 
 # -------------------------------
@@ -281,10 +281,10 @@ def map_header(m):
     if (type(m) is mrc.mrcfile.MrcFile) | (type(m) is mrc.mrcmemmap.MrcMemmap):
         # extracts MRC header information for a given mrc.object (legacy from reading mrc headers)
 
-        header['xsize'] = numpy.int(m.header.nx)
-        header['ysize'] = numpy.int(m.header.ny)
+        header['xsize'] = int(m.header.nx)
+        header['ysize'] = int(m.header.ny)
 
-        header['stacksize'] = numpy.int(m.header.nz)
+        header['stacksize'] = int(m.header.nz)
 
         # determine the scale
 
@@ -340,7 +340,11 @@ def write_navfile(filename, outitems, xml=False):
         lsa = ET.SubElement(pd, 'LastSavedAs')
         lsa.text = filename
 
+
         for item in allitems:
+            print(item)
+            print(item['# Item'])
+
             ci = ET.SubElement(root, 'Item')
             ci.set('name', item['# Item'])
 
@@ -433,7 +437,7 @@ def fullnav(inlines, header=False):
 
     navlines = inlines[:]
 
-    if navlines[0] == '<?xml version="1.0" encoding="utf-8"?>':
+    if '<?xml version=' in navlines[0]:
         # load XML
         c = xmltonav(navlines)
     else:
@@ -541,7 +545,7 @@ def duplicate_items(navitems, labels=None, prefix='', reg=True, maps=False):
 def map_matrix(mapitem):
     # calculates the matrix relating pixel and stage coordinates
 
-    return numpy.matrix(list(map(float, mapitem['MapScaleMat']))).reshape(2, 2) * (
+    return numpy.array(list(map(float, mapitem['MapScaleMat']))).reshape(2, 2) * (
             int(mapitem['MapBinning'][0]) / int(mapitem['MontBinning'][0]))
 
 
@@ -898,11 +902,11 @@ def mergemap(mapitem, crop=False, black=False,
 
     tilepx = numpy.array(tilepx)
     tilepx = tilepx[tilepx[:, 2] == str(mapsection), 0:2]
-    tilepx = tilepx.astype(numpy.float)
+    tilepx = tilepx.astype(float)
 
     tilepx1 = numpy.array(tilepx1)
     tilepx1 = tilepx1[tilepx1[:, 2] == str(mapsection), 0:2]
-    tilepx1 = tilepx1.astype(numpy.float)
+    tilepx1 = tilepx1.astype(float)
 
     tpx = tilepx1[:, 0]
     tpy = tilepx1[:, 1]
