@@ -138,41 +138,41 @@ def nav_item(inlines, label):
 # -------------------------------
 # %%
 
-# def adoc_items(lines1, search, header=False):
-#     # extracts the content block of an item of given label in an adoc file
-#     # returns it as a dictionary
-#
-#     result = []
-#
-#     if lines1[-1] != '':
-#         lines = lines1 + ['']
-#     else:
-#         lines = lines1
-#
-#     if header:
-#         item = lines[:lines.index('')]
-#         result.append(parse_adoc(item))
-#     else:
-#         pattern = '*' + search + '*'
-#         matching = fnmatch.filter(lines, pattern)
-#
-#         # search for mdoc key item with the given label
-#         for searchstr in matching:
-#             if searchstr not in lines:
-#                 print('ERROR: String ' + search + ' not found!')
-#                 itemdict = {}
-#             else:
-#                 itemstartline = lines.index(searchstr) + 1
-#                 itemendline = lines[itemstartline:].index('')
-#
-#                 item = lines[itemstartline:itemstartline + itemendline]
-#
-#                 itemdict = parse_adoc(item)
-#                 itemdict['# ' + searchstr] = lines[itemstartline - 1][
-#                                              lines[itemstartline - 1].find(' = ') + 2:-1].lstrip(' ')
-#             result.append(itemdict)
-#
-#     return result
+def adoc_items(lines1, search, header=False):
+    # extracts the content block of an item of given label in an adoc file
+    # returns it as a dictionary
+
+    result = []
+
+    if lines1[-1] != '':
+        lines = lines1 + ['']
+    else:
+        lines = lines1
+
+    if header:
+        item = lines[:lines.index('')]
+        result.append(parse_adoc(item))
+    else:
+        pattern = '*' + search + '*'
+        matching = fnmatch.filter(lines, pattern)
+
+        # search for mdoc key item with the given label
+        for searchstr in matching:
+            if searchstr not in lines:
+                print('ERROR: String ' + search + ' not found!')
+                itemdict = {}
+            else:
+                itemstartline = lines.index(searchstr) + 1
+                itemendline = lines[itemstartline:].index('')
+
+                item = lines[itemstartline:itemstartline + itemendline]
+
+                itemdict = parse_adoc(item)
+                itemdict['# ' + searchstr] = lines[itemstartline - 1][
+                                             lines[itemstartline - 1].find(' = ') + 2:-1].lstrip(' ')
+            result.append(itemdict)
+
+    return result
 
 
 # -------------------------------
@@ -459,6 +459,9 @@ def fullnav(inlines, header=False):
 # %%
 
 def xmltonav(navlines):
+    if not navlines[0].lstrip(' ').startswith('<'):
+        raise ValueError('Input string list not in XML format!')
+
     root = ET.fromstringlist(navlines)
 
     c = []
