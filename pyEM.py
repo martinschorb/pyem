@@ -140,7 +140,7 @@ def nav_item(inlines, label):
 
 def adoc_items(lines1, search, header=False):
     # extracts the content block of an item of given label in an adoc file
-    # returns it as a dictionary
+    # returns it as a list of dictionaries
 
     result = []
 

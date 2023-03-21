@@ -60,6 +60,34 @@ def test_nav_item(navlines, navlines_xml, capsys):
             assert 'PtsX = ' + item0['PtsX'][0] not in out0
 
 
+def test_adoc_item(navlines, mapitem, capsys):
+    # check if empty line at EOF
+    if navlines[-1] != '':
+        navlines += ['']
+
+    assert em.adoc_items(navlines, 'nonexistingstring') == []
+
+    captured = capsys.readouterr()
+    assert 'ERROR: String ' in captured.out
+
+    item0 = em.adoc_items(navlines, 'Item = 12-A')[0]
+
+    assert '# [Item = 12-A]' in item0.keys()
+
+    mapitem0 = dict(mapitem)
+
+    assert item0['# [Item = 12-A]'] == mapitem0['# Item']
+
+    mapitem0.pop('# Item')
+    item0.pop('# [Item = 12-A]')
+
+    assert mapitem0 == item0
+
+    expectedheader = {'AdocVersion': ['2.00'], 'LastSavedAs': ['pyem\\test\\test_files\\sort.nav']}
+    assert em.adoc_items(navlines, '', header=True) == [expectedheader]
+
+
+
 def test_mdoc_item(navlines, mapitem, capsys):
     # check if empty line at EOF
     if navlines[-1] != '':
