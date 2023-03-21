@@ -87,7 +87,6 @@ def test_adoc_item(navlines, mapitem, capsys):
     assert em.adoc_items(navlines, '', header=True) == [expectedheader]
 
 
-
 def test_mdoc_item(navlines, mapitem, capsys):
     # check if empty line at EOF
     if navlines[-1] != '':
@@ -217,3 +216,18 @@ def test_fullnav(navlines, navlines_xml):
             assert 'Type' in item.keys()
 
         assert item['GroupID'] == ['1074138545']
+
+
+def test_xmltonav(navlines, navlines_xml, capsys):
+
+    with pytest.raises(ValueError):
+        em.xmltonav(navlines)
+
+    captured = capsys.readouterr()
+    assert 'XML format!' in captured.out
+
+    allitems = em.fullnav(navlines)
+
+    items0 = em.xmltonav(navlines_xml)
+
+    assert items0 == allitems
