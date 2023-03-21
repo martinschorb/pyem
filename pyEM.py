@@ -523,20 +523,25 @@ def duplicate_items(navitems, labels=None, prefix='', reg=True, maps=False):
 
         if maps:
             drawnmap = realign_map(newitem, navitems)
+            newmapID = newID(outitems, int(drawnmap['MapID'][0])) + 1
 
             if not drawnmap == []:
                 dupdrawn = copy.deepcopy(drawnmap)
                 dupdrawn['# Item'] = prefix + drawnmap['# Item']
-                dupdrawn['MapID'] = [str(newID(outitems, int(dupdrawn['MapID'][0])))]
-                newitem['DrawnID'] = dupdrawn['MapID']
-
-                othermaps = navlabel_match(navitems, dupdrawn['# Item'])
-                othermaps.pop(othermaps.index(nav_selection(othermaps, sel=dupdrawn['# Item'], acquire=False)[0]))
-
                 dupdrawn['Regis'] = new_reg
 
-                outitems.append(dupdrawn)
+                existingmaps = nav_find(outitems, '# Item', val=dupdrawn['# Item'])
+                existingdupmaps = nav_find(existingmaps, 'Regis', val=dupdrawn['Regis'])
+                dupdrawn['MapID'] = [str(newmapID)]
 
+                if len(existingdupmaps) == 0:
+
+                    othermaps = navlabel_match(navitems, dupdrawn['# Item'])
+                    othermaps.pop(othermaps.index(nav_selection(othermaps, sel=dupdrawn['# Item'], acquire=False)[0]))
+
+                    outitems.append(dupdrawn)
+
+                newitem['DrawnID'] = dupdrawn['MapID']
         outitems.append(newitem)
 
     return outitems

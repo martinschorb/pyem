@@ -231,3 +231,73 @@ def test_xmltonav(navlines, navlines_xml, capsys):
     items0 = em.xmltonav(navlines_xml)
 
     assert items0 == allitems
+
+
+def test_duplicate_items(navlines):
+    allitems = em.fullnav(navlines)
+
+    for flag in [None, 'prefix', 'reg']:
+
+        if flag is None:
+            dup0 = em.duplicate_items(allitems[:])
+        elif flag == 'prefix':
+            dup0 = em.duplicate_items(allitems[:], prefix=flag)
+        elif flag == 'reg':
+            dup0 = em.duplicate_items(allitems[:], reg=False)
+
+        assert len(dup0) == 9
+
+        for idx in [-3,-2,-1]:
+            item = dict(dup0[idx])
+            origitem = dict(allitems[idx])
+
+            if not flag == 'reg':
+                assert item['Regis'] == [str(em.newreg(allitems))]
+                item.pop('Regis')
+                origitem.pop('Regis')
+
+            if flag == 'prefix':
+                assert item['# Item'] == flag + origitem['# Item']
+                item.pop('# Item')
+                origitem.pop('# Item')
+
+            assert item['MapID'] == [str(em.newID(allitems, int(origitem['MapID'][0])))]
+            item.pop('MapID')
+            origitem.pop('MapID')
+
+            assert item == origitem
+
+    # test map
+
+    dup1 = em.duplicate_items(allitems[:], maps=True)
+
+    assert len(dup1) == 10
+
+    for idx in [-4, -3, -2, -1]:
+
+        item = dict(dup1[idx])
+
+        if idx == -4:
+            # original map
+            origitem = dict(allitems[0])
+        else:
+            origitem = dict(allitems[idx])
+
+        assert item['Regis'] == [str(em.newreg(allitems))]
+        item.pop('Regis')
+        origitem.pop('Regis')
+
+        if idx == -4:
+            assert item['MapID'] == [str(em.newID(allitems, int(origitem['MapID'][0]))+1)]
+        else:
+            assert item['MapID'] == [str(em.newID(allitems, int(origitem['MapID'][0])))]
+
+        item.pop('MapID')
+        origitem.pop('MapID')
+
+        if idx > -4:
+            assert item['DrawnID'] == dup1[-4]['MapID']
+            item.pop('DrawnID')
+            origitem.pop('DrawnID')
+
+        assert item == origitem
