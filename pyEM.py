@@ -864,10 +864,10 @@ def mergemap(mapitem, crop=False, black=False,
                     tilepx[j] = list(re.split(' +', item))
 
                 # use original tile coordinates(pixels) from SerialEM to determine tile position in montage
-                tilepx1 = loadtext(mapfile + '.pcs')
+                tilepx1 = list(loadtext(mapfile + '.pcs'))
 
                 for j, item in enumerate(tilepx1):
-                    tilepx1[j] = str(list(re.split(' +', item)))
+                    tilepx1[j] = list(re.split(' +', item))
                 merge_mrc.close()
 
             else:
@@ -898,11 +898,11 @@ def mergemap(mapitem, crop=False, black=False,
 
     tilepx = numpy.array(tilepx)
     tilepx = tilepx[tilepx[:, 2] == str(mapsection), 0:2]
-    tilepx = tilepx.astype(numpy.float)
+    tilepx = tilepx.astype(float)
 
     tilepx1 = numpy.array(tilepx1)
     tilepx1 = tilepx1[tilepx1[:, 2] == str(mapsection), 0:2]
-    tilepx1 = tilepx1.astype(numpy.float)
+    tilepx1 = tilepx1.astype(float)
 
     tpx = tilepx1[:, 0]
     tpy = tilepx1[:, 1]
