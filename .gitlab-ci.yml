@@ -17,8 +17,14 @@
 # https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Getting-Started.gitlab-ci.yml
 
 stages:          # List of stages for jobs, and their order of execution
-  - build
   - test
-  - deploy
 
-    - echo "Application successfully deployed."
+tests:
+  image: 'python:3.10-bullseye'
+  stage: test
+
+  before_script:
+    - pip install .
+
+  script:
+    - echo blubb
