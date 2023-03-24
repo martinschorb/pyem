@@ -11,7 +11,6 @@ tests:
 
   #    - git pull origin $CI_COMMIT_BRANCH
   script:
-
     - chmod +rx -R *
     - su testuser -c 'coverage run -m pytest'
     - coverage combine
