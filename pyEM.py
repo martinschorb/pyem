@@ -109,7 +109,7 @@ def nav_item(inlines, label):
             newroot = ET.Element('navigator')
             newroot.append(el[0])
 
-            result = xmltonav(ET.tostringlist(newroot))[0]
+            result = xmltonav(ET.tostringlist(newroot, encoding='unicode'))[0]
             lines = ET.tostring(root)
             lines = xml.dom.minidom.parseString(lines).toprettyxml().replace('\t', '').split('\n')
     else:
@@ -156,11 +156,15 @@ def adoc_items(lines1, search, header=False):
         pattern = '*' + search + '*'
         matching = fnmatch.filter(lines, pattern)
 
+        if len(matching) == 0 :
+            print('ERROR: String ' + search + ' not found!')
+
         # search for mdoc key item with the given label
         for searchstr in matching:
             if searchstr not in lines:
                 print('ERROR: String ' + search + ' not found!')
-                itemdict = {}
+            elif '=' in searchstr[:searchstr.index(search)]:
+                print('ERROR: String ' + search + ' not found in labels!')
             else:
                 itemstartline = lines.index(searchstr) + 1
                 itemendline = lines[itemstartline:].index('')
@@ -170,7 +174,7 @@ def adoc_items(lines1, search, header=False):
                 itemdict = parse_adoc(item)
                 itemdict['# ' + searchstr] = lines[itemstartline - 1][
                                              lines[itemstartline - 1].find(' = ') + 2:-1].lstrip(' ')
-            result.append(itemdict)
+                result.append(itemdict)
 
     return result
 

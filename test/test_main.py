@@ -35,7 +35,7 @@ def test_loadtext():
 
 
 def test_nav_item(navlines, navlines_xml, capsys):
-    for xml, navl in enumerate([navlines_xml, navlines]):
+    for xml, navl in enumerate([ navlines, navlines_xml]):
         # check if empty line at EOF
         if navl[-1] != '':
             navl = navl + ['']
@@ -69,6 +69,11 @@ def test_adoc_item(navlines, mapitem, capsys):
 
     captured = capsys.readouterr()
     assert 'ERROR: String ' in captured.out
+
+    assert em.adoc_items(navlines, '000499') == []
+
+    captured = capsys.readouterr()
+    assert 'not found in labels!' in captured.out
 
     item0 = em.adoc_items(navlines, 'Item = 12-A')[0]
 
