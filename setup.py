@@ -19,7 +19,7 @@ setup(name='py-EM',
       'scipy',
       'tqdm',
       'mrcfile',
-      #'time',
+      'scikit-image',
       #'operator',      
       ],
       ) 
