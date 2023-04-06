@@ -1,10 +1,11 @@
 import os.path
 import pytest
 import shutil
+import numpy as np
 
 import pyEM as em
 
-from test_data import example_map
+from test_data import example_map, expected
 
 
 @pytest.fixture(scope='module')
@@ -35,7 +36,7 @@ def test_loadtext():
 
 
 def test_nav_item(navlines, navlines_xml, capsys):
-    for xml, navl in enumerate([ navlines, navlines_xml]):
+    for xml, navl in enumerate([navlines, navlines_xml]):
         # check if empty line at EOF
         if navl[-1] != '':
             navl = navl + ['']
@@ -155,7 +156,6 @@ def test_map_file(mapitem):
     shutil.rmtree('d1')
 
 
-
 def test_map_header(mapitem):
     assert em.map_header('nonexistingmap') == {}
 
@@ -236,12 +236,10 @@ def test_fullnav(navlines, navlines_xml):
 
 
 def test_xmltonav(navlines, navlines_xml, capsys):
-
     with pytest.raises(ValueError):
         em.xmltonav(navlines)
         captured = capsys.readouterr()
         assert 'XML format!' in captured.err
-
 
     allitems = em.fullnav(navlines)
 
@@ -251,8 +249,6 @@ def test_xmltonav(navlines, navlines_xml, capsys):
 
 
 def test_duplicate_items(navlines):
-
-
     for flag in [None, 'prefix', 'reg']:
         allitems = em.fullnav(navlines)
         if flag is None:
@@ -264,7 +260,7 @@ def test_duplicate_items(navlines):
 
         assert len(dup0) == 9
 
-        for idx in [-3,-2,-1]:
+        for idx in [-3, -2, -1]:
             item = dict(dup0[idx])
             origitem = dict(allitems[idx])
 
@@ -306,7 +302,7 @@ def test_duplicate_items(navlines):
         origitem.pop('Regis')
 
         if idx == -4:
-            assert item['MapID'] == [str(em.newID(allitems, int(origitem['MapID'][0]))+1)]
+            assert item['MapID'] == [str(em.newID(allitems, int(origitem['MapID'][0])) + 1)]
         else:
             assert item['MapID'] == [str(em.newID(allitems, int(origitem['MapID'][0])))]
 
@@ -319,3 +315,27 @@ def test_duplicate_items(navlines):
             origitem.pop('DrawnID')
 
         assert item == origitem
+
+
+def test_map_matrix(mapitem):
+    matrix = em.map_matrix(mapitem)
+    assert (matrix == np.array(expected["map_matrix"])).all()
+
+#TODO: mergemap + call_blendmont
+
+def test_realign_map(mapitem, navlines, capsys):
+    allitems = em.fullnav(navlines)
+    ptitem = allitems[-1]
+
+    realignmap1 = em.realign_map(ptitem, allitems)
+
+    assert realignmap1 == mapitem
+
+    assert em.realign_map(mapitem, allitems) == []
+
+    captured = capsys.readouterr()
+    assert 'No map found to realign' in captured.out
+    assert mapitem['# Item'] in captured.out
+
+
+

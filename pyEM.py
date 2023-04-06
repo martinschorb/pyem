@@ -1286,7 +1286,21 @@ def call_blendmont(mapfile, mergebase, mapsection, black=False):
 # %%
 
 def realign_map(item, allitems):
-    # determines which map to align to for given navigator item
+    """
+    Determines which map to align to for given navigator item.
+
+    Parameters
+    ----------
+    item : dict
+        Navigator Item
+    allitems : list of dict
+        list of all Navigator Items
+    Returns
+    -------
+    dict
+
+    """
+    #
 
     if item['Type'] in [['0'], ['1']]:
         # point or polygon
@@ -1305,7 +1319,8 @@ def realign_map(item, allitems):
 
         if 'RealignedID' not in item.keys():
             print('No map found to realign item ' + item['# Item'] + ' to, skipping it...')
-            mapID = []
+            return []
+
         else:
             mapID = item['RealignedID']
 
