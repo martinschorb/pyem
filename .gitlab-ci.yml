@@ -8,7 +8,8 @@ tests:
 
   #    - git pull origin $CI_COMMIT_BRANCH
   script:
-    - coverage run -m pytest --rootdir=./
+    - cd test
+    - coverage run -m pytest
     - coverage xml
     - coverage-badge
     - coverage report
