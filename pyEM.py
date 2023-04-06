@@ -246,18 +246,21 @@ def map_file(mapitem):
 
         # check subdirectories recursively
 
-        for subdir in list(os.walk(cdir)):
-            mapfile = os.path.join(subdir[0], mapfile1)
-            # print(' Try ' + mapfile)
-            if os.path.exists(mapfile):
-                mapfound = True
-                if subdir[0] == cdir or subdir[0] == os.path.join(cdir, dir2):
-                    return mapfile
-                else:
-                    mapfile2 = mapfile
+        for path, directories, files in os.walk(cdir):
+            for subdir in directories:
+                mapfile = os.path.join(path, subdir, mapfile1)
 
-            else:
-                mapfound = False
+
+            # print(' Try ' + mapfile)
+                if os.path.exists(mapfile):
+                    mapfound = True
+                    if subdir == os.path.join(cdir, dir2):
+                        return mapfile
+                    else:
+                        mapfile2 = mapfile
+
+                else:
+                    mapfound = False
 
         if not mapfound:
             raise FileNotFoundError('ERROR: ' + mapfile1 + ' does not exist! Exiting' + '\n')
