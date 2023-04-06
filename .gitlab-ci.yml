@@ -1,36 +1,14 @@
-#prepare_test_data:
-#  stage: build
-#  image: 'python:3.10-bullseye'
-#  cache:
-#    paths:
-#      - test
-#    untracked: true
-#    policy: push
-#  script:
-#    - cd test
-#    - python test_data.py
-#  when: manual
-
 tests:
   image: 'python:3.10-bullseye'
   stage: test
-  cache:
-    paths:
-      - render
 
   before_script:
     - pip install .
     - pip install -r test_requirements.txt
-    - useradd testuser
-    - cd test
-    - python test_data.py
 
   #    - git pull origin $CI_COMMIT_BRANCH
   script:
-    - chmod +rx -R *
-    - ls test_files
     - coverage run -m pytest --rootdir=./
-    - coverage combine
     - coverage xml
     - coverage-badge
     - coverage report
