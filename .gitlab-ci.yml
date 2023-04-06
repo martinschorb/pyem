@@ -29,7 +29,7 @@ tests:
   script:
     - chmod +rx -R *
     - ls test_files
-    - coverage run -m pytest
+    - coverage run -m pytest --rootdir=./
     - coverage combine
     - coverage xml
     - coverage-badge
