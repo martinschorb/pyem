@@ -28,6 +28,7 @@ tests:
   #    - git pull origin $CI_COMMIT_BRANCH
   script:
     - chmod +rx -R *
+    - ls test_files
     - coverage run -m pytest
     - coverage combine
     - coverage xml
