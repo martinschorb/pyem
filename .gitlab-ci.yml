@@ -6,7 +6,8 @@ tests:
     - pip install .
     - pip install -r test_requirements.txt
     - useradd testuser
-    - python test/test_data.py
+    - cd test
+    - python test_data.py
 
   #    - git pull origin $CI_COMMIT_BRANCH
   script:

@@ -239,16 +239,16 @@ def test_xmltonav(navlines, navlines_xml, capsys):
 
 
 def test_duplicate_items(navlines):
-    allitems = em.fullnav(navlines)
+
 
     for flag in [None, 'prefix', 'reg']:
-
+        allitems = em.fullnav(navlines)
         if flag is None:
-            dup0 = em.duplicate_items(allitems[:])
+            dup0 = em.duplicate_items(allitems)
         elif flag == 'prefix':
-            dup0 = em.duplicate_items(allitems[:], prefix=flag)
+            dup0 = em.duplicate_items(allitems, prefix=flag)
         elif flag == 'reg':
-            dup0 = em.duplicate_items(allitems[:], reg=False)
+            dup0 = em.duplicate_items(allitems, reg=False)
 
         assert len(dup0) == 9
 
@@ -273,8 +273,9 @@ def test_duplicate_items(navlines):
             assert item == origitem
 
     # test map
+    allitems = em.fullnav(navlines)
 
-    dup1 = em.duplicate_items(allitems[:], maps=True)
+    dup1 = em.duplicate_items(allitems, maps=True)
 
     assert len(dup1) == 10
 
