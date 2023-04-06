@@ -227,9 +227,9 @@ def test_xmltonav(navlines, navlines_xml, capsys):
 
     with pytest.raises(ValueError):
         em.xmltonav(navlines)
+        captured = capsys.readouterr()
+        assert 'XML format!' in captured.err
 
-    captured = capsys.readouterr()
-    assert 'XML format!' in captured.out
 
     allitems = em.fullnav(navlines)
 
