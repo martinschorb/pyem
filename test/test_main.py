@@ -143,6 +143,18 @@ def test_map_file(mapitem):
     assert mapfile1 == 'MMM_01.mrc'
     os.remove(mapfile1)
 
+    # test in sub-sub-sub-folder
+    testdir = 'd1/d2/d3'
+    os.makedirs(testdir)
+    shutil.move(mapfile0, testdir)
+
+    mapfile2 = em.map_file(mapitem)
+
+    assert os.path.relpath(mapfile2, os.getcwd()) == testdir + '/MMM_01.mrc'
+    shutil.move(mapfile2, mapfile0)
+    shutil.rmtree('d1')
+
+
 
 def test_map_header(mapitem):
     assert em.map_header('nonexistingmap') == {}
