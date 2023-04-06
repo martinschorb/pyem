@@ -245,26 +245,21 @@ def map_file(mapitem):
         #  print('will try ' + mapfile1 + ' in current directory or subdirectories.' + '\n')
 
         # check subdirectories recursively
+        mapfile2 = None
 
         for path, directories, files in os.walk(cdir):
-            for subdir in directories:
-                mapfile = os.path.join(path, subdir, mapfile1)
+            if mapfile1 in files:
+                mapfile = os.path.join(path, mapfile1)
 
-
-            # print(' Try ' + mapfile)
-                if os.path.exists(mapfile):
-                    mapfound = True
-                    if subdir == os.path.join(cdir, dir2):
-                        return mapfile
-                    else:
-                        mapfile2 = mapfile
-
+                if path == os.path.join(cdir, dir2):
+                    return mapfile
                 else:
-                    mapfound = False
+                    mapfile2 = mapfile
 
-        if not mapfound:
-            raise FileNotFoundError('ERROR: ' + mapfile1 + ' does not exist! Exiting' + '\n Tested directories: '+str(list(os.walk(cdir))))
-        return mapfile2
+        if mapfile2 is None:
+            raise FileNotFoundError('ERROR: ' + mapfile1 + ' does not exist! Exiting.')
+        else:
+            return mapfile2
 
 
 # -------------------------------
