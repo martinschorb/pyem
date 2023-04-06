@@ -263,7 +263,7 @@ def map_file(mapitem):
                     mapfound = False
 
         if not mapfound:
-            raise FileNotFoundError('ERROR: ' + mapfile1 + ' does not exist! Exiting' + '\n Tested directories: '+str(os.walk(cdir)))
+            raise FileNotFoundError('ERROR: ' + mapfile1 + ' does not exist! Exiting' + '\n Tested directories: '+str(list(os.walk(cdir))))
         return mapfile2
 
 
