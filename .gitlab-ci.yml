@@ -12,7 +12,7 @@ tests:
   #    - git pull origin $CI_COMMIT_BRANCH
   script:
     - chmod +rx -R *
-    - cd test
+    - pwd
     - su testuser -c 'coverage run -m pytest'
     - coverage combine
     - coverage xml
