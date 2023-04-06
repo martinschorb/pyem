@@ -1,6 +1,20 @@
+prepare_test_data:
+  stage: build
+  image: 'python:3.10-bullseye'
+  cache:
+    paths:
+      - test/test_files
+    untracked: true
+    policy: push
+  script:
+    - python test/test_data.py
+
 tests:
   image: 'python:3.10-bullseye'
   stage: test
+  cache:
+    paths:
+      - render
 
   before_script:
     - pip install .
