@@ -3,11 +3,12 @@ prepare_test_data:
   image: 'python:3.10-bullseye'
   cache:
     paths:
-      - test/test_files
+      - test
     untracked: true
     policy: push
   script:
-    - python test/test_data.py
+    - cd test
+    - python test_data.py
 
 tests:
   image: 'python:3.10-bullseye'
