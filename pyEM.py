@@ -68,7 +68,19 @@ else:
 # %%
 
 def loadtext(fname):
-    # loads a text file, such as nav or adoc, returns it as a list of strings
+    """
+    Reads a text file and returns the lines.
+
+    Parameters
+    ----------
+    fname : str
+        input path of a text file, such as nav (adoc or XML) or adoc
+
+    Returns
+    -------
+    list of str
+
+    """
 
     # check if file exists
     if not os.path.exists(fname):
@@ -89,11 +101,27 @@ def loadtext(fname):
 # %%
 
 def nav_item(inlines, label):
-    # extracts the content block of a single navItem of givel label
-    # reads and parses navigator adoc files version >2, also in XML format !!
-    # returns the first item found as a dictionary and the remaining list with that item removed
-    # this is useful when multiple items have the exact same label
-    # and the function is called from within a loop to retrieve them all.
+    """
+    Extracts the content block of a single navItem of given label.
+    Reads and parses navigator adoc files version >2, also in XML format !!
+    Returns the first item found as a dictionary and the remaining list with that item removed.
+    This is useful when multiple items have the exact same label and the function is called \\
+    from within a loop to retrieve them all.
+
+    Parameters
+    ----------
+    inlines : list of str
+        input navigator file lines
+
+    label : str
+        the navigator label to extract
+
+    Returns
+    -------
+    dict
+
+    """
+    #
 
     lines = inlines[:]
 
@@ -139,8 +167,25 @@ def nav_item(inlines, label):
 # %%
 
 def adoc_items(lines1, search, header=False):
-    # extracts the content block of an item of given label in an adoc file
-    # returns it as a list of dictionaries
+    """
+    Extracts the content block of an item of given label in an adoc file and \\
+    returns it as a list of dictionaries
+
+    Parameters
+    ----------
+    lines1 : list of str
+        input adoc file lines
+    search : str
+        the search string
+    header : bool
+        if True, returns the header of the file instead.
+
+    Returns
+    -------
+    list of dict
+
+    """
+
 
     result = []
 
@@ -183,8 +228,25 @@ def adoc_items(lines1, search, header=False):
 # %%
 
 def mdoc_item(lines1, label, header=False):
-    # extracts the content block of an item of given label in a mdoc file
-    # returns it as a dictionary
+    """
+    Extracts the content block of an item of given label in a mdoc file and \\
+    returns it as a dictionary
+
+    Parameters
+    ----------
+    lines1 : list of str
+        input mdoc file lines
+    label : str
+        the mdoc label to search for
+    header : bool
+        if True, returns the header of the file instead.
+
+    Returns
+    -------
+    list of dict
+
+    """
+
     if lines1[-1] != '':
         lines = lines1 + ['']
     else:
@@ -212,7 +274,20 @@ def mdoc_item(lines1, label, header=False):
 # %%
 
 def parse_adoc(lines):
-    # converts an adoc-format string list into a dictionary
+    """
+    Converts an adoc-format string list into a dictionary.
+
+    Parameters
+    ----------
+    lines1 : list of str
+        input adoc file lines
+
+    Returns
+    -------
+    dict
+
+    """
+    #
 
     output = {}
     for line in lines:
@@ -227,7 +302,21 @@ def parse_adoc(lines):
 # %%
 
 def map_file(mapitem):
-    # extracts map file name from navigator and checks for existance
+    """
+    Extracts map file name from navigator and checks for existance.
+    Checks all sub-directories if file is not present in the root (navigator location).
+
+    Parameters
+    ----------
+    mapitem : dict
+        a Map Item dict from the Navigator
+
+    Returns
+    -------
+    str
+
+    """
+
 
     # get string from navigator item
     mapfile = ' '.join(mapitem['MapFile'])
@@ -277,6 +366,19 @@ def map_file(mapitem):
 # -------------------------------
 # %%
 def map_header(m):
+    """
+    Extrracts the header of a map file.
+
+    Parameters
+    ----------
+    m : str or dict or mrc.mrcfile.MrcFile
+        A map file, map dictionary or MRC object
+
+    Returns
+    -------
+    dict
+
+    """
     header = {}
 
     if (type(m) is mrc.mrcfile.MrcFile) | (type(m) is mrc.mrcmemmap.MrcMemmap):
@@ -306,7 +408,22 @@ def map_header(m):
 # %%
 
 def itemtonav(item, name):
-    # converts a dictionary autodoc item variable into text list suitable for export into navigator format
+    """
+    Converts a dictionary autodoc item variable into text list suitable for export into navigator format.
+
+    Parameters
+    ----------
+    item : dict
+        Navigator Item
+    name : str
+        Item label name
+
+    Returns
+    -------
+    list of str
+
+    """
+
 
     dlist = list()
     dlist.append('[Item = ' + name + ']')
@@ -330,7 +447,21 @@ def itemtonav(item, name):
 # %%
 
 def write_navfile(filename, outitems, xml=False):
-    # creates a new navigator file from a list of navItems (default is mdoc format)
+    """
+    Creates a new navigator file from a list of navItems (default is mdoc format)
+
+
+    Parameters
+    ----------
+    filename : str
+        File name to ouput (needs to be writable.)
+    outitems : list of dict
+        A list of items to be written.
+    xml : bool
+        If true, write Navigator in XML format.
+
+    """
+
     allitems = copy.deepcopy(outitems)
 
     if xml:
@@ -403,8 +534,22 @@ def indent_xml(elem, level=0):
 # %%
 
 def newID(allitems, startid):
-    # checks if provided item ID already exists in a navigator and gives the next unique ID
-    # ID needs to be integer
+    """
+    Checks if provided item ID already exists in a navigator and gives the next unique ID.
+
+    Parameters
+    ----------
+    allitems : list of dict
+        list of all items in a Navigator (<-fullnav)
+    startid : int
+        starting ID
+
+    Returns
+    -------
+    int
+
+    """
+
 
     newid = startid
 
@@ -420,8 +565,20 @@ def newID(allitems, startid):
 # %%
 
 def newreg(navitems):
-    # gives the next available registration for the input set of navigator items
+    """
+    Returns the next available registration for the input set of navigator items
 
+    Parameters
+    ----------
+    navitems : list of dict
+        list of Navigator items
+
+    Returns
+    -------
+    int
+
+    """
+    #
     reg = list()
     for item in navitems:
         reg.append(int(item['Regis'][0]))
@@ -434,8 +591,22 @@ def newreg(navitems):
 # %%
 
 def fullnav(inlines, header=False):
-    # parses a full nav file and returns a list of dictionaries
+    """
+    Parses a full nav file and returns a list of dictionaries.
 
+    Parameters
+    ----------
+    inlines :  list of str
+        input navigator file lines
+
+    header : bool
+        if True, returns the header of the file instead.
+
+    Returns
+    -------
+    list of dict
+
+    """
     navlines = inlines[:]
 
     if '<?xml version=' in navlines[0]:
@@ -460,6 +631,19 @@ def fullnav(inlines, header=False):
 # %%
 
 def xmltonav(navlines):
+    """
+    Parses a XML block and returns the contents as a list of dictionaries.
+
+    Parameters
+    ----------
+    inlines :  list of str
+        input XML file lines
+
+    Returns
+    -------
+    list of dict
+
+    """
     if not navlines[0].lstrip(' ').startswith('<'):
         raise ValueError('Input string list not in XML format!')
 
@@ -481,7 +665,22 @@ def xmltonav(navlines):
 # %%
 
 def navlabel_match(navitems, searchstr):
-    # identifies navigator items whose labels contain the given string
+    """
+    Identifies navigator items whose labels contain the given string
+
+    Parameters
+    ----------
+    navitems : list of dict
+        List of Navigator items
+    searchstr : str
+        String to be searched
+
+    Returns
+    -------
+    list of dict
+
+    """
+
 
     r = re.compile(r'.*' + searchstr + '.*')
 
@@ -492,11 +691,29 @@ def navlabel_match(navitems, searchstr):
 # %%
 
 def duplicate_items(navitems, labels=None, prefix='', reg=True, maps=False):
-    # duplicates items from a list, optional second parameter is a list of labels of the items to duplicate.
-    # Default is to use the 'Acquire' flag. Third parameter defines a prefix for the created duplictes (defatul:none)
-    # The fourth parameter determines whether the registration of duplicate items should be changed (default:yes)
-    # if the maps flag is set, all maps that contain the label of the selected items
-    # or that were used to draw these are duplicated as well.
+    """
+    Duplicates a set of Navigator items. Adds the duplicates to the original Navigator list.
+
+    Parameters
+    ----------
+    navitems : list of dict
+        List of Navigator items
+    labels : bool
+        list of labels of the items to duplicate
+    prefix : str
+        prefix to be added to the label of the created duplicates
+    reg : bool
+        determines whether the registration of duplicate items should be changed (default:yes)
+    maps :bool
+        if True, all maps that contain the label of the selected items or that were used to draw \\
+         these are duplicated as well.
+
+    Returns
+    -------
+    list of dict
+
+    """
+
 
     if labels is None:
         labels = []
@@ -552,7 +769,18 @@ def duplicate_items(navitems, labels=None, prefix='', reg=True, maps=False):
 
 
 def map_matrix(mapitem):
-    # calculates the matrix relating pixel and stage coordinates
+    """
+    Extracts the matrix relating pixel and stage coordinates from a Map Item
+    Parameters
+    ----------
+    mapitem : dict
+        Navigator map item
+
+    Returns
+    -------
+    numpy.array
+
+    """
 
     return numpy.array(list(map(float, mapitem['MapScaleMat']))).reshape(2, 2) * (
             int(mapitem['MapBinning'][0]) / int(mapitem['MontBinning'][0]))
@@ -1077,6 +1305,7 @@ def realign_map(item, allitems):
 
         if 'RealignedID' not in item.keys():
             print('No map found to realign item ' + item['# Item'] + ' to, skipping it...')
+            mapID = []
         else:
             mapID = item['RealignedID']
 
