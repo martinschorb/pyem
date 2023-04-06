@@ -338,4 +338,11 @@ def test_realign_map(mapitem, navlines, capsys):
     assert mapitem['# Item'] in captured.out
 
 
+def test_imcrop(capsys):
+    testim = np.random.random([7,7])
+
+    with pytest.raises(TypeError):
+        a = em.imcrop([1],2, np.array([3]))
+        captured = capsys.readouterr()
+        assert 'list or numpy array' in captured.err
 

@@ -1333,27 +1333,38 @@ def realign_map(item, allitems):
 
 
 def imcrop(im1, c, sz):
-    # crops an image of a given size (2 element numpy array) around a pixel coordinate (2 element numpy array)
-    # in case the coordinate is close to an edge, the cropped image will have the maximum possible width/height
-    # and centering of the image
     """
-    
+    Crops an image of a given size (2 element numpy array) around a pixel coordinate (2 element numpy array)
+    in case the coordinate is close to an edge, the cropped image will have the maximum possible width/height
+    and centering of the image.
     
     Parameters
     ----------
-    im1 : np.array (2D)
-        input image.
-    c : np.array (2x1)
-        center around which to crop.
-    sz : np.array (2x1)
-        size of the crop region. (maximum, depending on image boundaries)
+    im1 : np.array or list
+        input image (2D).
+    c : np.array or list
+        center around which to crop (2x1).
+    sz : np.array or list
+        (2x1) size of the crop region. (maximum, depending on image boundaries)
     
     Returns
     -------
-    im2 : np.array (2D)
-        output cropped image.
+    im2 : np.array
+         (2D) output cropped image.
     
     """
+
+    if type(im1) is list:
+        im1 = numpy.array(im1)
+
+    if type(c) is list:
+        c = numpy.array(c)
+
+    if type(sz) is list:
+        sz = numpy.array(sz)
+
+    if any([type(p) is not numpy.ndarray for p in [im1, c, sz]]):
+        raise TypeError('Inputs need to be list or numpy array.')
 
     sz_x = sz[0]
     sz_y = sz[1]
