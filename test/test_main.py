@@ -3,6 +3,8 @@ import pytest
 import shutil
 import numpy as np
 
+from skimage.io import imread
+
 import pyEM as em
 
 from test_data import example_map, expected
@@ -321,7 +323,8 @@ def test_map_matrix(mapitem):
     matrix = em.map_matrix(mapitem)
     assert (matrix == np.array(expected["map_matrix"])).all()
 
-#TODO: mergemap + call_blendmont
+
+# TODO: mergemap + call_blendmont
 
 def test_realign_map(mapitem, navlines, capsys):
     allitems = em.fullnav(navlines)
@@ -339,10 +342,65 @@ def test_realign_map(mapitem, navlines, capsys):
 
 
 def test_imcrop(capsys):
-    testim = np.random.random([7,7])
+    testim = np.random.random([7, 7])
 
     with pytest.raises(TypeError):
-        a = em.imcrop([1],2, np.array([3]))
+        a = em.imcrop([1], 2, np.array([3]))
         captured = capsys.readouterr()
         assert 'list or numpy array' in captured.err
 
+    im2 = em.imcrop(testim, [5, 3], [3, 3])
+    assert (im2 == testim[0:5, :][:, 1:4]).all
+
+    im3 = em.imcrop(testim, [2, 1], [3, 6])
+    assert im3.shape == (2, 4)
+    assert (im3 == testim[0:2, :][:, 0:4]).all
+
+    im4 = em.imcrop(testim, [4, 6], [4, 1])
+    assert im4.shape == (2, 1)
+    assert (im4 == testim[:, 5][-2:]).all
+
+
+def test_img2polygon(capsys):
+    testim = imread('test_files/mask1.tif')
+    testim1 = (testim / 245).astype(bool)
+
+    for im in [testim, testim1]:
+        poly = em.img2polygon(im, 4, [11, 7], 5)
+
+        assert (poly == [[14., 7.],
+                         [14., 8.],
+                         [11., 8.],
+                         [11., 8.],
+                         [9., 9.],
+                         [6., 9.],
+                         [6., 7.],
+                         [7., 5.],
+                         [9., 3.],
+                         [10., 2.],
+                         [12., 3.],
+                         [13., 5.],
+                         [13., 7.]]).all
+
+        poly = em.img2polygon(im, 7, [3, 3], 4)
+        assert (poly == [[5., 3.],
+                         [4., 3.],
+                         [4., 6.],
+                         [3., 3.],
+                         [3., 3.],
+                         [3., 3.],
+                         [3., 3.],
+                         [2., 1.],
+                         [3., 1.],
+                         [4., 2.],
+                         [5., 2.]]).all
+
+        poly = em.img2polygon(im, 7, [3, 3], 8)
+        assert (poly == [[5., 3.],
+                         [7., 9.],
+                         [3., 3.],
+                         [3., 3.],
+                         [3., 3.],
+                         [2., 1.],
+                         [4., 1.],
+                         [5., 2.]]).all

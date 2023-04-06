@@ -1340,16 +1340,16 @@ def imcrop(im1, c, sz):
     
     Parameters
     ----------
-    im1 : np.array or list
+    im1 : numpy.ndarray or list
         input image (2D).
-    c : np.array or list
+    c : numpy.ndarray or list
         center around which to crop (2x1).
-    sz : np.array or list
+    sz : numpy.ndarray or list
         (2x1) size of the crop region. (maximum, depending on image boundaries)
     
     Returns
     -------
-    im2 : np.array
+    im2 : numpy.ndarray
          (2D) output cropped image.
     
     """
@@ -1395,7 +1395,19 @@ def imcrop(im1, c, sz):
 # %%
 
 def cart2pol(c):
-    # cartesian into polar coordinates (2D)
+    """
+    Converts Cartesian into polar coordinates (2D)
+
+    Parameters
+    ----------
+    c : numpy.ndarray or list
+
+    Returns
+    -------
+    numpy.ndarray
+
+    """
+    #
     rho = numpy.sqrt(c[:, 0] ** 2 + c[:, 1] ** 2)
     phi = numpy.arctan2(c[:, 1], c[:, 0])
     return numpy.transpose([phi, rho])
@@ -1404,7 +1416,20 @@ def cart2pol(c):
 # --------------------------------------
 
 def pol2cart(rho, phi):
-    # polar into cartesian coordinates (2D)
+    """
+    Converts  polar into cartesian coordinates (2D)
+
+    Parameters
+    ----------
+    rho : float or int
+    phi : float or int
+
+    Returns
+    -------
+    numpy.ndarray
+
+    """
+
     x = rho * numpy.cos(phi)
     y = rho * numpy.sin(phi)
     return numpy.transpose([x, y])
@@ -1414,8 +1439,29 @@ def pol2cart(rho, phi):
 # %%
 
 def img2polygon(img, n_poly, center, radius):
-    # converts a binary image into a polygon (list of points) describing its outline
-    # parameters: image, n of polygon, center around which to draw the polygon, maximum radius of polygon
+    """
+    Converts a binary image into a polygon (list of points) describing its outline
+
+
+    Parameters
+    ----------
+    img : numpy.ndarray
+        a binary image
+    n_poly : int
+        number of points for polygon
+    center : list or numpy.ndarray
+        center around which to draw the polygon
+    radius : int or float
+        maximum radius of polygon (pixel)
+
+    Returns
+    -------
+    np.ndarray
+
+    """
+
+    if type(img) is not numpy.ndarray:
+        raise TypeError('Input image needs to be numpy array.')
 
     # define threshold based on image type
     if img.dtype.kind == 'b':
