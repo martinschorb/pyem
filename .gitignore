@@ -4,3 +4,4 @@ build/
 dist/
 pyem_tests/
 *.egg-info/
+.idea/

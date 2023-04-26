@@ -47,8 +47,10 @@ mrcext = ('.st', '.mrc', '.map', '.rec', '.ali', '.preali')
 # get python version
 py_ver = sys.version_info
 
+my_env = os.environ.copy()
+
 # get IMOD version
-p1 = Popen("imodinfo", shell=True, stdout=PIPE)
+p1 = Popen("imodinfo", shell=True, stdout=PIPE, env=my_env)
 o = list()
 for imodline in p1.stdout:
     o.append(imodline)
@@ -71,8 +73,8 @@ def loadtext(fname):
 
     # check if file exists
     if not os.path.exists(fname):
-        print('ERROR: ' + fname + ' does not exist! Exiting' + '\n')
-        sys.exit(1)
+        raise FileNotFoundError('ERROR: ' + fname + ' does not exist! Exiting' + '\n')
+
     f = open(fname, "r")
 
     lines = list()
@@ -255,8 +257,7 @@ def map_file(mapitem):
                 mapfound = False
 
         if not mapfound:
-            print('ERROR: ' + mapfile1 + ' does not exist! Exiting' + '\n')
-            sys.exit(1)  # kills KNIME ;-)
+            raise FileNotFoundError('ERROR: ' + mapfile1 + ' does not exist! Exiting' + '\n')
 
         return mapfile2
 
@@ -1018,8 +1019,7 @@ def call_blendmont(mapfile, mergebase, mapsection, black=False):
 
     # check IMOD version
     if imod_ver[0] < 4 | (imod_ver == 4 & imod_ver[1] < 10):
-        print('ERROR: IMOD version needs to be at least 4.11 ! Please update. Exiting' + '\n')
-        sys.exit(1)
+        raise EnvironmentError('ERROR: IMOD version needs to be at least 4.11 ! Please update. Exiting' + '\n')
 
     # merge the montage to a single file
     callcmd = 'extractpieces ' + '\"' + mapfile + '\" \"' + mapfile + '.pcs\"'
