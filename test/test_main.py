@@ -4,6 +4,7 @@ import shutil
 import numpy as np
 
 from skimage.io import imread
+from skimage.transform import resize
 
 import pyEM as em
 
@@ -349,58 +350,91 @@ def test_imcrop(capsys):
         captured = capsys.readouterr()
         assert 'list or numpy array' in captured.err
 
-    im2 = em.imcrop(testim, [5, 3], [3, 3])
-    assert (im2 == testim[0:5, :][:, 1:4]).all
+    im2 = em.imcrop(testim, [3, 3], [5, 3])
+    assert np.array(im2 == testim[0:5, :][:, 1:4]).all()
 
     im3 = em.imcrop(testim, [2, 1], [3, 6])
     assert im3.shape == (2, 4)
-    assert (im3 == testim[0:2, :][:, 0:4]).all
+    assert np.array(im3 == testim[0:2, :][:, 0:4]).all()
 
     im4 = em.imcrop(testim, [4, 6], [4, 1])
     assert im4.shape == (2, 1)
-    assert (im4 == testim[:, 5][-2:]).all
+    assert np.array(im4.squeeze() == testim[:,3][-2:]).all()
 
 
 def test_img2polygon(capsys):
+    with pytest.raises(TypeError):
+        em.img2polygon(12, 12, 12, 12)
+        captured = capsys.readouterr()
+        assert 'Input image needs to be numpy array.' in captured.out
+
     testim = imread('test_files/mask1.tif')
     testim1 = (testim / 245).astype(bool)
 
     for im in [testim, testim1]:
-        poly = em.img2polygon(im, 4, [11, 7], 5)
+        poly = em.img2polygon(im, 14, [11, 7], 5)
 
-        assert (poly == [[14., 7.],
-                         [14., 8.],
-                         [11., 8.],
-                         [11., 8.],
-                         [9., 9.],
-                         [6., 9.],
-                         [6., 7.],
-                         [7., 5.],
-                         [9., 3.],
-                         [10., 2.],
-                         [12., 3.],
-                         [13., 5.],
-                         [13., 7.]]).all
+        assert np.array(poly == [[14., 7.],
+                                 [14., 8.],
+                                 [12., 8.],
+                                 [11., 8.],
+                                 [10., 9.],
+                                 [7., 10.],
+                                 [6., 9.],
+                                 [6., 7.],
+                                 [7., 5.],
+                                 [9., 5.],
+                                 [9., 2.],
+                                 [11., 3.],
+                                 [13., 4.],
+                                 [13., 5.],
+                                 [13., 7.]]).all()
 
         poly = em.img2polygon(im, 7, [3, 3], 4)
-        assert (poly == [[5., 3.],
-                         [4., 3.],
-                         [4., 6.],
-                         [3., 3.],
-                         [3., 3.],
-                         [3., 3.],
-                         [3., 3.],
-                         [2., 1.],
-                         [3., 1.],
-                         [4., 2.],
-                         [5., 2.]]).all
+        assert np.array(poly == [[5., 3.],
+                                 [5., 6.],
+                                 [3., 3.],
+                                 [3., 3.],
+                                 [3., 3.],
+                                 [2., 1.],
+                                 [3., 1.],
+                                 [5., 2.]]).all()
 
         poly = em.img2polygon(im, 7, [3, 3], 8)
-        assert (poly == [[5., 3.],
-                         [7., 9.],
-                         [3., 3.],
-                         [3., 3.],
-                         [3., 3.],
-                         [2., 1.],
-                         [4., 1.],
-                         [5., 2.]]).all
+        assert np.array(poly == [[5., 3.],
+                                 [7., 9.],
+                                 [3., 3.],
+                                 [3., 3.],
+                                 [3., 3.],
+                                 [2., 1.],
+                                 [4., 1.],
+                                 [5., 2.]]).all()
+
+
+def test_map_extract():
+    testim = imread('test_files/mask1.tif')
+
+    sourceim = np.zeros((51,21))
+    sourceim[30:41, 6:21] = testim
+    sourceim = sourceim.T
+
+    # sourceim = resize(sourceim, (63, 153))
+
+    im1, pts1 = em.map_extract(sourceim, [34, 6], [[35, 6], [35, 7], [36, 6]], 1, [7, 7], np.array([[0, 1], [-1, 0]]))
+
+    assert im1.shape == (7, 7)
+    assert np.all(im1 == expected['im1'])
+    assert np.all(pts1 == expected['pts1'])
+
+    im2, pts2 = em.map_extract(sourceim, [35, 6], [[35, 6], [35, 7], [36, 6]], 0.4, [11, 11], np.array([[0, 1], [-1, 0]]))
+
+    assert im2.shape == (4, 4)
+    assert np.all(pts2 == expected['pts2'])
+
+
+    pass
+
+
+
+if __name__ == "__main__":
+    test_map_extract()

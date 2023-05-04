@@ -186,7 +186,6 @@ def adoc_items(lines1, search, header=False):
 
     """
 
-
     result = []
 
     if lines1[-1] != '':
@@ -201,7 +200,7 @@ def adoc_items(lines1, search, header=False):
         pattern = '*' + search + '*'
         matching = fnmatch.filter(lines, pattern)
 
-        if len(matching) == 0 :
+        if len(matching) == 0:
             print('ERROR: String ' + search + ' not found!')
 
         # search for mdoc key item with the given label
@@ -317,7 +316,6 @@ def map_file(mapitem):
 
     """
 
-
     # get string from navigator item
     mapfile = ' '.join(mapitem['MapFile'])
     cdir = os.getcwd()
@@ -424,7 +422,6 @@ def itemtonav(item, name):
 
     """
 
-
     dlist = list()
     dlist.append('[Item = ' + name + ']')
 
@@ -471,7 +468,6 @@ def write_navfile(filename, outitems, xml=False):
         adv.text = '2.00'
         lsa = ET.SubElement(pd, 'LastSavedAs')
         lsa.text = filename
-
 
         for item in allitems:
             print(item)
@@ -549,7 +545,6 @@ def newID(allitems, startid):
     int
 
     """
-
 
     newid = startid
 
@@ -681,7 +676,6 @@ def navlabel_match(navitems, searchstr):
 
     """
 
-
     r = re.compile(r'.*' + searchstr + '.*')
 
     return list(filter(lambda item: r.match(item['# Item']), navitems))
@@ -713,7 +707,6 @@ def duplicate_items(navitems, labels=None, prefix='', reg=True, maps=False):
     list of dict
 
     """
-
 
     if labels is None:
         labels = []
@@ -753,7 +746,6 @@ def duplicate_items(navitems, labels=None, prefix='', reg=True, maps=False):
                 dupdrawn['MapID'] = [str(newmapID)]
 
                 if len(existingdupmaps) == 0:
-
                     othermaps = navlabel_match(navitems, dupdrawn['# Item'])
                     othermaps.pop(othermaps.index(nav_selection(othermaps, sel=dupdrawn['# Item'], acquire=False)[0]))
 
@@ -1456,7 +1448,7 @@ def img2polygon(img, n_poly, center, radius):
 
     Returns
     -------
-    np.ndarray
+    numpy.ndarray
 
     """
 
@@ -1508,37 +1500,45 @@ def img2polygon(img, n_poly, center, radius):
 # --------------------------------------
 
 def map_extract(im, c, p, px_scale, t_size, mat, int8=False):
-    # extracts an image from a given position in an existing map and links positions inside
-
     """
-    
+    Extracts an image from a given position in an existing map and links positions inside.
 
     Parameters
     ----------
-    im : np.array
-        inut image.
-    c : np.array (2x1)
-        center of target region.
-    p : list of np.arrays (2xn)
-        points in the image that are transformed.
+    im : numpy.ndarray
+        input image.
+    c : numpy.ndarray
+        (2x1) - center of target region.
+    p : list of numpy.ndarray
+        (2xn) - points in the image that are transformed.
     px_scale : float
         relative scale of input and output image
-    t_size : np.array (2x1)
-        target size of output image (maximum, limited by original region boundaries).
-    mat : np.mat/np.array (2x2)
-        transformation matrix.
-    int8 : bool, optional
+    t_size : numpy.ndarray
+        (2x1) - target size of output image (maximum, limited by original region boundaries).
+    mat : numpy.mat or numpy.ndarray
+        (2x2) - transformation matrix.
+    int8 : bool
         if conversion of the outoput image to 8bit is desired. The default is False.
 
     Returns
     -------
-    im3 : np.array (2D)
-        output extracted image.
-    
-    p4 : list of np.arrays (2xn)
-        output pixel coordinates of input points 
+    numpy.ndarray, list of numpy.ndarray
+     img3 (2D) output extracted image.
+
+     p4 (2xn) output pixel coordinates of input points
 
     """
+
+    if type(t_size) is list:
+        t_size = numpy.array(t_size)
+
+    if type(p) is list:
+        p = numpy.array(p)
+        if len(p.shape) < 2:
+            p = [p]
+
+    if type(c) is list:
+        c = numpy.array(c)
 
     imsz1 = t_size * px_scale
 
@@ -1548,7 +1548,6 @@ def map_extract(im, c, p, px_scale, t_size, mat, int8=False):
     cropsize = numpy.array([cropsize1.max(), cropsize1.max()])
 
     im1 = imcrop(im, c, cropsize)
-
     realsize = numpy.array(im1.shape)
 
     # center to origin
@@ -1557,7 +1556,8 @@ def map_extract(im, c, p, px_scale, t_size, mat, int8=False):
     # create homogenous matrices
     mat_i = numpy.linalg.inv(mat)
 
-    o_size = numpy.max(numpy.abs([[0, realsize[1]] * mat, [realsize[0], 0] * mat]), axis=0).astype(numpy.int).squeeze()
+    o_size = numpy.max(numpy.abs([numpy.dot([0, realsize[1]], mat), numpy.dot([realsize[0], 0], mat)]
+                                 ), axis=0).astype(int).squeeze()
 
     M = numpy.concatenate((mat_i, numpy.array([[0], [0]])), axis=1)
     M = numpy.concatenate((M, [[0, 0, 1]]), axis=0)
@@ -1583,14 +1583,14 @@ def map_extract(im, c, p, px_scale, t_size, mat, int8=False):
 
     limitsize = numpy.min([o_size, t_size], axis=0).squeeze()
 
-    if limitsize == t_size:
+    if (limitsize == t_size).all():
         # im3=im2.copy()
         outsize = t_size
         shift = [0, 0]
     else:
         # determine limitation of image by the borders of rotated crop
 
-        rotmat = mat_i / numpy.sqrt(numpy.linalg.det(mat_i))
+        rotmat = mat_i / numpy.sqrt(abs(numpy.linalg.det(mat_i)))
 
         ca = numpy.mean(abs(numpy.diag(rotmat)))
 
@@ -1607,7 +1607,7 @@ def map_extract(im, c, p, px_scale, t_size, mat, int8=False):
             ii = ii + 1
 
         shift = numpy.mod(outsize, 2 ** ii) / 2
-        outsize = 2 ** ii * numpy.floor(outsize / (2 ** ii))
+        outsize = (2 ** ii * numpy.floor(outsize / (2 ** ii))).astype(int)
 
     im3 = imcrop(im2, [o_size[1] / 2 + shift[1], o_size[0] / 2 + shift[0]], outsize)
 
@@ -1620,7 +1620,7 @@ def map_extract(im, c, p, px_scale, t_size, mat, int8=False):
     else:
         im3 = im3.astype(numpy.int16)
 
-    p4 = p1 * mat.T
+    p4 = numpy.dot(p1, mat.T)
 
     p4[:, 0] = f_size[1] / 2 + p4[:, 0]
     p4[:, 1] = f_size[0] / 2 + p4[:, 1]
