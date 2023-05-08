@@ -1302,9 +1302,9 @@ def map_extract(im, c, p, px_scale, t_size, mat, int8=False):
     f_size = im3.shape
 
     if int8:
-        im3 = im3.astype(int8)
+        im3 = im3.astype(numpy.int8)
     else:
-        im3 = im3.astype(int16)
+        im3 = im3.astype(numpy.int16)
 
     p4 = p1 * mat.T
 
