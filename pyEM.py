@@ -48,6 +48,8 @@ mrcext = ('.st', '.mrc', '.map', '.rec', '.ali', '.preali')
 # get python version
 py_ver = sys.version_info
 
+my_env = os.environ.copy()
+
 # get IMOD version
 p1 = Popen("imodinfo", shell=True, stdout=PIPE)
 o = list()
@@ -1251,8 +1253,7 @@ def call_blendmont(mapfile, mergebase, mapsection, black=False):
 
     # check IMOD version
     if imod_ver[0] < 4 | (imod_ver == 4 & imod_ver[1] < 10):
-        print('ERROR: IMOD version needs to be at least 4.11 ! Please update. Exiting' + '\n')
-        sys.exit(1)
+        raise EnvironmentError('ERROR: IMOD version needs to be at least 4.11 ! Please update. Exiting' + '\n')
 
     # merge the montage to a single file
     callcmd = 'extractpieces ' + '\"' + mapfile + '\" \"' + mapfile + '.pcs\"'
@@ -1480,7 +1481,7 @@ def img2polygon(img, n_poly, center, radius):
     # find the intersection points and mark the coordinates
     for pt in endpts:
         x, y = numpy.linspace(center[0], pt[0], radius), numpy.linspace(center[1], pt[1], radius)
-        a, b = x.astype(numpy.int), y.astype(numpy.int)
+        a, b = x.astype(int), y.astype(int)
         a[a > (ys - 1)] = ys - 1
         a[a < 0] = 0
         b[b > (xs - 1)] = xs - 1
