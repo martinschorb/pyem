@@ -282,10 +282,10 @@ def map_header(m):
     if (type(m) is mrc.mrcfile.MrcFile) | (type(m) is mrc.mrcmemmap.MrcMemmap):
         # extracts MRC header information for a given mrc.object (legacy from reading mrc headers)
 
-        header['xsize'] = numpy.int(m.header.nx)
-        header['ysize'] = numpy.int(m.header.ny)
+        header['xsize'] = int(m.header.nx)
+        header['ysize'] = int(m.header.ny)
 
-        header['stacksize'] = numpy.int(m.header.nz)
+        header['stacksize'] = int(m.header.nz)
 
         # determine the scale
 
@@ -1174,7 +1174,7 @@ def img2polygon(img, n_poly, center, radius):
     # find the intersection points and mark the coordinates
     for pt in endpts:
         x, y = numpy.linspace(center[0], pt[0], radius), numpy.linspace(center[1], pt[1], radius)
-        a, b = x.astype(numpy.int), y.astype(numpy.int)
+        a, b = x.astype(int), y.astype(int)
         a[a > (ys - 1)] = ys - 1
         a[a < 0] = 0
         b[b > (xs - 1)] = xs - 1
@@ -1243,7 +1243,7 @@ def map_extract(im, c, p, px_scale, t_size, mat, int8=False):
     # create homogenous matrices
     mat_i = numpy.linalg.inv(mat)
 
-    o_size = numpy.max(numpy.abs([[0, realsize[1]] * mat, [realsize[0], 0] * mat]), axis=0).astype(numpy.int).squeeze()
+    o_size = numpy.max(numpy.abs([[0, realsize[1]] * mat, [realsize[0], 0] * mat]), axis=0).astype(int).squeeze()
 
     M = numpy.concatenate((mat_i, numpy.array([[0], [0]])), axis=1)
     M = numpy.concatenate((M, [[0, 0, 1]]), axis=0)
@@ -1302,9 +1302,9 @@ def map_extract(im, c, p, px_scale, t_size, mat, int8=False):
     f_size = im3.shape
 
     if int8:
-        im3 = im3.astype(numpy.int8)
+        im3 = im3.astype(int8)
     else:
-        im3 = im3.astype(numpy.int16)
+        im3 = im3.astype(int16)
 
     p4 = p1 * mat.T
 
