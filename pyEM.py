@@ -827,7 +827,7 @@ def mergemap(mapitem, crop=False, black=False,
     montage_tiles = numpy.prod(m['frames'])
 
     tileidx_offset = 0
-    mbase = os.path.splitext(os.path.basename(mapfile))[0]
+    mbase = os.path.splitext(mapfile)[0]
     mergebase = mbase + '_merged' + '_s' + str(mapsection)
 
     if os.path.splitext(mapfile)[1] not in mrcext:
@@ -857,7 +857,7 @@ def mergemap(mapitem, crop=False, black=False,
                     if 'Image = ' in lastitem:
                         break
 
-            prefix = mbase  # [:mbase.find('.idoc')]
+            prefix = os.path.basename(mbase)  # [:mbase.find('.idoc')]
             stacksize = int(lastitem[lastitem.find(prefix) + len(prefix):-5]) + 1
             mergeheader['stacksize'] = stacksize
 
@@ -1632,13 +1632,20 @@ def map_extract(im, c, p, px_scale, t_size, mat, int8=False):
 # --------------------------------------
 
 def get_pixel(navitem, mergedmap, tile=False, outline=False):
-    # determines the pixel coordinates of a navigator item in its associated map.
-    # input:
-    # - navigator item
-    # - map item as resulting from mergemap
-    # - tile(optional) output is pixel and tile index of closest map tile
-    # - outline(optional) return coordinates of outline (map/polygon) instead of center point
-    # output: pixel coordinates
+    """
+    Determines the pixel coordinates of a navigator item in its associated map.
+
+    Parameters
+    ----------
+    navitem : dict
+        Navigator Item
+    mergedmap : dict
+        Navigator Item  as resulting from mergemap
+    tile : bool
+        if True: output is pixel and tile index of closest map tile
+    outline : numpy.ndarray
+        array containing the pixel coordinates and optionally the tile index
+    """
 
     xval = float(navitem['StageXYZ'][0])  # (float(acq_item['PtsX'][0]))
     yval = float(navitem['StageXYZ'][1])  # (float(acq_item['PtsY'][0]))
@@ -1697,7 +1704,7 @@ def get_pixel(navitem, mergedmap, tile=False, outline=False):
         pt_px = pt_px.squeeze()
 
     if tile:
-        return pt_px, tileidx
+        return numpy.array([pt_px, tileidx])
     else:
         pt_px1 = pt_px + mergedmap['tilepx'][tileidx]
         pt_px1[1] = imsz[0] - pt_px1[1]
