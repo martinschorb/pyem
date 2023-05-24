@@ -1643,7 +1643,12 @@ def get_pixel(navitem, mergedmap, tile=False, outline=False):
         Navigator Item  as resulting from mergemap
     tile : bool
         if True: output is pixel and tile index of closest map tile
-    outline : numpy.ndarray
+    outline : bool
+        if True returns coordinates of outline (map/polygon) instead of center point
+
+    Returns
+    -------
+    numpy.ndarray
         array containing the pixel coordinates and optionally the tile index
     """
 
@@ -1695,9 +1700,14 @@ def get_pixel(navitem, mergedmap, tile=False, outline=False):
 
         ptn = numpy.array(pt - tilepos[tileidx])
 
-        pt_px = numpy.array(ptn * mergedmap['matrix'].T)
-        pt_px[:, 0] = (mergedmap['mappxcenter'][0]) + pt_px[:, 0]
-        pt_px[:, 1] = (mergedmap['mappxcenter'][1]) - pt_px[:, 1]
+        pt_px = numpy.dot(mergedmap['matrix'],ptn)
+
+        if len(pt_px.shape) > 1:
+            pt_px[:, 0] = (mergedmap['mappxcenter'][0]) + pt_px[:, 0]
+            pt_px[:, 1] = (mergedmap['mappxcenter'][1]) - pt_px[:, 1]
+        else:
+            pt_px[0] = (mergedmap['mappxcenter'][0]) + pt_px[0]
+            pt_px[1] = (mergedmap['mappxcenter'][1]) - pt_px[1]
 
     # output
     if not outline:
