@@ -1267,7 +1267,7 @@ def map_extract(im, c, p, px_scale, t_size, mat, int8=False):
 
     limitsize = numpy.min([o_size, t_size], axis=0).squeeze()
 
-    if limitsize == t_size:
+    if (limitsize == t_size).all():
         # im3=im2.copy()
         outsize = t_size
         shift = [0, 0]
