@@ -844,8 +844,6 @@ def mergemap(mapitem, crop=False, black=False,
             elif len(imd.shape) == 2:
                 im = imd
 
-            merge_mrc.close()
-
         else:
 
             if blendmont:
@@ -888,11 +886,11 @@ def mergemap(mapitem, crop=False, black=False,
                 mergeheader['xsize'] = int(tilepx[-1][0]) + im.shape[0]  # int(mapitem['MapWidthHeight'][0])
                 mergeheader['ysize'] = int(tilepx[-1][1]) + im.shape[1]  # int(mapitem['MapWidthHeight'][1])
 
-    if not blend_in:
-        im = mf.data
+        if not blend_in:
+            im = mf.data
 
-    im = numpy.rot90(numpy.transpose(im), axes=(0, 1))
-    mf.close()
+        im = numpy.rot90(numpy.transpose(im), axes=(0, 1))
+        mf.close()
         # end MRC section
 
     tilepos = numpy.array(tilepos, float)
