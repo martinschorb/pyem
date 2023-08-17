@@ -25,6 +25,9 @@ def navlines_xml():
 def mapitem(navlines):
     return em.nav_item(navlines, '12-A')[0]
 
+@pytest.fixture(scope='module')
+def mergeitem(mapitem):
+    return em.mergemap(mapitem)
 
 def test_loadtext():
     with pytest.raises(FileNotFoundError):
@@ -429,10 +432,24 @@ def test_map_extract():
     im2, pts2 = em.map_extract(sourceim, [35, 6], [[35, 6], [35, 7], [36, 6]], 0.4, [11, 11], np.array([[0, 1], [-1, 0]]))
 
     assert im2.shape == (4, 4)
+    assert np.all(im2 == expected['im2'])
     assert np.all(pts2 == expected['pts2'])
 
 
-    pass
+def test_get_pixel(mergeitem, navlines):
+
+    pt1, __ = em.nav_item(navlines, '175')
+    px1 = em.get_pixel(pt1,mergeitem)
+    assert (np.round(px1) == expected['px1']).all()
+
+    pt2, __ = em.nav_item(navlines, '175_nopx')
+    px2 = em.get_pixel(pt2,mergeitem)
+    assert (np.round(px2) == expected['px2']).all()
+
+    outline1, __ = em.nav_item(navlines, 'refmap')
+
+    # get outline
+    px_out = em.get_pixel(outline1, mergeitem, outline=True)
 
 
 

@@ -1692,7 +1692,6 @@ def get_pixel(navitem, mergedmap, tile=False, outline=False):
                 tileid = int(navitem['PieceOn'][0])
                 tileidx = numpy.argwhere(mergedmap['sections'] == tileid)[0][0]
             else:
-                # TODO   this points to the lower left corner of the tiles NOT to the center!!! ISSUE #2
                 tiledist = numpy.sum((tilepos - pt0) ** 2, axis=1)
                 tileidx = numpy.argmin(tiledist)
 
@@ -1700,7 +1699,7 @@ def get_pixel(navitem, mergedmap, tile=False, outline=False):
 
         ptn = numpy.array(pt - tilepos[tileidx])
 
-        pt_px = numpy.dot(mergedmap['matrix'],ptn)
+        pt_px = numpy.dot(ptn, mergedmap['matrix'].T)
 
         if len(pt_px.shape) > 1:
             pt_px[:, 0] = (mergedmap['mappxcenter'][0]) + pt_px[:, 0]
@@ -1716,8 +1715,13 @@ def get_pixel(navitem, mergedmap, tile=False, outline=False):
     if tile:
         return numpy.array([pt_px, tileidx])
     else:
+        if len(pt_px.shape) > 1:
+            pt_px[:, 1] = mergedmap['mapheader']['xsize'] - pt_px[:, 1]
+        else:
+            pt_px[1] = mergedmap['mapheader']['xsize'] - pt_px[1]
+
         pt_px1 = pt_px + mergedmap['tilepx'][tileidx]
-        pt_px1[1] = imsz[0] - pt_px1[1]
+
         return pt_px1
 
 
