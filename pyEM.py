@@ -394,7 +394,7 @@ def map_header(m):
         header['pixelsize'] = m.voxel_size.x / 10000  # in um
     elif type(m) is dict:
         if "MapFile" in m.keys():
-            merge = mergemap(m, blendmont=False)
+            merge = mergemap(m)# THERE IS A BUG!!!!!, blendmont=False)
             header = merge['mapheader']
     elif type(m) is str:
         if os.path.exists(m):
@@ -1077,8 +1077,6 @@ def mergemap(mapitem, crop=False, black=False,
                 im = imd[mapsection, :, :]
             elif len(imd.shape) == 2:
                 im = imd
-
-            merge_mrc.close()
 
         else:
 
